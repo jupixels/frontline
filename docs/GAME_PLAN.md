@@ -228,6 +228,17 @@ Tutorial mission, replays UI, achievements/stats screen, accessibility (colorbli
 
 ---
 
+## 8b. Strategic depth (so it's not "biggest army A-moves")
+**Phase 1 (sim workstream A, built into the core now):**
+- **Ability system:** data-driven active abilities with cooldowns/costs and a `useAbility` command. Starter set: smoke (blocks LOS), deploy/entrench (infantry: +armor, no move), sprint/overdrive, artillery barrage on a spotted area, AT ambush (hidden until it fires).
+- **Physical logistics:** supply is carried by **supply trucks** from depots/points to the HQ along roads. Trucks can be ambushed, and cutting a line starves production. Units far from supply slowly lose readiness (fire rate/morale).
+
+**Phase 2:**
+- **Map design goals** (maps workstream): every map has chokepoints, bridges, high ground, forests/cover, at least 2 alternate routes to each point, and points that are harder to hold than to take.
+- **Smart AI** (AI workstream): scouts, counter-builds against what it has seen, flanks, raids supply lines and power, contests points instead of sending waves.
+- **Anti-degenerate balance tests** (balance workstream): headless sims assert that no single-unit-type army beats a mixed army of equal cost, and that a side down 30% on tickets can still come back.
+- **Pacing review:** tune sudden death, bleed acceleration and the pop-cap comeback mechanic against playtests so they don't reward turtling.
+
 ## 9. Decisions (2026-10-29)
 1. **Repo:** https://github.com/jupixels/frontline, deployed to https://jupixels.github.io/frontline/
 2. **Extra assets:** downloading free assets is approved. Prefer CC0, and record anything CC-BY in the credits.
