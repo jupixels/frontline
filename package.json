@@ -12,6 +12,7 @@
     "assets": "node tools/build-assets.mjs"
   },
   "dependencies": {
+    "meshoptimizer": "^1.3.0",
     "n8ao": "^2.0.1",
     "postprocessing": "^6.39.5",
     "three": "^0.186.1"
@@ -23,7 +24,6 @@
     "@types/node": "^26.6.6",
     "@types/three": "^0.186.0",
     "fflate": "^0.8.3",
-    "meshoptimizer": "^1.3.0",
     "sharp": "^0.35.5",
     "typescript": "^5.9.3",
     "vite": "^8.3.5",
