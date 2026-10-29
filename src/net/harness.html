@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontline net harness</title>
+    <style>
+      body { font: 14px/1.4 system-ui, sans-serif; background: #111; color: #ddd; margin: 16px; }
+      button, input { font: inherit; padding: 4px 10px; margin: 2px; }
+      pre { background: #1b1b1b; padding: 8px; white-space: pre-wrap; max-height: 40vh; overflow: auto; }
+      #status { color: #8fd18f; }
+      .err { color: #f17b6c; }
+    </style>
+  </head>
+  <body>
+    <h3>Frontline net harness (dev only)</h3>
+    <p>Open in two tabs: Host in one, then paste the code (or open the share link) in the other.</p>
+    <div>
+      <input id="name" placeholder="name" value="" />
+      <button id="host">Host</button>
+      <input id="code" placeholder="ROOM CODE" size="8" />
+      <button id="join">Join</button>
+      <button id="ready">Ready</button>
+      <button id="ai">Add AI</button>
+      <button id="start">Start</button>
+      <button id="leave">Leave</button>
+    </div>
+    <div>
+      <input id="chat" placeholder="chat" />
+      <button id="send">Send</button>
+    </div>
+    <p id="status">idle</p>
+    <pre id="lobby"></pre>
+    <pre id="match"></pre>
+    <pre id="log"></pre>
+    <script type="module" src="./harness.ts"></script>
+  </body>
+</html>
