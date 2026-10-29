@@ -1,0 +1,56 @@
+{
+  "tank_mbt": {
+    "name": "Main Battle Tank",
+    "model": "models/tank_mbt.glb",
+    "domain": "ground",
+    "armor": "heavy",
+    "hp": 1200,
+    "speed": 7,
+    "turnRate": 1.6,
+    "radius": 3.2,
+    "sight": 90,
+    "cost": 450,
+    "buildSeconds": 30,
+    "turretNode": "P_turret",
+    "turretTurnRate": 1.4
+  },
+  "ifv": {
+    "name": "Infantry Fighting Vehicle",
+    "model": "models/ifv.glb",
+    "domain": "ground",
+    "armor": "light",
+    "hp": 650,
+    "speed": 10,
+    "turnRate": 2.2,
+    "radius": 2.8,
+    "sight": 100,
+    "cost": 250,
+    "buildSeconds": 20
+  },
+  "jeep": {
+    "name": "Recon Jeep",
+    "model": "models/jeep.glb",
+    "domain": "ground",
+    "armor": "light",
+    "hp": 220,
+    "speed": 16,
+    "turnRate": 3,
+    "radius": 2,
+    "sight": 140,
+    "cost": 80,
+    "buildSeconds": 8
+  },
+  "rifleman": {
+    "name": "Rifleman",
+    "model": "models/rifleman.glb",
+    "domain": "ground",
+    "armor": "infantry",
+    "hp": 100,
+    "speed": 4,
+    "turnRate": 6,
+    "radius": 0.6,
+    "sight": 70,
+    "cost": 30,
+    "buildSeconds": 5
+  }
+}

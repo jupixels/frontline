@@ -1,0 +1,35 @@
+{
+  "$comment": "Source files are read from the asset zips (see tools/README.md). length = target longest horizontal extent in meters (or height = target height, or scale = explicit factor for skinned models). rotateY = extra yaw in degrees so the model faces +Z. clips = keep only these animation clips (omit to keep all).",
+  "models": [
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/Tank_MBT.glb",
+      "out": "models/tank_mbt.glb",
+      "length": 9.5
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/IFV_MechInfantry.glb",
+      "out": "models/ifv.glb",
+      "length": 7.5
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/Jeep_zsky_CC-BY.glb",
+      "out": "models/jeep.glb",
+      "length": 4.6
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/soldiers/Rifleman.glb",
+      "out": "models/rifleman.glb",
+      "scale": 1,
+      "clips": ["MilitaryIdle01", "Idle01", "Run01_Forward", "Walk01_Forward", "AssaultRifle_Aim01", "AssaultRifle_Aim01_Shoot01", "AssaultRifle_Reload01", "Damage01", "Death01", "Death02"]
+    }
+  ],
+  "sounds": [
+    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/ui/", "out": "sounds/ui/" },
+    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/engines/", "out": "sounds/engines/" },
+    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/music/", "out": "sounds/music/" }
+  ]
+}
