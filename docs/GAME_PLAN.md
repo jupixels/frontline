@@ -205,6 +205,8 @@ A–F don't overlap in files. Anything that must change `src/shared/` goes throu
 | — | **Master** | Integration, playtests, perf profiling, bug triage |
 
 ### Phase 3 — Polish
+**Shared command (optional co-op mode):** 2+ players control one army with a shared base and economy, optionally split into roles (ground / air / navy / logistics). The sim's `canCommand` hook (Phase 1) makes this a lobby option, not a rewrite.
+
 Tutorial mission, replays UI, achievements/stats screen, accessibility (colorblind team colors, rebindable keys), and mobile/tablet touch controls (stretch goal).
 
 ### Milestones
