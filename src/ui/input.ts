@@ -1,40 +1,114 @@
 import type { Command } from '../shared/commands';
-import type { SimView } from '../shared/entities';
-import type { EntityId, PlayerId } from '../shared/types';
+import type { EntityState, SimView } from '../shared/entities';
+import type { EntityId, PlayerId, Vec2 } from '../shared/types';
 import type { Picker } from '../shared/view';
+import { defaultKeybinds, type Keybinds } from './keybinds';
 
 const DRAG_PX = 5;
+const RIGHT_DRAG_PX = 14;
+const DOUBLE_CLICK_MS = 320;
+const HOVER_EVERY_MS = 60;
+
+export type CursorState = 'default' | 'select' | 'move' | 'attack' | 'invalid' | 'target' | 'place' | 'rally';
+
+/** Pending targeted order: the next left click on the map completes it. */
+export type TargetMode =
+  | { kind: 'none' }
+  | { kind: 'attackMove' }
+  | { kind: 'patrol' }
+  | { kind: 'rally'; factories: EntityId[] }
+  | { kind: 'place'; structure: string; builder: EntityId; rotation: number };
+
+export interface InputOptions {
+  /** Current key bindings (read on every key press, so rebinding applies live). */
+  keybinds?: () => Keybinds;
+  /**
+   * When false the controller doesn't listen to the keyboard; MatchUi routes keys instead.
+   * Defaults to true (Phase 0 Match uses the controller on its own).
+   */
+  keyboard?: boolean;
+  /** Is the entity a structure that takes rally points / is it a builder etc. Optional. */
+  isFactory?: (e: EntityState) => boolean;
+  /** Validity check for the placement ghost. */
+  canPlace?: (structure: string, at: Vec2) => boolean;
+  onModeChange?: (mode: TargetMode) => void;
+  /** Formation facing preview while right-dragging (screen px), or null when it ends. */
+  onFormationDrag?: (from: { x: number; y: number } | null, to?: { x: number; y: number }) => void;
+  /** Placement ghost position (screen px + world) every pointer move while placing. */
+  onPlacementHover?: (screen: { x: number; y: number } | null, world: Vec2 | null, valid: boolean) => void;
+  /** Visible feedback for an issued order (click marker). */
+  onOrderMarker?: (screen: { x: number; y: number }, kind: 'move' | 'attack' | 'rally' | 'build') => void;
+}
 
 /**
  * Mouse/keyboard → selection + Commands.
- * Left click/drag selects own units, right click moves (or attacks an enemy), A = attack-move
- * on next left click, S = stop, H = hold, Ctrl+1..9 set control group, 1..9 recall.
+ *
+ * Left click/drag selects own units (Shift adds/toggles, Ctrl+click or double-click selects all
+ * visible units of that type). Right click moves or attacks; right-drag gives the move a facing.
+ * A = attack-move on the next left click, S = stop, H = hold, Ctrl+1..9 set a control group,
+ * 1..9 recall it. Targeted orders (attack-move, rally, structure placement) are modes; Esc or
+ * right click cancels them.
  */
 export class InputController {
   readonly selection = new Set<EntityId>();
-  private groups = new Map<string, EntityId[]>();
+  readonly groups = new Map<number, EntityId[]>();
   private dragStart: { x: number; y: number } | null = null;
-  private attackMoveArmed = false;
+  private rightStart: { x: number; y: number; t: number } | null = null;
+  private mode: TargetMode = { kind: 'none' };
   private readonly box: HTMLDivElement;
+  private lastClick = { t: 0, id: -1 as EntityId };
+  private lastHover = 0;
+  private cursor: CursorState = 'default';
+  private enabled = true;
+  private readonly opts: InputOptions;
+  private readonly cleanup: (() => void)[] = [];
 
   constructor(
     private readonly dom: HTMLElement,
     private readonly sim: SimView,
     private readonly picker: Picker,
-    private readonly localPlayer: PlayerId,
+    readonly localPlayer: PlayerId,
     private readonly issue: (cmd: Command) => void,
     private readonly onSelectionChange: (ids: EntityId[]) => void,
+    opts: InputOptions = {},
   ) {
+    this.opts = opts;
     this.box = document.createElement('div');
     this.box.className = 'select-box';
     document.body.appendChild(this.box);
 
-    dom.addEventListener('contextmenu', (e) => e.preventDefault());
-    dom.addEventListener('pointerdown', (e) => this.onDown(e));
-    addEventListener('pointermove', (e) => this.onMove(e));
-    addEventListener('pointerup', (e) => this.onUp(e));
-    addEventListener('keydown', (e) => this.onKey(e));
+    const on = <K extends keyof WindowEventMap>(target: EventTarget, type: K, fn: (e: WindowEventMap[K]) => void) => {
+      target.addEventListener(type, fn as EventListener);
+      this.cleanup.push(() => target.removeEventListener(type, fn as EventListener));
+    };
+    on(dom, 'contextmenu', (e) => e.preventDefault());
+    on(dom, 'pointerdown', (e) => this.onDown(e));
+    on(window, 'pointermove', (e) => this.onMove(e));
+    on(window, 'pointerup', (e) => this.onUp(e));
+    if (opts.keyboard !== false) on(window, 'keydown', (e) => this.onKey(e));
   }
+
+  private get keys(): Keybinds {
+    return this.opts.keybinds?.() ?? defaultKeybinds();
+  }
+
+  /** Disable while a menu covers the map (pause menu, settings). */
+  setEnabled(on: boolean): void {
+    this.enabled = on;
+    if (!on) {
+      this.dragStart = null;
+      this.rightStart = null;
+      this.box.style.display = 'none';
+      this.opts.onFormationDrag?.(null);
+    }
+  }
+
+  dispose(): void {
+    for (const c of this.cleanup) c();
+    this.box.remove();
+  }
+
+  // --- selection
 
   private own(ids: Iterable<EntityId>): EntityId[] {
     const out: EntityId[] = [];
@@ -42,10 +116,33 @@ export class InputController {
     return out;
   }
 
-  private setSelection(ids: EntityId[], additive = false): void {
+  /** Units first: a box over units and buildings selects only the units. */
+  private preferUnits(ids: EntityId[]): EntityId[] {
+    const units = ids.filter((id) => this.sim.get(id)?.kind === 'unit');
+    return units.length ? units : ids.filter((id) => this.sim.get(id)?.kind === 'structure');
+  }
+
+  select(ids: EntityId[], additive = false): void {
     if (!additive) this.selection.clear();
     for (const id of ids) this.selection.add(id);
+    if (this.mode.kind !== 'none') this.setMode({ kind: 'none' });
     this.onSelectionChange([...this.selection]);
+  }
+
+  deselect(ids: EntityId[]): void {
+    for (const id of ids) this.selection.delete(id);
+    this.onSelectionChange([...this.selection]);
+  }
+
+  /** Own units of `type` currently on screen. */
+  visibleOfType(type: string): EntityId[] {
+    return this.own(this.picker.entitiesInRect(0, 0, innerWidth, innerHeight)).filter((id) => this.sim.get(id)?.type === type);
+  }
+
+  selectArmy(): void {
+    const ids: EntityId[] = [];
+    for (const e of this.sim.entities()) if (e.owner === this.localPlayer && e.kind === 'unit') ids.push(e.id);
+    this.select(ids);
   }
 
   /** Drop ids that no longer exist (died/removed). */
@@ -53,101 +150,299 @@ export class InputController {
     let changed = false;
     for (const id of this.selection) if (!this.sim.get(id)) changed = this.selection.delete(id) || changed;
     if (changed) this.onSelectionChange([...this.selection]);
+    for (const [k, ids] of this.groups) {
+      const alive = ids.filter((id) => this.sim.get(id));
+      if (alive.length !== ids.length) this.groups.set(k, alive);
+    }
   }
 
+  setGroup(n: number, additive = false): void {
+    const ids = [...this.selection];
+    this.groups.set(n, additive ? [...new Set([...(this.groups.get(n) ?? []), ...ids])] : ids);
+  }
+
+  recallGroup(n: number, additive = false): EntityId[] {
+    const ids = this.own(this.groups.get(n) ?? []);
+    this.select(ids, additive);
+    return ids;
+  }
+
+  // --- modes
+
+  getMode(): TargetMode {
+    return this.mode;
+  }
+
+  setMode(m: TargetMode): void {
+    this.mode = m;
+    this.opts.onModeChange?.(m);
+    if (m.kind !== 'place') this.opts.onPlacementHover?.(null, null, false);
+    this.refreshCursor();
+  }
+
+  armAttackMove(): void {
+    if (this.selection.size) this.setMode({ kind: 'attackMove' });
+  }
+
+  beginPlacement(structure: string, builder: EntityId): void {
+    this.setMode({ kind: 'place', structure, builder, rotation: 0 });
+  }
+
+  rotatePlacement(): void {
+    if (this.mode.kind === 'place') {
+      this.mode = { ...this.mode, rotation: (this.mode.rotation + Math.PI / 2) % (Math.PI * 2) };
+      this.opts.onModeChange?.(this.mode);
+    }
+  }
+
+  cancelMode(): boolean {
+    if (this.mode.kind === 'none') return false;
+    this.setMode({ kind: 'none' });
+    return true;
+  }
+
+  stop(): void {
+    const units = this.units();
+    if (units.length) this.issue({ type: 'stop', units });
+  }
+
+  hold(): void {
+    const units = this.units();
+    if (units.length) this.issue({ type: 'hold', units });
+  }
+
+  /** Selected own mobile units (structures can't take move orders). */
+  units(): EntityId[] {
+    return [...this.selection].filter((id) => this.sim.get(id)?.kind === 'unit');
+  }
+
+  private factories(): EntityId[] {
+    const isF = this.opts.isFactory;
+    return [...this.selection].filter((id) => {
+      const e = this.sim.get(id);
+      return !!e && e.kind === 'structure' && (!isF || isF(e));
+    });
+  }
+
+  // --- pointer
+
   private onDown(e: PointerEvent): void {
+    if (!this.enabled) return;
     if (e.button === 0) {
-      if (this.attackMoveArmed) {
-        this.attackMoveArmed = false;
-        this.dom.style.cursor = '';
-        this.orderMove(e.clientX, e.clientY, true, e.shiftKey);
+      if (this.mode.kind !== 'none') {
+        this.completeMode(e);
         return;
       }
       this.dragStart = { x: e.clientX, y: e.clientY };
     } else if (e.button === 2) {
-      this.attackMoveArmed = false;
-      this.dom.style.cursor = '';
-      this.orderAt(e.clientX, e.clientY, e.shiftKey);
+      if (this.cancelMode()) return;
+      this.rightStart = { x: e.clientX, y: e.clientY, t: performance.now() };
+    }
+  }
+
+  private completeMode(e: PointerEvent): void {
+    const m = this.mode;
+    const p = this.picker.pickGround(e.clientX, e.clientY);
+    const at = { x: e.clientX, y: e.clientY };
+    if (m.kind === 'attackMove' || m.kind === 'patrol') {
+      // TODO(shared): a real `patrol` order. Until then patrol issues an attack-move.
+      const units = this.units();
+      if (p && units.length) {
+        this.issue({ type: 'move', units, target: p, attackMove: true, queue: e.shiftKey });
+        this.opts.onOrderMarker?.(at, 'attack');
+      }
+      if (!e.shiftKey) this.setMode({ kind: 'none' });
+    } else if (m.kind === 'rally') {
+      if (p) {
+        for (const f of m.factories) this.issue({ type: 'setRally', factory: f, at: p });
+        this.opts.onOrderMarker?.(at, 'rally');
+      }
+      this.setMode({ kind: 'none' });
+    } else if (m.kind === 'place') {
+      if (!p) return;
+      const valid = this.opts.canPlace?.(m.structure, p) ?? true;
+      if (!valid) return;
+      this.issue({ type: 'build', builder: m.builder, structure: m.structure, at: p, rotation: m.rotation, queue: e.shiftKey });
+      this.opts.onOrderMarker?.(at, 'build');
+      // Shift keeps placing more of the same.
+      if (!e.shiftKey) this.setMode({ kind: 'none' });
     }
   }
 
   private onMove(e: PointerEvent): void {
+    if (!this.enabled) return;
     const s = this.dragStart;
-    if (!s) return;
-    const w = Math.abs(e.clientX - s.x);
-    const h = Math.abs(e.clientY - s.y);
-    if (w < DRAG_PX && h < DRAG_PX) return;
-    Object.assign(this.box.style, {
-      display: 'block',
-      left: `${Math.min(s.x, e.clientX)}px`,
-      top: `${Math.min(s.y, e.clientY)}px`,
-      width: `${w}px`,
-      height: `${h}px`,
-    });
+    if (s) {
+      const w = Math.abs(e.clientX - s.x);
+      const hgt = Math.abs(e.clientY - s.y);
+      if (w >= DRAG_PX || hgt >= DRAG_PX) {
+        Object.assign(this.box.style, {
+          display: 'block',
+          left: `${Math.min(s.x, e.clientX)}px`,
+          top: `${Math.min(s.y, e.clientY)}px`,
+          width: `${w}px`,
+          height: `${hgt}px`,
+        });
+      }
+    }
+    const r = this.rightStart;
+    if (r && Math.hypot(e.clientX - r.x, e.clientY - r.y) >= RIGHT_DRAG_PX && this.units().length) {
+      this.opts.onFormationDrag?.({ x: r.x, y: r.y }, { x: e.clientX, y: e.clientY });
+    }
+    if (e.target === this.dom) this.hover(e);
+    else if (this.mode.kind === 'place') this.opts.onPlacementHover?.(null, null, false);
+  }
+
+  private hover(e: PointerEvent): void {
+    if (this.mode.kind === 'place') {
+      const p = this.picker.pickGround(e.clientX, e.clientY);
+      const valid = !!p && (this.opts.canPlace?.(this.mode.structure, p) ?? true);
+      this.opts.onPlacementHover?.({ x: e.clientX, y: e.clientY }, p, valid);
+      this.setCursor(valid ? 'place' : 'invalid');
+      return;
+    }
+    const now = performance.now();
+    if (now - this.lastHover < HOVER_EVERY_MS || this.dragStart) return;
+    this.lastHover = now;
+    this.refreshCursor(e.clientX, e.clientY);
+  }
+
+  private refreshCursor(sx?: number, sy?: number): void {
+    const m = this.mode;
+    if (m.kind === 'attackMove' || m.kind === 'patrol') return this.setCursor('target');
+    if (m.kind === 'rally') return this.setCursor('rally');
+    if (m.kind === 'place') return this.setCursor('place');
+    if (sx === undefined || sy === undefined) return this.setCursor('default');
+    const id = this.picker.pickEntity(sx, sy);
+    const ent = id !== null ? this.sim.get(id) : undefined;
+    const hasUnits = this.units().length > 0;
+    if (ent && ent.owner === this.localPlayer) return this.setCursor('select');
+    if (ent && ent.owner >= 0 && hasUnits) return this.setCursor('attack');
+    if (hasUnits || this.factories().length) return this.setCursor(this.picker.pickGround(sx, sy) ? (hasUnits ? 'move' : 'rally') : 'invalid');
+    this.setCursor(ent ? 'select' : 'default');
+  }
+
+  private setCursor(c: CursorState): void {
+    if (c === this.cursor) return;
+    this.dom.classList.remove(`cursor-${this.cursor}`);
+    this.cursor = c;
+    this.dom.classList.add(`cursor-${c}`);
   }
 
   private onUp(e: PointerEvent): void {
+    if (e.button === 2) {
+      const r = this.rightStart;
+      this.rightStart = null;
+      if (!r || !this.enabled) return;
+      const dragged = Math.hypot(e.clientX - r.x, e.clientY - r.y) >= RIGHT_DRAG_PX;
+      this.opts.onFormationDrag?.(null);
+      if (dragged && this.units().length) this.orderFormation(r, e);
+      else this.orderAt(r.x, r.y, e.shiftKey);
+      return;
+    }
     const s = this.dragStart;
     if (e.button !== 0 || !s) return;
     this.dragStart = null;
     this.box.style.display = 'none';
+    if (!this.enabled) return;
+    const additive = e.shiftKey;
     if (Math.abs(e.clientX - s.x) >= DRAG_PX || Math.abs(e.clientY - s.y) >= DRAG_PX) {
-      this.setSelection(this.own(this.picker.entitiesInRect(s.x, s.y, e.clientX, e.clientY)), e.shiftKey);
-    } else {
-      const id = this.picker.pickEntity(e.clientX, e.clientY);
-      this.setSelection(id !== null ? this.own([id]) : [], e.shiftKey);
+      this.select(this.preferUnits(this.own(this.picker.entitiesInRect(s.x, s.y, e.clientX, e.clientY))), additive);
+      return;
     }
+    const id = this.picker.pickEntity(e.clientX, e.clientY);
+    const ent = id !== null ? this.sim.get(id) : undefined;
+    const now = performance.now();
+    const isDouble = id !== null && this.lastClick.id === id && now - this.lastClick.t < DOUBLE_CLICK_MS;
+    this.lastClick = { t: now, id: id ?? -1 };
+    if (!ent || ent.owner !== this.localPlayer) {
+      // Clicking empty ground (or an enemy, to inspect) clears unless adding.
+      if (!additive) this.select([]);
+      return;
+    }
+    if (e.ctrlKey || e.metaKey || isDouble) {
+      this.select(this.visibleOfType(ent.type), additive);
+      return;
+    }
+    if (additive && this.selection.has(ent.id)) this.deselect([ent.id]);
+    else this.select([ent.id], additive);
   }
 
   private orderAt(sx: number, sy: number, queue: boolean): void {
-    const units = [...this.selection];
-    if (!units.length) return;
+    const units = this.units();
+    if (!units.length) {
+      // Right click with only factories selected sets their rally point.
+      const factories = this.factories();
+      const p = this.picker.pickGround(sx, sy);
+      if (factories.length && p) {
+        for (const f of factories) this.issue({ type: 'setRally', factory: f, at: p });
+        this.opts.onOrderMarker?.({ x: sx, y: sy }, 'rally');
+      }
+      return;
+    }
     const targetId = this.picker.pickEntity(sx, sy);
     const target = targetId !== null ? this.sim.get(targetId) : undefined;
-    if (target && target.owner !== this.localPlayer && target.owner >= 0) {
+    if (target && target.owner !== this.localPlayer && target.owner >= 0 && target.kind !== 'point') {
       this.issue({ type: 'attack', units, targetId: target.id, queue });
+      this.opts.onOrderMarker?.({ x: sx, y: sy }, 'attack');
       return;
     }
     this.orderMove(sx, sy, false, queue);
   }
 
   private orderMove(sx: number, sy: number, attackMove: boolean, queue: boolean): void {
-    const units = [...this.selection];
+    const units = this.units();
     const p = this.picker.pickGround(sx, sy);
-    if (units.length && p) this.issue({ type: 'move', units, target: p, attackMove, queue });
+    if (units.length && p) {
+      this.issue({ type: 'move', units, target: p, attackMove, queue });
+      this.opts.onOrderMarker?.({ x: sx, y: sy }, attackMove ? 'attack' : 'move');
+    }
   }
 
+  /**
+   * Right-drag: move to the drag start, facing along the drag. The facing is not in the shared
+   * Command yet (TODO(shared): `facing?: Heading` on `move`), so the units get the move and the
+   * facing is dropped until the contract has it.
+   */
+  private orderFormation(from: { x: number; y: number }, e: PointerEvent): void {
+    const units = this.units();
+    const a = this.picker.pickGround(from.x, from.y);
+    const b = this.picker.pickGround(e.clientX, e.clientY);
+    if (!a || !units.length) return;
+    const cmd: Command = { type: 'move', units, target: a, queue: e.shiftKey };
+    if (b) Object.assign(cmd, { facing: formationFacing(a, b) });
+    this.issue(cmd);
+    this.opts.onOrderMarker?.(from, 'move');
+  }
+
+  // --- keyboard (stand-alone mode; MatchUi routes keys itself)
+
   private onKey(e: KeyboardEvent): void {
-    if (e.target instanceof HTMLInputElement) return;
-    const units = [...this.selection];
+    if (!this.enabled || isTyping(e)) return;
     const digit = /^Digit([1-9])$/.exec(e.code)?.[1];
     if (digit) {
       if (e.ctrlKey) {
-        this.groups.set(digit, units);
+        this.setGroup(Number(digit), e.shiftKey);
         e.preventDefault();
-      } else {
-        this.setSelection(this.own(this.groups.get(digit) ?? []));
-      }
+      } else this.recallGroup(Number(digit), e.shiftKey);
       return;
     }
-    switch (e.code) {
-      case 'KeyA':
-        if (units.length) {
-          this.attackMoveArmed = true;
-          this.dom.style.cursor = 'crosshair';
-        }
-        break;
-      case 'KeyS':
-        if (units.length) this.issue({ type: 'stop', units });
-        break;
-      case 'KeyH':
-        if (units.length) this.issue({ type: 'hold', units });
-        break;
-      case 'Escape':
-        this.attackMoveArmed = false;
-        this.dom.style.cursor = '';
-        this.setSelection([]);
-        break;
+    const k = this.keys;
+    if (e.code === k.attackMove) this.armAttackMove();
+    else if (e.code === k.stop) this.stop();
+    else if (e.code === k.hold) this.hold();
+    else if (e.code === 'Escape') {
+      if (!this.cancelMode()) this.select([]);
     }
   }
+}
+
+/** Heading (sim convention: 0 faces +z, forward = (sin h, cos h)) from a to b. UI-side floats are fine. */
+export function formationFacing(a: Vec2, b: Vec2): number {
+  return Math.atan2(b.x - a.x, b.z - a.z);
+}
+
+export function isTyping(e: KeyboardEvent): boolean {
+  const t = e.target;
+  return t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || (t instanceof HTMLElement && t.isContentEditable);
 }
