@@ -130,7 +130,7 @@ export class UnitView {
       mesh.material = this.materialFor(mesh.material as THREE.Material, prepared, false, band);
     });
     this.model = model;
-    this.body.add(model);
+    if (this.rigVisible) this.body.add(model);
     if (prepared.animations.length) {
       this.mixer = new THREE.AnimationMixer(model);
       for (const [state, names] of Object.entries(CLIPS)) {
@@ -379,9 +379,13 @@ export class UnitView {
     }
   }
 
+  /** Full model vs far-LOD instance. The hidden model is detached so it costs no matrix updates. */
   setRigVisible(on: boolean): void {
+    if (on === this.rigVisible) return;
     this.rigVisible = on;
-    if (this.model) this.model.visible = on;
+    if (!this.model) return;
+    if (on) this.body.add(this.model);
+    else this.body.remove(this.model);
   }
 
   dispose(): void {

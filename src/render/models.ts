@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { MeshoptSimplifier } from 'meshoptimizer/simplifier';
 import { assetUrl } from '../shared/view';
 
 /** A loaded unit model, optimized once and cloned per unit. */
@@ -54,15 +55,27 @@ function prepare(gltf: GLTF): PreparedModel {
       primaryMaterial = m;
     }
   }
+  // Unnamed, untextured white materials on vehicles are default-material running gear (road wheels,
+  // idlers); paint them dark steel instead of glowing white.
+  scene.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh || Array.isArray(mesh.material) || mesh.material === primaryMaterial) return;
+    const m = mesh.material as THREE.MeshStandardMaterial;
+    if (m.name === '' && !m.map && m.color?.getHex() === 0xffffff) m.color.setHex(0x2a2a28);
+  });
   scene.updateMatrixWorld(true);
   const bounds = new THREE.Box3().setFromObject(scene, true);
   return { scene, animations: gltf.animations, bounds, primaryMaterial, skinned };
 }
 
+/** Nodes whose own animation is worth keeping per unit: turrets, guns, rotors, the hull (recoil, death). */
+const KEEP_ANIMATED = /turret|barrel|gun|cannon|rotor|propel|body|hull/i;
+
 /**
- * Merge non-animated meshes that share a material into one mesh per rigid group, cutting draw calls
- * (the IFV alone ships ~50 meshes). A "rigid group" is the nearest animated ancestor, so animation
- * still moves exactly what it did before.
+ * Flatten a vehicle into a handful of meshes: every mesh is merged, per material, into its nearest
+ * ancestor-or-self that is an animated turret/gun/rotor/hull node (or the model root). Animation of
+ * small parts like individual road wheels is dropped: invisible at RTS zoom, and it was costing one
+ * draw call per wheel plus mixer time. The tank goes from ~50 draws to ~8.
  */
 function mergeStaticMeshes(root: THREE.Object3D, clips: THREE.AnimationClip[]): void {
   // Rigged characters attach props to bones that may be driven by constraints rather than tracks;
@@ -74,15 +87,16 @@ function mergeStaticMeshes(root: THREE.Object3D, clips: THREE.AnimationClip[]): 
   for (const clip of clips) {
     for (const track of clip.tracks) animated.add(THREE.PropertyBinding.parseTrackName(track.name).nodeName);
   }
+  const keep = new Set([...animated].filter((n) => KEEP_ANIMATED.test(n)));
   root.updateMatrixWorld(true);
+
   const groups = new Map<THREE.Object3D, Map<THREE.Material, THREE.Mesh[]>>();
   root.traverse((o) => {
     const mesh = o as THREE.Mesh;
-    if (!mesh.isMesh || (mesh as THREE.SkinnedMesh).isSkinnedMesh || Array.isArray(mesh.material)) return;
-    if (animated.has(mesh.name) || mesh.morphTargetInfluences) return;
+    if (!mesh.isMesh || (mesh as THREE.SkinnedMesh).isSkinnedMesh || Array.isArray(mesh.material) || mesh.morphTargetInfluences) return;
     let anchor: THREE.Object3D = root;
-    for (let p = mesh.parent; p && p !== root; p = p.parent) {
-      if (animated.has(p.name)) {
+    for (let p: THREE.Object3D | null = mesh; p && p !== root; p = p.parent) {
+      if (keep.has(p.name)) {
         anchor = p;
         break;
       }
@@ -94,12 +108,15 @@ function mergeStaticMeshes(root: THREE.Object3D, clips: THREE.AnimationClip[]): 
     byMat.set(mesh.material, list);
   });
 
+  // Build merged geometry while every transform is still the original hierarchy.
+  const pending: { anchor: THREE.Object3D; mesh: THREE.Mesh }[] = [];
+  const replaced = new Set<THREE.Mesh>();
   const inv = new THREE.Matrix4();
   const m = new THREE.Matrix4();
   for (const [anchor, byMat] of groups) {
     inv.copy(anchor.matrixWorld).invert();
     for (const [material, meshes] of byMat) {
-      if (meshes.length < 2) continue;
+      if (meshes.length === 1 && meshes[0] === anchor) continue;
       const hasUv = meshes.every((x) => x.geometry.attributes.uv);
       const indexed = meshes.every((x) => x.geometry.index);
       const geos = meshes.map((x) => {
@@ -121,10 +138,30 @@ function mergeStaticMeshes(root: THREE.Object3D, clips: THREE.AnimationClip[]): 
       if (!merged) continue;
       const mesh = new THREE.Mesh(merged, material);
       mesh.name = `${anchor.name || 'root'}_merged_${material.name}`;
-      anchor.add(mesh);
-      for (const x of meshes) replaceWithEmpty(x);
+      pending.push({ anchor, mesh });
+      for (const x of meshes) replaced.add(x);
     }
   }
+  const swap = new Map<THREE.Object3D, THREE.Object3D>();
+  for (const x of replaced) swap.set(x, replaceWithEmpty(x));
+  for (const { anchor, mesh } of pending) (swap.get(anchor) ?? anchor).add(mesh);
+
+  // Drop tracks for parts that no longer move on their own.
+  for (const clip of clips) {
+    clip.tracks = clip.tracks.filter((t) => keep.has(THREE.PropertyBinding.parseTrackName(t.name).nodeName));
+    clip.resetDuration();
+  }
+  pruneEmpty(root, keep);
+}
+
+/** Remove nodes with no meshes below them (left over from merging); every node costs matrix updates per unit per frame. */
+function pruneEmpty(node: THREE.Object3D, keep: Set<string>): boolean {
+  let hasContent = (node as THREE.Mesh).isMesh === true || keep.has(node.name);
+  for (const child of [...node.children]) {
+    if (pruneEmpty(child, keep)) hasContent = true;
+    else node.remove(child);
+  }
+  return hasContent;
 }
 
 function toFloat32(attr: THREE.BufferAttribute): THREE.BufferAttribute {
@@ -136,18 +173,20 @@ function toFloat32(attr: THREE.BufferAttribute): THREE.BufferAttribute {
 }
 
 /** Swap a mesh for a plain Object3D with the same name/transform/children so the hierarchy survives. */
-function replaceWithEmpty(mesh: THREE.Mesh): void {
+function replaceWithEmpty(mesh: THREE.Mesh): THREE.Object3D {
   const parent = mesh.parent;
-  if (!parent) return;
   const empty = new THREE.Object3D();
   empty.name = mesh.name;
   empty.position.copy(mesh.position);
   empty.quaternion.copy(mesh.quaternion);
   empty.scale.copy(mesh.scale);
   for (const c of [...mesh.children]) empty.add(c);
-  parent.children[parent.children.indexOf(mesh)] = empty;
-  empty.parent = parent;
-  mesh.parent = null;
+  if (parent) {
+    parent.children[parent.children.indexOf(mesh)] = empty;
+    empty.parent = parent;
+    mesh.parent = null;
+  }
+  return empty;
 }
 
 /** Clone with skeletons rebound (plain clone() shares bones between copies). */
@@ -155,24 +194,33 @@ export function cloneModel(model: PreparedModel): THREE.Object3D {
   return SkeletonUtils.clone(model.scene);
 }
 
+export interface BakeOptions {
+  clip?: string;
+  time?: number;
+  /** Keep this fraction of triangles (meshoptimizer simplifier). 1 = no simplification. */
+  detail?: number;
+  /** Faceted normals (hard-surface vehicles) instead of smooth (soldiers). */
+  flat?: boolean;
+}
+
 /**
- * Bake the skinned model at `time` seconds into `clipName` into one static geometry in model space.
- * Used for instanced far-LOD infantry.
+ * Bake the model (optionally posed at `time` into `clip`) into static model-space geometry, one per
+ * source material, simplified for far-LOD instancing.
  */
-export function bakePose(model: PreparedModel, clipName: string, time: number): THREE.BufferGeometry {
+export async function bakeModel(model: PreparedModel, opts: BakeOptions = {}): Promise<Map<THREE.Material, THREE.BufferGeometry>> {
   const clone = cloneModel(model);
-  const clip = model.animations.find((c) => c.name === clipName);
+  const clip = opts.clip ? model.animations.find((c) => c.name === opts.clip) : undefined;
   if (clip) {
     const mixer = new THREE.AnimationMixer(clone);
     mixer.clipAction(clip).play();
-    mixer.setTime(time);
+    mixer.setTime(opts.time ?? 0);
   }
   clone.updateMatrixWorld(true);
-  const parts: THREE.BufferGeometry[] = [];
+  const parts = new Map<THREE.Material, THREE.BufferGeometry[]>();
   const v = new THREE.Vector3();
   clone.traverse((o) => {
     const mesh = o as THREE.Mesh;
-    if (!mesh.isMesh) return;
+    if (!mesh.isMesh || Array.isArray(mesh.material)) return;
     const src = mesh.geometry;
     const pos = src.attributes.position;
     const out = new Float32Array(pos.count * 3);
@@ -188,12 +236,34 @@ export function bakePose(model: PreparedModel, clipName: string, time: number): 
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(out, 3));
-    if (src.index) g.setIndex(src.index.clone());
-    parts.push(g);
+    const idx = src.index ? Array.from(src.index.array as ArrayLike<number>) : Array.from({ length: pos.count }, (_, i) => i);
+    g.setIndex(idx);
+    const list = parts.get(mesh.material) ?? [];
+    list.push(g);
+    parts.set(mesh.material, list);
   });
-  const allIndexed = parts.every((g) => g.index);
-  const merged = mergeGeometries(allIndexed ? parts : parts.map((g) => (g.index ? g.toNonIndexed() : g)), false) ?? new THREE.BufferGeometry();
-  merged.computeVertexNormals();
-  merged.computeBoundingSphere();
-  return merged;
+  const detail = opts.detail ?? 1;
+  if (detail < 1) await MeshoptSimplifier.ready;
+  const result = new Map<THREE.Material, THREE.BufferGeometry>();
+  for (const [mat, list] of parts) {
+    let g = mergeGeometries(list, false);
+    if (!g) continue;
+    if (detail < 1) g = simplify(g, detail);
+    if (opts.flat) g = g.toNonIndexed();
+    g.computeVertexNormals();
+    g.computeBoundingSphere();
+    result.set(mat, g);
+  }
+  return result;
+}
+
+function simplify(geo: THREE.BufferGeometry, detail: number): THREE.BufferGeometry {
+  const welded = mergeVertices(geo, 1e-4);
+  const positions = welded.attributes.position.array as Float32Array;
+  const indices = new Uint32Array(welded.index!.array as ArrayLike<number>);
+  const target = Math.max(12, Math.floor((indices.length * detail) / 3) * 3);
+  // Far LOD is seen from 100 m+, so a few percent of the model's extent is well under a couple of pixels.
+  const [simplified] = MeshoptSimplifier.simplify(indices, positions, 3, target, 0.08, ['Prune']);
+  welded.setIndex(new THREE.BufferAttribute(simplified, 1));
+  return welded;
 }

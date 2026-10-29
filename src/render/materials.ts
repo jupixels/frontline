@@ -141,9 +141,10 @@ const CAMO_UNIFORM = /* glsl */ `
 diffuseColor.rgb = camoColor(uTeam);
 `;
 
+// three maps instance color to USE_COLOR / vColor in the fragment stage.
 const CAMO_INSTANCED = /* glsl */ `
-#ifdef USE_INSTANCING_COLOR
-diffuseColor.rgb = camoColor(vColor);
+#ifdef USE_COLOR
+diffuseColor.rgb = camoColor(vColor.rgb);
 #else
 diffuseColor.rgb = camoColor(uTeam);
 #endif

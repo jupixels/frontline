@@ -9,10 +9,10 @@ import { RtsCamera } from './camera';
 import { DecalKind, DecalMap } from './decals';
 import { Environment } from './environment';
 import { FogOfWar, LocalVisionSource, type VisibilitySource } from './fog';
-import { InfantryInstancer } from './infantry';
 import { CommandMarkers, HealthBars } from './overlay';
 import { PostStack } from './post';
-import { initialQuality, QUALITY, type QualityLevel, type QualitySettings } from './quality';
+import { LodInstancer } from './lod';
+import { gpuName, initialQuality, QUALITY, type QualityLevel, type QualitySettings } from './quality';
 import { Terrain, WATER_LEVEL } from './terrain';
 import { UnitView } from './units';
 import { Vfx, type MuzzleSize } from './vfx';
@@ -65,7 +65,8 @@ export class GameRenderer implements Picker {
   private readonly markers: CommandMarkers;
   private readonly views = new Map<EntityId, UnitView>();
   private readonly wrecks: UnitView[] = [];
-  private readonly infantry = new Map<string, InfantryInstancer>();
+  /** Far-LOD instancers per unit type. */
+  private readonly lods = new Map<string, LodInstancer>();
   private readonly teamColors = new Map<number, THREE.Color>();
   private readonly allies = new Set<PlayerId>();
   private readonly raycaster = new THREE.Raycaster();
@@ -77,7 +78,6 @@ export class GameRenderer implements Picker {
   private frameNo = 0;
 
   constructor(private readonly setup: RenderSetup) {
-    this.quality = QUALITY[initialQuality()];
     const r = new THREE.WebGLRenderer({
       canvas: setup.canvas,
       antialias: false, // SMAA in post; MSAA on the default framebuffer would be wasted
@@ -88,6 +88,7 @@ export class GameRenderer implements Picker {
     r.shadowMap.type = THREE.PCFShadowMap;
     r.toneMapping = THREE.NoToneMapping; // tone mapping happens in post
     this.renderer = r;
+    this.quality = QUALITY[initialQuality(gpuName(r.getContext()))];
     this.cam = new RtsCamera(setup.canvas);
     this.cam.camera.far = 3000;
     this.cam.setBounds(setup.mapSize / 2);
@@ -297,10 +298,10 @@ export class GameRenderer implements Picker {
     v.setSelected(this.selection.has(id));
     this.scene.add(v.root);
     this.views.set(id, v);
-    if (v.cls === 'infantry' && !this.infantry.has(def.model)) {
-      const inst = new InfantryInstancer(def.model);
-      this.infantry.set(def.model, inst);
-      this.scene.add(inst.group);
+    if ((v.cls === 'infantry' || v.cls === 'vehicle') && !this.lods.has(e.type)) {
+      const lod = new LodInstancer(def, v.cls);
+      this.lods.set(e.type, lod);
+      this.scene.add(lod.group);
     }
     return v;
   }
@@ -395,31 +396,38 @@ export class GameRenderer implements Picker {
   private updateUnits(sim: SimView, alpha: number, dt: number): void {
     const camPos = this.cam.camera.position;
     const q = this.quality;
-    const rigCandidates: { v: UnitView; d: number }[] = [];
+    const soldiers: { v: UnitView; d: number; type: string }[] = [];
+    const vehicles: { v: UnitView; d: number; type: string }[] = [];
     for (const e of sim.entities()) {
       const v = this.ensureView(sim, e.id);
       if (!v) continue;
       const visible = this.allies.has(e.owner) || this.fog.isVisible(e.pos.x, e.pos.z) || v.dying;
       v.root.visible = visible;
-      v.update(e, alpha, dt, visible && this.animateThisFrame(v, camPos));
+      const d = camPos.distanceTo(v.root.position);
+      // LOD'd units skip their mixer; it catches up (accumulated dt) when they come back to full detail.
+      v.update(e, alpha, dt, visible && v.rigVisible && this.animateThisFrame(v, camPos));
       if (!visible) continue;
-      if (v.cls === 'infantry') {
-        rigCandidates.push({ v, d: v.dying ? -1 : camPos.distanceTo(v.root.position) });
-      } else if (e.moving && !v.dying) {
-        this.groundEffects(v, dt);
-      }
+      if (v.cls === 'infantry') soldiers.push({ v, d: v.dying ? -1 : d, type: e.type });
+      else if (v.cls === 'vehicle') vehicles.push({ v, d: v.dying ? -1 : d, type: e.type });
+      if (e.moving && !v.dying && v.cls !== 'infantry') this.groundEffects(v, dt);
     }
 
-    // Infantry LOD: nearest N within range get the animated rig; the rest are instanced poses.
-    rigCandidates.sort((a, b) => a.d - b.d);
-    for (const inst of this.infantry.values()) inst.begin();
-    rigCandidates.forEach(({ v, d }, i) => {
-      const inst = this.infantry.get(v.def.model);
-      const rig = !inst?.ready || d < 0 || (d < q.infantryLodDistance && i < q.maxInfantryRigs);
-      v.setRigVisible(rig);
-      if (!rig) inst!.add(v, this.time);
+    // LOD: the nearest N units within range keep their full animated model; the rest are drawn by
+    // the per-type instancers.
+    for (const lod of this.lods.values()) lod.begin();
+    this.assignLod(soldiers, q.infantryLodDistance, q.maxInfantryRigs);
+    this.assignLod(vehicles, q.vehicleLodDistance, q.maxVehicleRigs);
+    for (const lod of this.lods.values()) lod.end();
+  }
+
+  private assignLod(list: { v: UnitView; d: number; type: string }[], range: number, cap: number): void {
+    list.sort((a, b) => a.d - b.d);
+    list.forEach(({ v, d, type }, i) => {
+      const lod = this.lods.get(type);
+      const full = !lod?.ready || d < 0 || (d < range && i < cap);
+      v.setRigVisible(full);
+      if (!full) lod!.add(v, this.time);
     });
-    for (const inst of this.infantry.values()) inst.end();
   }
 
   /** Tracks, dust and wakes behind moving units. */
