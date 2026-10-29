@@ -16,6 +16,11 @@ export class RtsCamera {
   private mouse = { x: -1, y: -1, inside: false };
   private rotating = false;
   private bounds = 300;
+  /** Camera shake energy in [0, 1]; offset scales with its square. */
+  private trauma = 0;
+  private shakeTime = 0;
+  /** Ground height lookup so the orbit target rides the terrain. */
+  groundHeight: (x: number, z: number) => number = () => 0;
 
   constructor(dom: HTMLElement) {
     this.camera = new THREE.PerspectiveCamera(40, 1, 1, 4000);
@@ -47,12 +52,26 @@ export class RtsCamera {
     });
   }
 
+  /** Distance from the camera to its orbit target. */
+  get viewDistance(): number {
+    return this.distance;
+  }
+
+  /** 0 = fully zoomed in, 1 = fully zoomed out. */
+  get zoom(): number {
+    return (this.distance - MIN_DIST) / (MAX_DIST - MIN_DIST);
+  }
+
+  addTrauma(amount: number): void {
+    this.trauma = Math.min(1, this.trauma + amount);
+  }
+
   setBounds(halfSize: number): void {
     this.bounds = halfSize;
   }
 
   lookAt(x: number, z: number): void {
-    this.target.set(x, 0, z);
+    this.target.set(x, this.groundHeight(x, z), z);
   }
 
   update(dt: number): void {
@@ -83,6 +102,7 @@ export class RtsCamera {
       this.target.x = THREE.MathUtils.clamp(this.target.x, -this.bounds, this.bounds);
       this.target.z = THREE.MathUtils.clamp(this.target.z, -this.bounds, this.bounds);
     }
+    this.target.y += (this.groundHeight(this.target.x, this.target.z) - this.target.y) * Math.min(1, dt * 6);
     const horiz = this.distance * Math.cos(this.pitch);
     this.camera.position.set(
       this.target.x + Math.sin(this.yaw) * horiz,
@@ -90,6 +110,17 @@ export class RtsCamera {
       this.target.z + Math.cos(this.yaw) * horiz,
     );
     this.camera.lookAt(this.target);
+    if (this.trauma > 0) {
+      this.shakeTime += dt;
+      const s = this.trauma * this.trauma;
+      const t = this.shakeTime * 32;
+      const amp = s * this.distance * 0.012;
+      this.camera.position.x += Math.sin(t * 1.1) * Math.sin(t * 0.37 + 1.3) * amp;
+      this.camera.position.y += Math.sin(t * 0.93 + 2.1) * Math.sin(t * 0.51) * amp;
+      this.camera.position.z += Math.sin(t * 1.27 + 4.2) * Math.sin(t * 0.29 + 0.6) * amp;
+      this.camera.rotateZ(Math.sin(t * 0.8 + 3.3) * s * 0.012);
+      this.trauma = Math.max(0, this.trauma - dt * 1.4);
+    }
   }
 
   resize(w: number, h: number): void {
