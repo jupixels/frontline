@@ -114,7 +114,7 @@ export const SOUNDS = {
   // --- ambience ---
   battle_distant: { files: v('ww2', 'battle_distant_', 4), volume: 0.12, vary: 0.05, flat: true, maxVoices: 2 },
   // --- voices & alerts (flat, voice bus) ---
-  radio_static: { files: f('alerts/radio_static_6s'), volume: 0.16, flat: true, bus: 'voice', offsetMax: 5.2, duration: 0.35, maxVoices: 2 },
+  radio_static: { files: f('alerts/radio_static_6s'), volume: 0.16, flat: true, bus: 'voice', offsetMax: 5.2, duration: 0.35, maxVoices: 2, cooldown: 0 },
   radio_morse: { files: f('ww2/radio_morse_02'), volume: 0.2, flat: true, bus: 'voice', maxVoices: 1 },
   siren: { files: f('alerts/siren_alarm'), volume: 0.35, flat: true, bus: 'voice', maxVoices: 1 },
   ground_select: { files: f('voices/artil/artil.select'), volume: 0.7, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },

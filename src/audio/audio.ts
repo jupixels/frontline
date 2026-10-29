@@ -181,6 +181,13 @@ export class AudioManager {
     l.yaw = yaw;
   }
 
+  /** Same as setListener, derived from a three.js camera position and its ground look-at target. */
+  setListenerFromCamera(camera: { x: number; y: number; z: number }, target: { x: number; y?: number; z: number }): void {
+    const dx = camera.x - target.x;
+    const dz = camera.z - target.z;
+    this.setListener(target.x, target.z, Math.hypot(dx, camera.y - (target.y ?? 0), dz), Math.atan2(dx, dz));
+  }
+
   /** Per-frame: engine/rotor loops, jet flybys, music intensity, ambient bed. */
   update(view: SimView, dt: number): void {
     this.refreshKnown(view);
