@@ -3,8 +3,8 @@ import type { EntityKind, EntityState, PlayerState } from '../shared/entities';
 import type { SimEvent } from '../shared/events';
 import type { EntityId, Heading, MatchSetup, PlayerId, TeamId, Tick, Vec2 } from '../shared/types';
 import { NEUTRAL, SIM_HZ } from '../shared/types';
-import { resolveContent, type ResolvedContent, type SimContent, type SimUnitDef, type StructureDef, type TargetLayer, type WeaponDef } from './content';
-import type { ProposedEvent } from './contracts';
+import { resolveContent, type AbilityDef, type ResolvedContent, type SimContent, type SimUnitDef, type StructureDef, type TargetLayer, type WeaponDef } from './content';
+import type { ProposedEvent, SimPlayerSlot } from './contracts';
 import { Prng } from './math/prng';
 import { FogOfWar } from './systems/fog';
 import { FlowFieldCache, type FlowField } from './path/flowfield';
@@ -17,7 +17,41 @@ export type Order =
   | { kind: 'move'; target: Vec2; attackMove: boolean }
   | { kind: 'attack'; targetId: EntityId }
   | { kind: 'hold' }
-  | { kind: 'build'; siteId: EntityId };
+  | { kind: 'build'; siteId: EntityId }
+  | { kind: 'ability'; ability: string; at: Vec2; targetId: EntityId };
+
+export interface AbilityState {
+  id: string;
+  def: AbilityDef;
+  /** Ticks until usable again. */
+  cooldown: number;
+}
+
+export type EntrenchState = 'none' | 'deploying' | 'entrenched' | 'packing';
+
+/** Supply truck state machine. */
+export interface Haul {
+  source: EntityId;
+  phase: 'toSource' | 'toHq';
+  cargo: number;
+}
+
+export interface Smoke {
+  at: Vec2;
+  radius: number;
+  until: Tick;
+}
+
+/** Barrage in progress: `left` more shells from `caster` at `at`. */
+export interface Barrage {
+  caster: EntityId;
+  weapon: string;
+  at: Vec2;
+  radius: number;
+  left: number;
+  next: Tick;
+  interval: number;
+}
 
 export interface PathState {
   /** Where this unit is going (its formation slot). */
@@ -59,6 +93,8 @@ export interface Projectile {
   /** Direct shots roll accuracy at fire time; a hit always lands on the target. */
   hits: boolean;
   arrive: Tick;
+  /** Damage multiplier fixed at fire time (ambush bonus). */
+  mult: number;
 }
 
 /** Mutable sim-internal entity. Only sim/ sees this type; everyone else gets EntityState. */
@@ -106,6 +142,25 @@ export interface Entity extends EntityState {
   queue: ProductionItem[];
   rally: Vec2 | null;
 
+  abilities: AbilityState[];
+  /** Sprint/overdrive: speed multiplier active until `boostUntil`. */
+  boostUntil: Tick;
+  boostMult: number;
+  entrench: EntrenchState;
+  /** Tick the current entrench transition completes. */
+  entrenchAt: Tick;
+  entrenchDamage: number;
+  /** Ambush armed: hidden from enemies while stationary until it fires. */
+  ambush: boolean;
+  ambushBonus: number;
+  /** 0.5..1, falls when far from friendly supply. Scales fire rate and accuracy. */
+  readiness: number;
+  /** Supply sources (points, depots): supply waiting for a truck, and the truck serving it. */
+  stock: number;
+  truck: EntityId;
+  truckReadyAt: Tick;
+  haul: Haul | null;
+
   /** Capture points: 0..1 progress toward `capturer` (or toward owner when owned). */
   captureProgress: number;
   capturer: PlayerId;
@@ -150,6 +205,10 @@ export class World {
   /** Rebuilt each tick: every living unit and structure. */
   readonly spatial: SpatialHash<Entity>;
   projectiles: Projectile[] = [];
+  smokes: Smoke[] = [];
+  barrages: Barrage[] = [];
+  /** player -> owners whose stuff they may command (besides their own). See canCommand. */
+  readonly commandsFor = new Map<PlayerId, Set<PlayerId>>();
   events: SimEvent[] = [];
   /** Events not yet in the shared SimEvent union (see contracts.ts). */
   proposed: ProposedEvent[] = [];
@@ -167,7 +226,7 @@ export class World {
     this.rng = new Prng(setup.seed);
     const map = this.content.map;
     this.nav = new NavGrid(map, this.content.rules.navCellSize);
-    this.fields = new FlowFieldCache(this.nav);
+    this.fields = new FlowFieldCache(this.nav, 96);
     this.spatial = new SpatialHash<Entity>(map.size / 2, 16);
     const r = this.content.rules;
     for (const slot of setup.players) {
@@ -189,6 +248,10 @@ export class World {
         lastAlertTick: -100000,
       });
       if (!this.teams.has(slot.team)) this.teams.set(slot.team, { id: slot.team, tickets: r.startingTickets, defeated: false });
+    }
+    for (const slot of setup.players as SimPlayerSlot[]) {
+      const others = (slot.commandsFor ?? []).filter((o) => o !== slot.id && setup.players.some((p) => p.id === o));
+      if (others.length) this.commandsFor.set(slot.id, new Set(others));
     }
     this.fog = new FogOfWar(this);
   }
@@ -243,6 +306,19 @@ export class World {
       captureProgress: 0,
       capturer: NEUTRAL,
       captureRadius: 0,
+      abilities: [],
+      boostUntil: 0,
+      boostMult: 1,
+      entrench: 'none',
+      entrenchAt: 0,
+      entrenchDamage: 1,
+      ambush: false,
+      ambushBonus: 1,
+      readiness: 1,
+      stock: 0,
+      truck: 0,
+      truckReadyAt: 0,
+      haul: null,
     };
   }
 
@@ -274,6 +350,11 @@ export class World {
     e.cp = cpShare ?? def.cp / (def.squad ?? 1);
     e.weapons = this.weaponsFor(def.weapons);
     e.guard = { x: e.pos.x, z: e.pos.z };
+    e.abilities = (def.abilities ?? []).map((id) => {
+      const ad = this.content.abilities[id];
+      if (!ad) throw new Error(`Unknown ability "${id}"`);
+      return { id, def: ad, cooldown: 0 };
+    });
     if (def.turretNode || e.weapons.some((w) => w.def.mount === 'turret')) e.turretHeading = heading;
     return this.add(e);
   }
@@ -327,6 +408,15 @@ export class World {
   areEnemies(a: TeamId, b: TeamId): boolean {
     return a !== b && a >= 0 && b >= 0;
   }
+}
+
+/**
+ * Whether `player` may give orders to `e`. Owner by default; shared-command co-op adds the owners
+ * listed in the player's `commandsFor`. Every command handler goes through this.
+ */
+export function canCommand(world: World, player: PlayerId, e: Entity): boolean {
+  if (e.owner < 0) return false;
+  return e.owner === player || !!world.commandsFor.get(player)?.has(e.owner);
 }
 
 /** Footprint w (x) and d (z), swapped when the structure is rotated by roughly 90 degrees. */

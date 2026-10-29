@@ -56,14 +56,18 @@ export function canPlace(world: World, player: PlayerId, type: string, at: Vec2,
   return world.nav.canPlace(at, w, d, def.placement === 'shore') && nearOwnStructure(world, player, at);
 }
 
-/** `build` command: place a foundation (paying for it) and send the builder. */
+/**
+ * `build` command from `player` (who may be a co-commander): the foundation belongs to and is paid
+ * by the builder's owner. Blocked reasons are reported to the issuing player.
+ */
 export function orderBuild(world: World, player: PlayerId, builder: Entity, type: string, at: Vec2, rotation: number, queue: boolean): boolean {
-  const p = world.players.get(player)!;
+  const owner = builder.owner;
+  const p = world.players.get(owner)!;
   const def = world.content.structures[type];
   if (!builder.unit?.builder || !def || def.buildable === false) return false;
   // Resume an unfinished site of the same type at the same spot.
   for (const e of world.entities.values()) {
-    if (e.kind === 'structure' && e.owner === player && e.type === type && e.buildProgress < 1 && !e.dead) {
+    if (e.kind === 'structure' && e.owner === owner && e.type === type && e.buildProgress < 1 && !e.dead) {
       const dx = e.pos.x - at.x;
       const dz = e.pos.z - at.z;
       if (dx * dx + dz * dz <= 4) {
@@ -73,10 +77,10 @@ export function orderBuild(world: World, player: PlayerId, builder: Entity, type
     }
   }
   if (!meetsRequirements(p, def.requires, def.tier)) return block(world, player, 'requirements');
-  if (!canPlace(world, player, type, at, rotation)) return block(world, player, 'placement');
+  if (!canPlace(world, owner, type, at, rotation)) return block(world, player, 'placement');
   if (p.supply < def.cost) return block(world, player, 'supply');
   p.supply -= def.cost;
-  const site = world.spawnStructure(type, player, at, rotation, false);
+  const site = world.spawnStructure(type, owner, at, rotation, false);
   world.proposed.push({ type: 'placed', id: site.id, builder: builder.id });
   assignBuild(builder, site.id, queue);
   return true;
@@ -119,9 +123,9 @@ export function builderTick(world: World, e: Entity, siteId: EntityId): void {
   }
 }
 
-/** `produce` command: queue `count` items, paying for each up front. */
+/** `produce` command: queue `count` items, each paid up front by the factory's owner. */
 export function orderProduce(world: World, player: PlayerId, factory: Entity, unit: string, count: number): void {
-  const p = world.players.get(player)!;
+  const p = world.players.get(factory.owner)!;
   const ud = world.content.units[unit];
   if (!ud || factory.buildProgress < 1 || !factory.structure?.produces?.includes(unit)) return;
   if (!meetsRequirements(p, undefined, ud.tier)) {
@@ -143,11 +147,11 @@ export function orderProduce(world: World, player: PlayerId, factory: Entity, un
   }
 }
 
-export function orderCancel(world: World, player: PlayerId, factory: Entity, index: number): void {
+export function orderCancel(world: World, factory: Entity, index: number): void {
   const i = Math.floor(index);
   if (i < 0 || i >= factory.queue.length) return;
   const [item] = factory.queue.splice(i, 1);
-  world.players.get(player)!.supply += item.paid;
+  world.players.get(factory.owner)!.supply += item.paid;
 }
 
 function depotOnNode(world: World, e: Entity): boolean {
@@ -190,17 +194,25 @@ export function economySystem(world: World): void {
     p.cp = 0;
     p.structures.clear();
   }
+  // HQ income goes straight to the player. Depots and held points fill a local stock that
+  // supply trucks carry home (logistics.ts).
   const income = new Map<PlayerId, number>();
   for (const e of world.entities.values()) {
     const p = world.players.get(e.owner);
     if (!p || e.dead) continue;
     if (e.kind === 'unit') p.cp += e.cp;
-    else if (e.kind === 'structure' && e.buildProgress >= 1) {
+    else if (e.kind === 'point') {
+      if (!p.defeated) e.stock = Math.min(rules.stockCap, e.stock + rules.pointIncome / SIM_HZ);
+    } else if (e.kind === 'structure' && e.buildProgress >= 1) {
       const def = e.structure!;
       p.structures.set(e.type, (p.structures.get(e.type) ?? 0) + 1);
       if (def.power >= 0) p.powerProduced += def.power;
       else p.powerUsed -= def.power;
-      if (def.income) income.set(p.id, (income.get(p.id) ?? 0) + def.income * (e.type === 'supply_depot' && depotOnNode(world, e) ? rules.supplyNodeMult : 1));
+      if (!def.income || p.defeated) continue;
+      if (e.type === 'supply_depot') {
+        const rate = def.income * (depotOnNode(world, e) ? rules.supplyNodeMult : 1);
+        e.stock = Math.min(rules.stockCap, e.stock + rate / SIM_HZ);
+      } else income.set(p.id, (income.get(p.id) ?? 0) + def.income);
     }
   }
   for (const p of world.players.values()) {
@@ -214,7 +226,7 @@ export function economySystem(world: World): void {
     if (tier >= 2 && world.seconds() >= rules.tier3UnlockSeconds) tier = 3;
     p.tier = tier;
     if (p.defeated) continue;
-    p.supply += ((income.get(p.id) ?? 0) + p.pointsHeld * rules.pointIncome) / SIM_HZ;
+    p.supply += (income.get(p.id) ?? 0) / SIM_HZ;
   }
 
   for (const e of world.entities.values()) {

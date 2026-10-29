@@ -1,5 +1,6 @@
 import type { EntityId, PlayerId, TeamId } from '../../shared/types';
 import { FOG_EXPLORED, FOG_UNEXPLORED, FOG_VISIBLE, type FogView } from '../contracts';
+import { hiddenFrom } from './abilities';
 import type { World } from '../world';
 
 /** Per-team visibility grids, recomputed every `fogUpdateTicks`. */
@@ -34,9 +35,33 @@ export class FogOfWar implements FogView {
     return d;
   }
 
+  /** Cells covered by smoke this update (null when there is none). */
+  private smokeMask(): Uint8Array | null {
+    const smokes = this.world.smokes;
+    if (smokes.length === 0) return null;
+    const m = new Uint8Array(this.cols * this.rows);
+    for (const s of smokes) {
+      const r = Math.ceil(s.radius / this.cellSize);
+      const cx = Math.floor((s.at.x + this.half) / this.cellSize);
+      const cz = Math.floor((s.at.z + this.half) / this.cellSize);
+      for (let dz = -r; dz <= r; dz++) {
+        for (let dx = -r; dx <= r; dx++) {
+          const x = cx + dx;
+          const z = cz + dz;
+          if (x < 0 || z < 0 || x >= this.cols || z >= this.rows) continue;
+          const wx = (x + 0.5) * this.cellSize - this.half - s.at.x;
+          const wz = (z + 0.5) * this.cellSize - this.half - s.at.z;
+          if (wx * wx + wz * wz <= s.radius * s.radius) m[z * this.cols + x] = 1;
+        }
+      }
+    }
+    return m;
+  }
+
   update(): void {
     for (const g of this.grids.values()) for (let i = 0; i < g.length; i++) if (g[i] === FOG_VISIBLE) g[i] = FOG_EXPLORED;
     const { cols, rows } = this;
+    const smoke = this.smokeMask();
     for (const e of this.world.entities.values()) {
       if (e.dead || e.sight <= 0 || e.team < 0) continue;
       const g = this.grids.get(e.team);
@@ -48,6 +73,8 @@ export class FogOfWar implements FogView {
         const x = cx + d[k];
         const z = cz + d[k + 1];
         if (x < 0 || z < 0 || x >= cols || z >= rows) continue;
+        // Smoke hides what's inside it from anyone more than a cell away.
+        if (smoke && smoke[z * cols + x] && d[k] * d[k] + d[k + 1] * d[k + 1] > 2) continue;
         g[z * cols + x] = FOG_VISIBLE;
       }
     }
@@ -91,6 +118,6 @@ export class FogOfWar implements FogView {
     if (e.kind === 'point' || e.team < 0) return true;
     const team = this.world.teamOf(player);
     if (e.team === team) return true;
-    return this.teamVisible(team, e.pos.x, e.pos.z);
+    return this.teamVisible(team, e.pos.x, e.pos.z) && !hiddenFrom(this.world, e, team);
   }
 }

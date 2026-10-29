@@ -16,7 +16,12 @@
     "weapons": [
       "rifle"
     ],
-    "squad": 4
+    "squad": 4,
+    "abilities": [
+      "smoke",
+      "entrench",
+      "sprint"
+    ]
   },
   "sniper": {
     "name": "Sniper",
@@ -34,6 +39,10 @@
     "tier": 2,
     "weapons": [
       "sniper_rifle"
+    ],
+    "abilities": [
+      "ambush",
+      "entrench"
     ]
   },
   "at_soldier": {
@@ -53,7 +62,12 @@
     "weapons": [
       "at_rocket"
     ],
-    "squad": 2
+    "squad": 2,
+    "abilities": [
+      "entrench",
+      "ambush",
+      "sprint"
+    ]
   },
   "engineer": {
     "name": "Engineer",
@@ -72,7 +86,10 @@
     "weapons": [
       "pistol"
     ],
-    "builder": true
+    "builder": true,
+    "abilities": [
+      "sprint"
+    ]
   },
   "jeep": {
     "name": "Recon Jeep",
@@ -90,6 +107,9 @@
     "tier": 1,
     "weapons": [
       "jeep_mg"
+    ],
+    "abilities": [
+      "overdrive"
     ]
   },
   "scout_car": {
@@ -108,6 +128,10 @@
     "tier": 1,
     "weapons": [
       "autocannon"
+    ],
+    "abilities": [
+      "smoke",
+      "overdrive"
     ]
   },
   "ifv": {
@@ -132,7 +156,10 @@
       "front": 0.8,
       "side": 1,
       "rear": 1.3
-    }
+    },
+    "abilities": [
+      "smoke"
+    ]
   },
   "tank_light": {
     "name": "Light Tank",
@@ -155,7 +182,11 @@
       "front": 0.75,
       "side": 1,
       "rear": 1.35
-    }
+    },
+    "abilities": [
+      "smoke",
+      "overdrive"
+    ]
   },
   "tank_mbt": {
     "name": "Main Battle Tank",
@@ -181,7 +212,10 @@
       "front": 0.6,
       "side": 1,
       "rear": 1.5
-    }
+    },
+    "abilities": [
+      "smoke"
+    ]
   },
   "aa_tank": {
     "name": "Mobile AA",
@@ -222,6 +256,9 @@
     "tier": 2,
     "weapons": [
       "mlrs"
+    ],
+    "abilities": [
+      "barrage"
     ]
   },
   "artillery": {
@@ -245,7 +282,10 @@
       "front": 0.8,
       "side": 1,
       "rear": 1.3
-    }
+    },
+    "abilities": [
+      "barrage"
+    ]
   },
   "heli_attack": {
     "name": "Attack Helicopter",
@@ -376,6 +416,9 @@
     "weapons": [
       "heavy_naval_gun",
       "sam"
+    ],
+    "abilities": [
+      "barrage"
     ]
   },
   "submarine": {
@@ -413,5 +456,22 @@
     "weapons": [
       "ship_mg"
     ]
+  },
+  "supply_truck": {
+    "name": "Supply Truck",
+    "model": "models/jeep.glb",
+    "domain": "ground",
+    "armor": "light",
+    "hp": 300,
+    "speed": 11,
+    "turnRate": 2.2,
+    "radius": 2.4,
+    "sight": 50,
+    "cost": 0,
+    "buildSeconds": 0,
+    "cp": 0,
+    "tier": 1,
+    "weapons": [],
+    "logistics": true
   }
 }

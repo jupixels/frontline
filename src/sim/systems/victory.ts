@@ -16,7 +16,7 @@ export function captureSystem(world: World): void {
     let team: TeamId = -1;
     let contested = false;
     world.spatial.query(pt.pos.x, pt.pos.z, pt.captureRadius, (u) => {
-      if (u.kind !== 'unit' || u.dead || u.domain === 'air' || u.owner < 0) return;
+      if (u.kind !== 'unit' || u.dead || u.domain === 'air' || u.owner < 0 || u.unit?.logistics) return;
       const pl = world.players.get(u.owner);
       if (!pl || pl.defeated) return;
       perPlayer[u.owner]++;
@@ -54,6 +54,8 @@ function stepPoint(world: World, pt: Entity, team: TeamId, perPlayer: number[], 
       pt.owner = NEUTRAL;
       pt.team = -1;
       pt.capturer = lead;
+      pt.stock = 0;
+      pt.truck = 0;
     }
     return;
   }
@@ -71,6 +73,9 @@ function stepPoint(world: World, pt: Entity, team: TeamId, perPlayer: number[], 
     pt.captureProgress = 1;
     pt.owner = pt.capturer;
     pt.team = team;
+    pt.stock = 0;
+    pt.truck = 0;
+    pt.truckReadyAt = 0;
     world.emit({ type: 'captured', point: pt.id, by: pt.owner });
   }
 }
@@ -150,6 +155,8 @@ export function defeat(world: World, player: PlayerId): void {
       e.captureProgress = 0;
       e.capturer = NEUTRAL;
       e.hp = 0;
+      e.stock = 0;
+      e.truck = 0;
     } else if (!e.dead) {
       e.dead = true;
       e.hp = 0;

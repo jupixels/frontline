@@ -1,7 +1,9 @@
 import { TICK_SECONDS, type Vec2 } from '../../shared/types';
 import { headingTo, turnToward, wrapAngle } from '../math/dmath';
 import type { Entity, World } from '../world';
+import { abilityOrderTick } from './abilities';
 import { builderTick } from './economy';
+import { logisticsTick } from './logistics';
 
 const ARRIVE_DIST = 0.75;
 /** Vehicles only drive forward once roughly facing the target (radians). */
@@ -54,7 +56,8 @@ export function driveToward(world: World, e: Entity, to: Vec2, stopAt = ARRIVE_D
   const want = headingTo(dx, dz);
   e.heading = turnToward(e.heading, want, def.turnRate * TICK_SECONDS);
   if (Math.abs(wrapAngle(want - e.heading)) > DRIVE_CONE) return d;
-  const step = Math.min(def.speed * TICK_SECONDS, d - stopAt * 0.5);
+  const speed = world.tick < e.boostUntil ? def.speed * e.boostMult : def.speed;
+  const step = Math.min(speed * TICK_SECONDS, d - stopAt * 0.5);
   if (step <= 0) return d;
   slide(world, e, (dx / d) * step, (dz / d) * step);
   e.moving = true;
@@ -99,7 +102,16 @@ export function relaxTurret(e: Entity): void {
 export function movementSystem(world: World): void {
   for (const e of world.entities.values()) {
     if (e.kind !== 'unit' || e.dead) continue;
+    if (e.unit?.logistics) {
+      logisticsTick(world, e);
+      continue;
+    }
     if (e.busy) continue;
+    // Entrenching / packing infantry can't move.
+    if (e.entrench !== 'none') {
+      e.path = null;
+      continue;
+    }
     if (e.chasing) {
       e.path = null;
       e.chasing = false;
@@ -112,6 +124,8 @@ export function movementSystem(world: World): void {
     if (o.kind === 'move') {
       if (!e.path) setPath(world, e, o.target);
       if (followPath(world, e)) nextOrder(e);
+    } else if (o.kind === 'ability') {
+      abilityOrderTick(world, e, o);
     } else if (o.kind === 'build') {
       builderTick(world, e, o.siteId);
     } else if (o.kind === 'hold') {

@@ -1,7 +1,38 @@
 // Shared-contract proposals from the sim workstream. These belong in src/shared/ once the master
 // session promotes them; until then render/ui/ai can import the types from here (read-only use).
 
-import type { EntityId, PlayerId, TeamId, Tick, Vec2 } from '../shared/types';
+import type { Command, PlayerCommand } from '../shared/commands';
+import type { EntityId, PlayerId, PlayerSlot, TeamId, Tick, Vec2 } from '../shared/types';
+
+/** Proposed Command variant: activate an ability (data/abilities.json) on the given units. */
+export interface UseAbilityCommand {
+  type: 'useAbility';
+  units: EntityId[];
+  ability: string;
+  /** For 'point' abilities. */
+  at?: Vec2;
+  /** For 'unit' abilities. */
+  targetId?: EntityId;
+  queue?: boolean;
+}
+
+/** Command union the sim accepts: the shared one plus proposals. */
+export type SimCommand = Command | UseAbilityCommand;
+
+export interface SimPlayerCommand {
+  player: PlayerId;
+  cmd: SimCommand;
+}
+
+export type AnyPlayerCommand = PlayerCommand | SimPlayerCommand;
+
+/**
+ * Proposed PlayerSlot field for shared-command co-op (Phase 3): the players whose units, buildings
+ * and economy this player may also command. Omitted = only their own (today's behavior).
+ */
+export interface SimPlayerSlot extends PlayerSlot {
+  commandsFor?: PlayerId[];
+}
 
 /**
  * Extra events, delivered through `Simulation.proposedEvents` so `step()` keeps returning the
@@ -17,7 +48,17 @@ export type ProposedEvent =
   /** Production could not start or finish (no supply / no CP / requirements). */
   | { type: 'blocked'; player: PlayerId; reason: 'supply' | 'cp' | 'requirements' | 'placement' | 'queueFull' }
   /** Sudden death began: HQs lose armor and every team bleeds. */
-  | { type: 'suddenDeath'; tick: Tick };
+  | { type: 'suddenDeath'; tick: Tick }
+  /** An ability was activated (point/unit abilities: when cast, after moving into range). */
+  | { type: 'abilityUsed'; id: EntityId; ability: string; at?: Vec2; targetId?: EntityId }
+  /** Smoke cloud placed; blocks vision and targeting through it until `until`. */
+  | { type: 'smoke'; at: Vec2; radius: number; until: Tick }
+  /** Entrench state change: deploying, entrenched, packing, none. */
+  | { type: 'entrench'; id: EntityId; state: 'deploying' | 'entrenched' | 'packing' | 'none' }
+  /** An ambushing unit fired or was spotted and is visible again. */
+  | { type: 'revealed'; id: EntityId }
+  /** A supply truck delivered cargo to its HQ. */
+  | { type: 'delivered'; truck: EntityId; player: PlayerId; amount: number };
 
 /** Fog-of-war cell states. */
 export const FOG_UNEXPLORED = 0;
@@ -79,6 +120,14 @@ export interface SimViewExt {
   buildable(player: PlayerId): string[];
   /** Whether a `build` command would be accepted at this spot (for the placement ghost). */
   canPlace(player: PlayerId, structure: string, at: Vec2, rotation: number): boolean;
+  /** Abilities of a unit with remaining cooldown (0..1 of the full cooldown, 0 = ready). */
+  abilities(id: EntityId): readonly { ability: string; cooldown: number; active: boolean }[];
+  /** 0.5..1: fire rate and accuracy factor from distance to friendly supply. */
+  readiness(id: EntityId): number;
+  /** Supply waiting at a source (capture point / depot) for a truck. */
+  stock(id: EntityId): number;
+  /** Whether `player` may give orders to `id` (owner, or shared command). */
+  canCommand(player: PlayerId, id: EntityId): boolean;
   /** Match over: winning team, or null while playing. */
   readonly winner: TeamId | null;
 }

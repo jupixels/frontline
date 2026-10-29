@@ -22,5 +22,12 @@
   "maxQueue": 10,
   "navCellSize": 4,
   "fogCellSize": 8,
-  "fogUpdateTicks": 4
+  "fogUpdateTicks": 4,
+  "truckCapacity": 100,
+  "stockCap": 300,
+  "truckRespawnSeconds": 30,
+  "supplyRange": 120,
+  "readinessMin": 0.5,
+  "readinessDecayPerSecond": 0.005,
+  "readinessRecoverPerSecond": 0.02
 }

@@ -2,6 +2,7 @@ import { SIM_HZ, TICK_SECONDS, type EntityId, type Vec2 } from '../../shared/typ
 import type { TargetLayer, WeaponDef } from '../content';
 import { dcos, dsin, headingTo, turnToward, TWO_PI, wrapAngle } from '../math/dmath';
 import type { Entity, Projectile, World } from '../world';
+import { hiddenFrom, smokeBlocks } from './abilities';
 import { driveToward, followPath, nextOrder, relaxTurret, setPath } from './movement';
 
 /** Re-evaluate auto-targets this often (staggered by entity id). */
@@ -63,6 +64,11 @@ function validTarget(world: World, e: Entity, t: Entity | undefined): t is Entit
   return !!t && !t.dead && t.kind !== 'point' && world.areEnemies(e.team, t.team) && bestMultiplier(world, e, t) > 0;
 }
 
+/** Visible to `e`'s team, not ambush-hidden, and not behind smoke. */
+function canSeeTarget(world: World, e: Entity, t: Entity): boolean {
+  return world.fog.teamVisible(e.team, t.pos.x, t.pos.z) && !hiddenFrom(world, t, e.team) && !smokeBlocks(world, e.pos, t.pos);
+}
+
 /** Nearest worthwhile visible enemy within `range`. Prefers units, then what our weapons hurt most. */
 function acquire(world: World, e: Entity, range: number): EntityId {
   let best = 0;
@@ -70,7 +76,7 @@ function acquire(world: World, e: Entity, range: number): EntityId {
   world.spatial.query(e.pos.x, e.pos.z, range, (t, d2) => {
     if (!validTarget(world, e, t)) return;
     if (d2 > rangeVs(e, t) * rangeVs(e, t) && d2 > e.sight * e.sight) return;
-    if (!world.fog.teamVisible(e.team, t.pos.x, t.pos.z)) return;
+    if (!canSeeTarget(world, e, t)) return;
     const score = (Math.sqrt(d2) / (0.25 + bestMultiplier(world, e, t))) * (t.kind === 'structure' ? 3 : 1);
     if (score < bestScore || (score === bestScore && t.id < best)) {
       bestScore = score;
@@ -107,13 +113,14 @@ export function targetingSystem(world: World): void {
     }
     const isUnit = e.kind === 'unit';
     const cur = e.order;
-    const engages = isUnit && (!cur || cur.kind === 'attack' || (cur.kind === 'move' && cur.attackMove));
+    const dug = e.entrench !== 'none';
+    const engages = isUnit && !dug && (!cur || cur.kind === 'attack' || (cur.kind === 'move' && cur.attackMove));
     const mr = maxRange(e);
     const acqRange = engages ? Math.max(mr, e.sight) : mr;
 
     if (!forced) {
       const t = world.entities.get(e.target);
-      const stillOk = validTarget(world, e, t) && dist2(e.pos, t.pos) <= acqRange * acqRange && world.fog.teamVisible(e.team, t.pos.x, t.pos.z);
+      const stillOk = validTarget(world, e, t) && dist2(e.pos, t.pos) <= acqRange * acqRange && canSeeTarget(world, e, t);
       if (!stillOk || (world.tick + e.id) % RETARGET_TICKS === 0) e.target = acquire(world, e, acqRange);
     }
 
@@ -138,7 +145,7 @@ export function targetingSystem(world: World): void {
 
     const d = Math.sqrt(dist2(e.pos, t.pos));
     const range = rangeVs(e, t);
-    const hold = cur?.kind === 'hold';
+    const hold = cur?.kind === 'hold' || dug;
     if (engages && d > range * 0.92) {
       e.busy = true;
       if (!e.path || !e.chasing || world.tick % CHASE_REPATH_TICKS === e.id % CHASE_REPATH_TICKS) setPath(world, e, t.pos);
@@ -185,32 +192,59 @@ export function weaponsSystem(world: World): void {
       }
       if (world.content.damage[def.damageType][t.armor] <= 0) continue;
       fire(world, e, w.id, def, t, d);
-      w.cooldown = Math.max(1, Math.round(def.reload * SIM_HZ));
+      // Units far from supply (low readiness) reload slower.
+      w.cooldown = Math.max(1, Math.round((def.reload * SIM_HZ) / e.readiness));
     }
   }
 }
 
+/** Fire an indirect shell at a ground point (weapons and barrages). */
+export function launchIndirect(world: World, e: Entity, weapon: string, def: WeaponDef, at: Vec2, mult = 1): void {
+  const dx = at.x - e.pos.x;
+  const dz = at.z - e.pos.z;
+  const flight = Math.max(MIN_INDIRECT_FLIGHT, Math.ceil((Math.sqrt(dx * dx + dz * dz) / (def.projectileSpeed ?? 100)) * SIM_HZ));
+  world.emit({ type: 'fired', id: e.id, weapon, at: { x: at.x, z: at.z } });
+  world.proposed.push({ type: 'incoming', weapon, by: e.id, at: { x: at.x, z: at.z }, radius: def.splash ?? 0, arrive: world.tick + flight });
+  world.projectiles.push({
+    weapon,
+    def,
+    shooter: e.id,
+    owner: e.owner,
+    team: e.team,
+    from: { x: e.pos.x, z: e.pos.z },
+    at: { x: at.x, z: at.z },
+    targetId: 0,
+    hits: false,
+    arrive: world.tick + flight,
+    mult,
+  });
+}
+
 function fire(world: World, e: Entity, weapon: string, def: WeaponDef, t: Entity, d: number): void {
   const at = { x: t.pos.x, z: t.pos.z };
+  let mult = 1;
+  if (e.ambush) {
+    // Springing an ambush: bonus first shot, then visible.
+    mult = e.ambushBonus;
+    e.ambush = false;
+    world.proposed.push({ type: 'revealed', id: e.id });
+  }
+  // Morale: low readiness also costs accuracy.
+  const accuracy = def.accuracy * (0.6 + 0.4 * e.readiness);
   if (def.delivery === 'hitscan') {
     world.emit({ type: 'fired', id: e.id, weapon, target: t.id, at });
-    if (world.rng.next() < def.accuracy) applyDamage(world, t, def.damage, def, e.pos, e.id);
+    if (world.rng.next() < accuracy) applyDamage(world, t, def.damage * mult, def, e.pos, e.id);
     return;
   }
-  const speed = def.projectileSpeed ?? 100;
-  let flight = Math.max(1, Math.ceil((d / speed) * SIM_HZ));
   if (def.delivery === 'indirect') {
     const s = def.scatter ?? 0;
     const ang = world.rng.next() * TWO_PI;
     const r = s * Math.sqrt(world.rng.next());
-    at.x += dsin(ang) * r;
-    at.z += dcos(ang) * r;
-    flight = Math.max(flight, MIN_INDIRECT_FLIGHT);
-    world.emit({ type: 'fired', id: e.id, weapon, at });
-    world.proposed.push({ type: 'incoming', weapon, by: e.id, at: { x: at.x, z: at.z }, radius: def.splash ?? 0, arrive: world.tick + flight });
-  } else {
-    world.emit({ type: 'fired', id: e.id, weapon, target: t.id, at });
+    launchIndirect(world, e, weapon, def, { x: at.x + dsin(ang) * r, z: at.z + dcos(ang) * r }, mult);
+    return;
   }
+  const flight = Math.max(1, Math.ceil((d / (def.projectileSpeed ?? 100)) * SIM_HZ));
+  world.emit({ type: 'fired', id: e.id, weapon, target: t.id, at });
   const p: Projectile = {
     weapon,
     def,
@@ -219,9 +253,10 @@ function fire(world: World, e: Entity, weapon: string, def: WeaponDef, t: Entity
     team: e.team,
     from: { x: e.pos.x, z: e.pos.z },
     at,
-    targetId: def.delivery === 'indirect' ? 0 : t.id,
-    hits: def.delivery !== 'indirect' && world.rng.next() < def.accuracy,
+    targetId: t.id,
+    hits: world.rng.next() < accuracy,
     arrive: world.tick + flight,
+    mult,
   };
   world.projectiles.push(p);
 }
@@ -241,7 +276,7 @@ export function projectileSystem(world: World): void {
     if (p.hits && t && !t.dead) {
       at = { x: t.pos.x, z: t.pos.z };
       direct = t;
-      applyDamage(world, t, p.def.damage, p.def, p.from, p.shooter);
+      applyDamage(world, t, p.def.damage * p.mult, p.def, p.from, p.shooter);
     } else if (t && !t.dead && p.def.delivery !== 'indirect') {
       // A miss lands near where the target was aimed at.
       at = { x: p.at.x + (world.rng.next() - 0.5) * 6, z: p.at.z + (world.rng.next() - 0.5) * 6 };
@@ -266,7 +301,7 @@ function splash(world: World, p: Projectile, at: Vec2, skip: Entity | undefined)
     const dz = v.pos.z - at.z;
     const d = Math.max(0, Math.sqrt(dx * dx + dz * dz) - v.radius);
     if (d > r) continue;
-    applyDamage(world, v, p.def.damage * (1 - (0.5 * d) / r), p.def, p.from, p.shooter);
+    applyDamage(world, v, p.def.damage * p.mult * (1 - (0.5 * d) / r), p.def, p.from, p.shooter);
   }
 }
 
@@ -288,6 +323,7 @@ export function applyDamage(world: World, t: Entity, base: number, def: WeaponDe
   if (t.dead || t.kind === 'point') return;
   let mult = world.content.damage[def.damageType][t.armor] ?? 1;
   if (def.damageType !== 'aa' && def.damageType !== 'torpedo') mult *= facingMultiplier(t, from);
+  if (t.entrench === 'entrenched') mult *= t.entrenchDamage;
   if (t.type === 'hq' && world.suddenDeath) mult *= world.content.rules.suddenDeathHqDamageMult;
   const dmg = base * mult;
   if (dmg <= 0) return;

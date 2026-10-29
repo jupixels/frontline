@@ -1,19 +1,20 @@
-import type { PlayerCommand } from '../../shared/commands';
 import type { Domain } from '../../shared/data';
 import type { EntityId, PlayerId, Vec2 } from '../../shared/types';
-import type { Entity, Order, World } from '../world';
+import type { AnyPlayerCommand, SimCommand } from '../contracts';
+import { canCommand, type Entity, type Order, type World } from '../world';
+import { orderAbility, packUp } from './abilities';
 import { orderBuild, orderCancel, orderProduce } from './economy';
 import { setPath } from './movement';
 import { defeat } from './victory';
 
-/** Units in `ids` that exist and belong to `player`, deduplicated, in the order given. */
+/** Units in `ids` that exist and `player` may command, deduplicated, in the order given. */
 function ownedUnits(world: World, player: PlayerId, ids: EntityId[]): Entity[] {
   const out: Entity[] = [];
   const seen = new Set<EntityId>();
   if (!Array.isArray(ids)) return out;
   for (const id of ids) {
     const e = world.entities.get(id);
-    if (e && e.owner === player && e.kind === 'unit' && !e.dead && !seen.has(id)) {
+    if (e && e.kind === 'unit' && !e.dead && !e.unit?.logistics && canCommand(world, player, e) && !seen.has(id)) {
       seen.add(id);
       out.push(e);
     }
@@ -23,10 +24,12 @@ function ownedUnits(world: World, player: PlayerId, ids: EntityId[]): Entity[] {
 
 function ownedStructure(world: World, player: PlayerId, id: EntityId): Entity | undefined {
   const e = world.entities.get(id);
-  return e && e.owner === player && e.kind === 'structure' && !e.dead ? e : undefined;
+  return e && e.kind === 'structure' && !e.dead && canCommand(world, player, e) ? e : undefined;
 }
 
-function giveOrder(e: Entity, order: Order, queue: boolean | undefined): void {
+export function giveOrder(e: Entity, order: Order, queue: boolean | undefined): void {
+  // Entrenched infantry pack up before acting on a new order.
+  if (order.kind !== 'hold' && !(queue && e.order)) packUp(e);
   if (queue && e.order) e.orderQueue.push(order);
   else {
     e.order = order;
@@ -68,8 +71,10 @@ function groupMove(world: World, units: Entity[], target: Vec2, attackMove: bool
   }
 }
 
-export function applyCommands(world: World, commands: PlayerCommand[]): void {
-  for (const { player, cmd } of commands) {
+export function applyCommands(world: World, commands: readonly AnyPlayerCommand[]): void {
+  for (const pc of commands) {
+    const player = pc.player;
+    const cmd = pc.cmd as SimCommand;
     const p = world.players.get(player);
     if (!p || p.defeated || world.over || !cmd) continue;
     switch (cmd.type) {
@@ -122,12 +127,19 @@ export function applyCommands(world: World, commands: PlayerCommand[]): void {
       }
       case 'cancelProduce': {
         const f = ownedStructure(world, player, cmd.factory);
-        if (f && Number.isFinite(cmd.index)) orderCancel(world, player, f, cmd.index);
+        if (f && Number.isFinite(cmd.index)) orderCancel(world, f, cmd.index);
         break;
       }
       case 'setRally': {
         const f = ownedStructure(world, player, cmd.factory);
         if (f && finite(cmd.at)) f.rally = { x: cmd.at.x, z: cmd.at.z };
+        break;
+      }
+      case 'useAbility': {
+        const units = ownedUnits(world, player, cmd.units);
+        if (!units.length || typeof cmd.ability !== 'string') break;
+        if (cmd.at !== undefined && !finite(cmd.at)) break;
+        orderAbility(world, player, units, cmd.ability, cmd.at, cmd.targetId, !!cmd.queue);
         break;
       }
       case 'surrender':

@@ -1,6 +1,7 @@
 // Sim-side shapes of the data/ JSON files. These extend src/shared/data.ts and are listed as
 // shared-contract proposals in the PR; until promoted, other modules import them from here.
 
+import abilitiesJson from '../../data/abilities.json';
 import damageJson from '../../data/damage.json';
 import rulesJson from '../../data/rules.json';
 import structuresJson from '../../data/structures.json';
@@ -55,6 +56,41 @@ export interface SimUnitDef extends UnitDef {
   builder?: boolean;
   /** Directional damage multipliers for vehicles. */
   facing?: FacingArmor;
+  /** Ability ids from data/abilities.json. */
+  abilities?: string[];
+  /** Automatic logistics unit (supply truck): not commandable, doesn't capture. */
+  logistics?: boolean;
+}
+
+/** Active ability. Effect parameters are per ability id; unused ones are omitted. */
+export interface AbilityDef {
+  name: string;
+  /** self: instant on the caster. point/unit: caster moves into `range`, then casts. */
+  target: 'self' | 'point' | 'unit';
+  /** Meters. 0 = use the caster's longest weapon range. */
+  range: number;
+  /** Seconds. */
+  cooldown: number;
+  /** Supply paid by the caster's owner. */
+  cost: number;
+  radius?: number;
+  /** Seconds the effect lasts. */
+  duration?: number;
+  speedMult?: number;
+  deploySeconds?: number;
+  packSeconds?: number;
+  /** Damage multiplier while entrenched. */
+  damageTaken?: number;
+  shots?: number;
+  /** Seconds between barrage shells. */
+  interval?: number;
+  /** Target point must be visible to the caster's team. */
+  requiresVision?: boolean;
+  /** Ambush: enemies closer than this still see the unit. */
+  revealRange?: number;
+  firstShotMult?: number;
+  /** One caster per command (the closest), e.g. smoke. */
+  single?: boolean;
 }
 
 export interface StructureDef {
@@ -119,6 +155,16 @@ export interface RulesDef {
   navCellSize: number;
   fogCellSize: number;
   fogUpdateTicks: number;
+  /** Supply one truck carries per trip. */
+  truckCapacity: number;
+  /** Supply a source (point/depot) can hold waiting for pickup. */
+  stockCap: number;
+  truckRespawnSeconds: number;
+  /** Units within this distance of a friendly supply node keep full readiness. */
+  supplyRange: number;
+  readinessMin: number;
+  readinessDecayPerSecond: number;
+  readinessRecoverPerSecond: number;
 }
 
 export type MapShape =
@@ -145,6 +191,7 @@ export interface SimContent {
   structures?: Record<string, StructureDef>;
   damage?: DamageTable;
   rules?: RulesDef;
+  abilities?: Record<string, AbilityDef>;
 }
 
 export interface ResolvedContent {
@@ -154,6 +201,7 @@ export interface ResolvedContent {
   structures: Record<string, StructureDef>;
   damage: DamageTable;
   rules: RulesDef;
+  abilities: Record<string, AbilityDef>;
 }
 
 export function resolveContent(c: SimContent): ResolvedContent {
@@ -169,6 +217,7 @@ export function resolveContent(c: SimContent): ResolvedContent {
     structures: c.structures ?? (structuresJson as unknown as Record<string, StructureDef>),
     damage: c.damage ?? (damageJson as DamageTable),
     rules: c.rules ?? (rulesJson as RulesDef),
+    abilities: c.abilities ?? (abilitiesJson as Record<string, AbilityDef>),
   };
 }
 

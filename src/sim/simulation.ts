@@ -1,16 +1,17 @@
-import type { PlayerCommand } from '../shared/commands';
 import type { EntityState, PlayerState, SimView } from '../shared/entities';
 import type { SimEvent } from '../shared/events';
-import type { EntityId, MatchSetup, PlayerId, TeamId, Tick, Vec2 } from '../shared/types';
-import type { EconomyView, FogView, ProductionView, ProposedEvent, SimViewExt } from './contracts';
+import { SIM_HZ, type EntityId, type MatchSetup, type PlayerId, type TeamId, type Tick, type Vec2 } from '../shared/types';
+import type { AnyPlayerCommand, EconomyView, FogView, ProductionView, ProposedEvent, SimViewExt } from './contracts';
 import { dcos, dsin, headingTo } from './math/dmath';
 import { StateHasher } from './math/hash';
+import { abilitySystem } from './systems/abilities';
 import { deathSystem, projectileSystem, targetingSystem, weaponsSystem } from './systems/combat';
 import { buildable, canPlace, economySystem, producible } from './systems/economy';
+import { logisticsSystem, readinessSystem } from './systems/logistics';
 import { avoidanceSystem, movementSystem } from './systems/movement';
 import { applyCommands } from './systems/orders';
 import { captureSystem, victorySystem } from './systems/victory';
-import { World, type SimContent } from './world';
+import { canCommand, World, type SimContent } from './world';
 
 /** Starting army per player: HQ (spawned separately), an engineer and two rifle squads. */
 const STARTING_UNITS: { type: string; count: number }[] = [
@@ -54,8 +55,11 @@ export class Simulation implements SimView, SimViewExt {
     return this.world.players.get(id);
   }
 
-  /** Advance one tick, applying `commands` first. Returns the events of this tick. */
-  step(commands: PlayerCommand[]): SimEvent[] {
+  /**
+   * Advance one tick, applying `commands` first. Returns the events of this tick.
+   * Accepts the shared PlayerCommand plus proposed sim commands (useAbility).
+   */
+  step(commands: readonly AnyPlayerCommand[]): SimEvent[] {
     const w = this.world;
     w.events = [];
     w.proposed = [];
@@ -66,7 +70,10 @@ export class Simulation implements SimView, SimViewExt {
     avoidanceSystem(w);
     weaponsSystem(w);
     projectileSystem(w);
+    abilitySystem(w);
     economySystem(w);
+    logisticsSystem(w);
+    readinessSystem(w);
     captureSystem(w);
     victorySystem(w);
     deathSystem(w);
@@ -89,8 +96,13 @@ export class Simulation implements SimView, SimViewExt {
       if (e.turretHeading !== undefined) h.num(e.turretHeading);
       for (const wp of e.weapons) h.num(wp.cooldown);
       for (const q of e.queue) h.str(q.unit).num(q.progress);
+      for (const a of e.abilities) h.num(a.cooldown);
+      h.str(e.entrench).num(e.entrenchAt).num(e.boostUntil).num(e.ambush ? 1 : 0).num(e.readiness).num(e.stock).num(e.truck).num(e.truckReadyAt);
+      if (e.haul) h.num(e.haul.source).str(e.haul.phase).num(e.haul.cargo);
     }
-    for (const p of w.projectiles) h.num(p.shooter).num(p.at.x).num(p.at.z).num(p.arrive).num(p.hits ? 1 : 0);
+    for (const p of w.projectiles) h.num(p.shooter).num(p.at.x).num(p.at.z).num(p.arrive).num(p.hits ? 1 : 0).num(p.mult);
+    for (const s of w.smokes) h.num(s.at.x).num(s.at.z).num(s.until);
+    for (const b of w.barrages) h.num(b.caster).num(b.left).num(b.next);
     return h.digest();
   }
 
@@ -151,6 +163,34 @@ export class Simulation implements SimView, SimViewExt {
 
   canPlace(player: PlayerId, structure: string, at: Vec2, rotation: number): boolean {
     return canPlace(this.world, player, structure, at, rotation);
+  }
+
+  abilities(id: EntityId): readonly { ability: string; cooldown: number; active: boolean }[] {
+    const e = this.world.entities.get(id);
+    if (!e) return [];
+    return e.abilities.map((a) => ({
+      ability: a.id,
+      cooldown: a.def.cooldown > 0 ? a.cooldown / (a.def.cooldown * SIM_HZ) : 0,
+      active:
+        (a.id === 'entrench' && e.entrench !== 'none') ||
+        (a.id === 'ambush' && e.ambush) ||
+        (!!a.def.speedMult && this.world.tick < e.boostUntil) ||
+        (e.order?.kind === 'ability' && e.order.ability === a.id) ||
+        this.world.barrages.some((b) => b.caster === id && a.id === 'barrage'),
+    }));
+  }
+
+  readiness(id: EntityId): number {
+    return this.world.entities.get(id)?.readiness ?? 1;
+  }
+
+  stock(id: EntityId): number {
+    return this.world.entities.get(id)?.stock ?? 0;
+  }
+
+  canCommand(player: PlayerId, id: EntityId): boolean {
+    const e = this.world.entities.get(id);
+    return !!e && canCommand(this.world, player, e);
   }
 
   private spawnMap(): void {
