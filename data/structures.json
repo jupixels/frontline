@@ -1,0 +1,220 @@
+{
+  "hq": {
+    "name": "Headquarters",
+    "model": "models/buildings/hq.glb",
+    "hp": 5000,
+    "footprint": [
+      20,
+      20
+    ],
+    "cost": 0,
+    "buildSeconds": 0,
+    "power": 20,
+    "sight": 120,
+    "tier": 1,
+    "buildable": false,
+    "produces": [
+      "engineer"
+    ],
+    "income": 2,
+    "production": true
+  },
+  "barracks": {
+    "name": "Barracks",
+    "model": "models/buildings/barracks.glb",
+    "hp": 1500,
+    "footprint": [
+      14,
+      12
+    ],
+    "cost": 300,
+    "buildSeconds": 25,
+    "power": -10,
+    "sight": 70,
+    "tier": 1,
+    "produces": [
+      "rifleman",
+      "at_soldier",
+      "sniper",
+      "engineer"
+    ],
+    "production": true
+  },
+  "war_factory": {
+    "name": "War Factory",
+    "model": "models/buildings/war_factory.glb",
+    "hp": 2500,
+    "footprint": [
+      20,
+      20
+    ],
+    "cost": 500,
+    "buildSeconds": 40,
+    "power": -25,
+    "sight": 70,
+    "tier": 1,
+    "requires": [
+      "barracks"
+    ],
+    "produces": [
+      "jeep",
+      "scout_car",
+      "ifv",
+      "tank_light",
+      "tank_mbt",
+      "aa_tank",
+      "rocket_truck",
+      "artillery"
+    ],
+    "production": true
+  },
+  "airfield": {
+    "name": "Airfield",
+    "model": "models/buildings/airfield.glb",
+    "hp": 2500,
+    "footprint": [
+      30,
+      24
+    ],
+    "cost": 900,
+    "buildSeconds": 50,
+    "power": -40,
+    "sight": 90,
+    "tier": 2,
+    "requires": [
+      "war_factory"
+    ],
+    "produces": [
+      "jet_fighter",
+      "bomber"
+    ],
+    "production": true
+  },
+  "helipad": {
+    "name": "Helipad",
+    "model": "models/buildings/helipad.glb",
+    "hp": 1200,
+    "footprint": [
+      14,
+      14
+    ],
+    "cost": 500,
+    "buildSeconds": 30,
+    "power": -25,
+    "sight": 80,
+    "tier": 2,
+    "requires": [
+      "war_factory"
+    ],
+    "produces": [
+      "heli_attack",
+      "heli_transport"
+    ],
+    "production": true
+  },
+  "naval_yard": {
+    "name": "Naval Yard",
+    "model": "models/buildings/naval_yard.glb",
+    "hp": 2500,
+    "footprint": [
+      24,
+      20
+    ],
+    "cost": 600,
+    "buildSeconds": 40,
+    "power": -30,
+    "sight": 90,
+    "tier": 1,
+    "placement": "shore",
+    "produces": [
+      "patrol_boat",
+      "destroyer",
+      "cruiser",
+      "submarine",
+      "transport_ship"
+    ],
+    "production": true
+  },
+  "power_plant": {
+    "name": "Power Plant",
+    "model": "models/buildings/power_plant.glb",
+    "hp": 1200,
+    "footprint": [
+      14,
+      14
+    ],
+    "cost": 250,
+    "buildSeconds": 20,
+    "power": 100,
+    "sight": 60,
+    "tier": 1
+  },
+  "supply_depot": {
+    "name": "Supply Depot",
+    "model": "models/buildings/supply_depot.glb",
+    "hp": 1000,
+    "footprint": [
+      12,
+      12
+    ],
+    "cost": 300,
+    "buildSeconds": 20,
+    "power": -5,
+    "sight": 60,
+    "tier": 1,
+    "income": 3
+  },
+  "radar": {
+    "name": "Radar Station",
+    "model": "models/buildings/radar.glb",
+    "hp": 1000,
+    "footprint": [
+      10,
+      10
+    ],
+    "cost": 500,
+    "buildSeconds": 30,
+    "power": -30,
+    "sight": 250,
+    "tier": 1,
+    "grantsTier": 2
+  },
+  "hospital": {
+    "name": "Field Hospital",
+    "model": "models/buildings/hospital.glb",
+    "hp": 800,
+    "footprint": [
+      12,
+      12
+    ],
+    "cost": 300,
+    "buildSeconds": 20,
+    "power": -10,
+    "sight": 60,
+    "tier": 1,
+    "requires": [
+      "barracks"
+    ],
+    "heal": {
+      "radius": 30,
+      "perSecond": 5
+    }
+  },
+  "watchtower": {
+    "name": "Watchtower",
+    "model": "models/buildings/watchtower.glb",
+    "hp": 600,
+    "footprint": [
+      6,
+      6
+    ],
+    "cost": 200,
+    "buildSeconds": 15,
+    "power": -5,
+    "sight": 140,
+    "tier": 1,
+    "weapons": [
+      "tower_mg"
+    ]
+  }
+}
