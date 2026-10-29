@@ -202,6 +202,7 @@ A–F don't overlap in files. Anything that must change `src/shared/` goes throu
 | G | **Skirmish AI** (`src/ai/`) | Build orders, economy and attack waves, unit micro, 3 difficulties |
 | H | **Maps** (`public/assets/maps/`, map loader) | The 3 launch maps, with props and points |
 | I | **Balance & match pacing** (`data/`) | Headless AI-vs-AI sims to tune ticket drain so matches finish in 60–90 min |
+| J | **Drawn frontlines** (sim + ui + render; master adds the `holdLine` contract first) | Select units, hold **F** and draw a polyline; units spread along it facing away from your side and hold. Role-aware placement: infantry seek cover, tanks slightly back, AT on flanks, artillery behind. Gaps fill when units die, reinforcements sent to the line fill the weakest spots, and "advance line" pushes the whole line forward. Lines show on map and minimap in team color, and teammates see them in shared command |
 | — | **Master** | Integration, playtests, perf profiling, bug triage |
 
 ### Phase 3 — Polish
