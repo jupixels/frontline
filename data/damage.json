@@ -1,0 +1,42 @@
+{
+  "small_arms": {
+    "infantry": 1,
+    "light": 0.35,
+    "heavy": 0.08,
+    "air": 0.25,
+    "naval": 0.1,
+    "structure": 0.1
+  },
+  "ap": {
+    "infantry": 0.35,
+    "light": 1.2,
+    "heavy": 1,
+    "air": 0.5,
+    "naval": 0.8,
+    "structure": 0.6
+  },
+  "he": {
+    "infantry": 1.1,
+    "light": 0.9,
+    "heavy": 0.6,
+    "air": 0,
+    "naval": 0.7,
+    "structure": 1.2
+  },
+  "aa": {
+    "infantry": 0.2,
+    "light": 0.3,
+    "heavy": 0.1,
+    "air": 1,
+    "naval": 0.2,
+    "structure": 0.1
+  },
+  "torpedo": {
+    "infantry": 0,
+    "light": 0,
+    "heavy": 0,
+    "air": 0,
+    "naval": 1.5,
+    "structure": 0.5
+  }
+}

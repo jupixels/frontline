@@ -1,31 +1,78 @@
 {
-  "tank_mbt": {
-    "name": "Main Battle Tank",
-    "model": "models/tank_mbt.glb",
+  "rifleman": {
+    "name": "Rifle Squad",
+    "model": "models/rifleman.glb",
     "domain": "ground",
-    "armor": "heavy",
-    "hp": 1200,
-    "speed": 7,
-    "turnRate": 1.6,
-    "radius": 3.2,
-    "sight": 90,
-    "cost": 450,
-    "buildSeconds": 30,
-    "turretNode": "P_turret",
-    "turretTurnRate": 1.4
+    "armor": "infantry",
+    "hp": 100,
+    "speed": 4,
+    "turnRate": 6,
+    "radius": 0.6,
+    "sight": 70,
+    "cost": 100,
+    "buildSeconds": 12,
+    "cp": 4,
+    "tier": 1,
+    "weapons": [
+      "rifle"
+    ],
+    "squad": 4
   },
-  "ifv": {
-    "name": "Infantry Fighting Vehicle",
-    "model": "models/ifv.glb",
+  "sniper": {
+    "name": "Sniper",
+    "model": "models/sniper.glb",
     "domain": "ground",
-    "armor": "light",
-    "hp": 650,
-    "speed": 10,
-    "turnRate": 2.2,
-    "radius": 2.8,
-    "sight": 100,
-    "cost": 250,
-    "buildSeconds": 20
+    "armor": "infantry",
+    "hp": 80,
+    "speed": 4,
+    "turnRate": 6,
+    "radius": 0.6,
+    "sight": 110,
+    "cost": 150,
+    "buildSeconds": 15,
+    "cp": 2,
+    "tier": 2,
+    "weapons": [
+      "sniper_rifle"
+    ]
+  },
+  "at_soldier": {
+    "name": "Anti-Tank Team",
+    "model": "models/at_soldier.glb",
+    "domain": "ground",
+    "armor": "infantry",
+    "hp": 100,
+    "speed": 3.5,
+    "turnRate": 6,
+    "radius": 0.6,
+    "sight": 70,
+    "cost": 150,
+    "buildSeconds": 14,
+    "cp": 4,
+    "tier": 1,
+    "weapons": [
+      "at_rocket"
+    ],
+    "squad": 2
+  },
+  "engineer": {
+    "name": "Engineer",
+    "model": "models/rifleman.glb",
+    "domain": "ground",
+    "armor": "infantry",
+    "hp": 90,
+    "speed": 4,
+    "turnRate": 6,
+    "radius": 0.6,
+    "sight": 60,
+    "cost": 100,
+    "buildSeconds": 10,
+    "cp": 1,
+    "tier": 1,
+    "weapons": [
+      "pistol"
+    ],
+    "builder": true
   },
   "jeep": {
     "name": "Recon Jeep",
@@ -38,19 +85,333 @@
     "radius": 2,
     "sight": 140,
     "cost": 80,
-    "buildSeconds": 8
+    "buildSeconds": 8,
+    "cp": 2,
+    "tier": 1,
+    "weapons": [
+      "jeep_mg"
+    ]
   },
-  "rifleman": {
-    "name": "Rifleman",
-    "model": "models/rifleman.glb",
+  "scout_car": {
+    "name": "Scout Car",
+    "model": "models/scout_car.glb",
     "domain": "ground",
-    "armor": "infantry",
-    "hp": 100,
-    "speed": 4,
-    "turnRate": 6,
-    "radius": 0.6,
+    "armor": "light",
+    "hp": 380,
+    "speed": 13,
+    "turnRate": 2.6,
+    "radius": 2.4,
+    "sight": 120,
+    "cost": 180,
+    "buildSeconds": 14,
+    "cp": 3,
+    "tier": 1,
+    "weapons": [
+      "autocannon"
+    ]
+  },
+  "ifv": {
+    "name": "Infantry Fighting Vehicle",
+    "model": "models/ifv.glb",
+    "domain": "ground",
+    "armor": "light",
+    "hp": 650,
+    "speed": 10,
+    "turnRate": 2.2,
+    "radius": 2.8,
+    "sight": 100,
+    "cost": 300,
+    "buildSeconds": 20,
+    "cp": 4,
+    "tier": 2,
+    "weapons": [
+      "autocannon",
+      "atgm"
+    ],
+    "facing": {
+      "front": 0.8,
+      "side": 1,
+      "rear": 1.3
+    }
+  },
+  "tank_light": {
+    "name": "Light Tank",
+    "model": "models/tank_light.glb",
+    "domain": "ground",
+    "armor": "heavy",
+    "hp": 800,
+    "speed": 10,
+    "turnRate": 2,
+    "radius": 2.8,
+    "sight": 90,
+    "cost": 350,
+    "buildSeconds": 22,
+    "cp": 4,
+    "tier": 2,
+    "weapons": [
+      "light_cannon"
+    ],
+    "facing": {
+      "front": 0.75,
+      "side": 1,
+      "rear": 1.35
+    }
+  },
+  "tank_mbt": {
+    "name": "Main Battle Tank",
+    "model": "models/tank_mbt.glb",
+    "domain": "ground",
+    "armor": "heavy",
+    "hp": 1400,
+    "speed": 7,
+    "turnRate": 1.6,
+    "radius": 3.2,
+    "sight": 90,
+    "cost": 550,
+    "buildSeconds": 32,
+    "cp": 6,
+    "tier": 2,
+    "weapons": [
+      "tank_cannon",
+      "coax_mg"
+    ],
+    "turretNode": "P_turret",
+    "turretTurnRate": 1.4,
+    "facing": {
+      "front": 0.6,
+      "side": 1,
+      "rear": 1.5
+    }
+  },
+  "aa_tank": {
+    "name": "Mobile AA",
+    "model": "models/aa_tank.glb",
+    "domain": "ground",
+    "armor": "light",
+    "hp": 600,
+    "speed": 9,
+    "turnRate": 2,
+    "radius": 3,
+    "sight": 120,
+    "cost": 350,
+    "buildSeconds": 22,
+    "cp": 4,
+    "tier": 2,
+    "weapons": [
+      "aa_gun"
+    ],
+    "facing": {
+      "front": 0.85,
+      "side": 1,
+      "rear": 1.25
+    }
+  },
+  "rocket_truck": {
+    "name": "Rocket Artillery",
+    "model": "models/rocket_truck.glb",
+    "domain": "ground",
+    "armor": "light",
+    "hp": 400,
+    "speed": 9,
+    "turnRate": 1.8,
+    "radius": 3,
+    "sight": 80,
+    "cost": 500,
+    "buildSeconds": 28,
+    "cp": 5,
+    "tier": 2,
+    "weapons": [
+      "mlrs"
+    ]
+  },
+  "artillery": {
+    "name": "Self-Propelled Howitzer",
+    "model": "models/artillery.glb",
+    "domain": "ground",
+    "armor": "heavy",
+    "hp": 500,
+    "speed": 6,
+    "turnRate": 1.4,
+    "radius": 3.2,
     "sight": 70,
-    "cost": 30,
-    "buildSeconds": 5
+    "cost": 550,
+    "buildSeconds": 30,
+    "cp": 5,
+    "tier": 2,
+    "weapons": [
+      "howitzer"
+    ],
+    "facing": {
+      "front": 0.8,
+      "side": 1,
+      "rear": 1.3
+    }
+  },
+  "heli_attack": {
+    "name": "Attack Helicopter",
+    "model": "models/heli_attack.glb",
+    "domain": "air",
+    "armor": "air",
+    "hp": 700,
+    "speed": 22,
+    "turnRate": 2,
+    "radius": 4,
+    "sight": 140,
+    "cost": 650,
+    "buildSeconds": 30,
+    "cp": 6,
+    "tier": 2,
+    "weapons": [
+      "heli_rockets",
+      "heli_gun"
+    ]
+  },
+  "heli_transport": {
+    "name": "Transport Helicopter",
+    "model": "models/heli_transport.glb",
+    "domain": "air",
+    "armor": "air",
+    "hp": 900,
+    "speed": 24,
+    "turnRate": 1.8,
+    "radius": 5,
+    "sight": 120,
+    "cost": 400,
+    "buildSeconds": 24,
+    "cp": 4,
+    "tier": 2,
+    "weapons": [
+      "door_gun"
+    ]
+  },
+  "jet_fighter": {
+    "name": "Fighter Jet",
+    "model": "models/jet_fighter.glb",
+    "domain": "air",
+    "armor": "air",
+    "hp": 600,
+    "speed": 60,
+    "turnRate": 2.5,
+    "radius": 5,
+    "sight": 160,
+    "cost": 900,
+    "buildSeconds": 35,
+    "cp": 8,
+    "tier": 3,
+    "weapons": [
+      "aa_missile",
+      "jet_cannon"
+    ]
+  },
+  "bomber": {
+    "name": "Strategic Bomber",
+    "model": "models/bomber.glb",
+    "domain": "air",
+    "armor": "air",
+    "hp": 1200,
+    "speed": 45,
+    "turnRate": 1.2,
+    "radius": 8,
+    "sight": 140,
+    "cost": 1500,
+    "buildSeconds": 50,
+    "cp": 12,
+    "tier": 3,
+    "weapons": [
+      "bombs"
+    ]
+  },
+  "patrol_boat": {
+    "name": "Patrol Boat",
+    "model": "models/patrol_boat.glb",
+    "domain": "naval",
+    "armor": "naval",
+    "hp": 500,
+    "speed": 16,
+    "turnRate": 2,
+    "radius": 4,
+    "sight": 120,
+    "cost": 250,
+    "buildSeconds": 18,
+    "cp": 3,
+    "tier": 1,
+    "weapons": [
+      "boat_gun"
+    ]
+  },
+  "destroyer": {
+    "name": "Destroyer",
+    "model": "models/destroyer.glb",
+    "domain": "naval",
+    "armor": "naval",
+    "hp": 2200,
+    "speed": 11,
+    "turnRate": 1,
+    "radius": 9,
+    "sight": 160,
+    "cost": 900,
+    "buildSeconds": 40,
+    "cp": 8,
+    "tier": 2,
+    "weapons": [
+      "naval_gun",
+      "depth_charge",
+      "sam"
+    ]
+  },
+  "cruiser": {
+    "name": "Cruiser",
+    "model": "models/cruiser.glb",
+    "domain": "naval",
+    "armor": "naval",
+    "hp": 3500,
+    "speed": 9,
+    "turnRate": 0.8,
+    "radius": 12,
+    "sight": 180,
+    "cost": 1600,
+    "buildSeconds": 60,
+    "cp": 12,
+    "tier": 3,
+    "weapons": [
+      "heavy_naval_gun",
+      "sam"
+    ]
+  },
+  "submarine": {
+    "name": "Submarine",
+    "model": "models/submarine.glb",
+    "domain": "naval",
+    "armor": "naval",
+    "hp": 1200,
+    "speed": 10,
+    "turnRate": 1,
+    "radius": 7,
+    "sight": 110,
+    "cost": 800,
+    "buildSeconds": 36,
+    "cp": 6,
+    "tier": 2,
+    "weapons": [
+      "torpedo"
+    ]
+  },
+  "transport_ship": {
+    "name": "Transport Ship",
+    "model": "models/transport_ship.glb",
+    "domain": "naval",
+    "armor": "naval",
+    "hp": 1500,
+    "speed": 12,
+    "turnRate": 1,
+    "radius": 9,
+    "sight": 100,
+    "cost": 400,
+    "buildSeconds": 25,
+    "cp": 3,
+    "tier": 2,
+    "weapons": [
+      "ship_mg"
+    ]
   }
 }

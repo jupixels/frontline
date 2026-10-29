@@ -1,0 +1,376 @@
+{
+  "rifle": {
+    "range": 45,
+    "damage": 10,
+    "reload": 1,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground",
+      "air"
+    ],
+    "mount": "hull",
+    "accuracy": 0.7
+  },
+  "pistol": {
+    "range": 30,
+    "damage": 6,
+    "reload": 1,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground"
+    ],
+    "mount": "hull",
+    "accuracy": 0.6
+  },
+  "sniper_rifle": {
+    "range": 110,
+    "damage": 70,
+    "reload": 3.5,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground"
+    ],
+    "mount": "hull",
+    "accuracy": 0.95
+  },
+  "at_rocket": {
+    "range": 55,
+    "damage": 120,
+    "reload": 4,
+    "damageType": "ap",
+    "delivery": "projectile",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "hull",
+    "accuracy": 0.75,
+    "projectileSpeed": 60,
+    "splash": 1.5
+  },
+  "jeep_mg": {
+    "range": 50,
+    "damage": 8,
+    "reload": 0.25,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground",
+      "air"
+    ],
+    "mount": "turret",
+    "accuracy": 0.5
+  },
+  "autocannon": {
+    "range": 65,
+    "damage": 25,
+    "reload": 0.6,
+    "damageType": "ap",
+    "delivery": "hitscan",
+    "targets": [
+      "ground",
+      "air",
+      "naval"
+    ],
+    "mount": "turret",
+    "accuracy": 0.7
+  },
+  "atgm": {
+    "range": 80,
+    "damage": 180,
+    "reload": 8,
+    "damageType": "ap",
+    "delivery": "projectile",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "turret",
+    "accuracy": 0.9,
+    "projectileSpeed": 50
+  },
+  "light_cannon": {
+    "range": 70,
+    "damage": 110,
+    "reload": 2.5,
+    "damageType": "ap",
+    "delivery": "projectile",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "turret",
+    "accuracy": 0.8,
+    "projectileSpeed": 180,
+    "splash": 2
+  },
+  "tank_cannon": {
+    "range": 80,
+    "damage": 220,
+    "reload": 3.5,
+    "damageType": "ap",
+    "delivery": "projectile",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "turret",
+    "accuracy": 0.85,
+    "projectileSpeed": 220,
+    "splash": 2.5
+  },
+  "coax_mg": {
+    "range": 55,
+    "damage": 8,
+    "reload": 0.3,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground"
+    ],
+    "mount": "turret",
+    "accuracy": 0.5
+  },
+  "aa_gun": {
+    "range": 120,
+    "damage": 30,
+    "reload": 0.4,
+    "damageType": "aa",
+    "delivery": "hitscan",
+    "targets": [
+      "air"
+    ],
+    "mount": "turret",
+    "accuracy": 0.8
+  },
+  "mlrs": {
+    "range": 260,
+    "damage": 80,
+    "reload": 10,
+    "damageType": "he",
+    "delivery": "indirect",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "hull",
+    "accuracy": 1,
+    "minRange": 50,
+    "projectileSpeed": 80,
+    "splash": 12,
+    "scatter": 15
+  },
+  "howitzer": {
+    "range": 320,
+    "damage": 160,
+    "reload": 6,
+    "damageType": "he",
+    "delivery": "indirect",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "turret",
+    "accuracy": 1,
+    "minRange": 40,
+    "projectileSpeed": 120,
+    "splash": 10,
+    "scatter": 10
+  },
+  "heli_rockets": {
+    "range": 90,
+    "damage": 90,
+    "reload": 2,
+    "damageType": "ap",
+    "delivery": "projectile",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "hull",
+    "accuracy": 0.8,
+    "projectileSpeed": 120,
+    "splash": 3
+  },
+  "heli_gun": {
+    "range": 70,
+    "damage": 20,
+    "reload": 0.3,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "turret",
+    "accuracy": 0.6
+  },
+  "door_gun": {
+    "range": 50,
+    "damage": 8,
+    "reload": 0.25,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground"
+    ],
+    "mount": "turret",
+    "accuracy": 0.5
+  },
+  "aa_missile": {
+    "range": 150,
+    "damage": 250,
+    "reload": 5,
+    "damageType": "aa",
+    "delivery": "projectile",
+    "targets": [
+      "air"
+    ],
+    "mount": "hull",
+    "accuracy": 0.9,
+    "projectileSpeed": 250
+  },
+  "jet_cannon": {
+    "range": 80,
+    "damage": 30,
+    "reload": 0.4,
+    "damageType": "ap",
+    "delivery": "hitscan",
+    "targets": [
+      "ground",
+      "air"
+    ],
+    "mount": "hull",
+    "accuracy": 0.6
+  },
+  "bombs": {
+    "range": 20,
+    "damage": 600,
+    "reload": 8,
+    "damageType": "he",
+    "delivery": "projectile",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "hull",
+    "accuracy": 1,
+    "projectileSpeed": 40,
+    "splash": 18
+  },
+  "boat_gun": {
+    "range": 70,
+    "damage": 20,
+    "reload": 0.5,
+    "damageType": "ap",
+    "delivery": "hitscan",
+    "targets": [
+      "ground",
+      "naval",
+      "air"
+    ],
+    "mount": "turret",
+    "accuracy": 0.6
+  },
+  "naval_gun": {
+    "range": 180,
+    "damage": 140,
+    "reload": 3,
+    "damageType": "he",
+    "delivery": "projectile",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "turret",
+    "accuracy": 0.75,
+    "projectileSpeed": 200,
+    "splash": 5
+  },
+  "depth_charge": {
+    "range": 40,
+    "damage": 250,
+    "reload": 5,
+    "damageType": "torpedo",
+    "delivery": "projectile",
+    "targets": [
+      "naval"
+    ],
+    "mount": "hull",
+    "accuracy": 0.8,
+    "projectileSpeed": 20,
+    "splash": 6
+  },
+  "sam": {
+    "range": 180,
+    "damage": 200,
+    "reload": 4,
+    "damageType": "aa",
+    "delivery": "projectile",
+    "targets": [
+      "air"
+    ],
+    "mount": "turret",
+    "accuracy": 0.85,
+    "projectileSpeed": 300
+  },
+  "heavy_naval_gun": {
+    "range": 280,
+    "damage": 300,
+    "reload": 5,
+    "damageType": "he",
+    "delivery": "indirect",
+    "targets": [
+      "ground",
+      "naval"
+    ],
+    "mount": "turret",
+    "accuracy": 1,
+    "minRange": 30,
+    "projectileSpeed": 150,
+    "splash": 10,
+    "scatter": 8
+  },
+  "torpedo": {
+    "range": 120,
+    "damage": 450,
+    "reload": 8,
+    "damageType": "torpedo",
+    "delivery": "projectile",
+    "targets": [
+      "naval"
+    ],
+    "mount": "hull",
+    "accuracy": 0.85,
+    "projectileSpeed": 30
+  },
+  "ship_mg": {
+    "range": 50,
+    "damage": 8,
+    "reload": 0.25,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground",
+      "air"
+    ],
+    "mount": "turret",
+    "accuracy": 0.5
+  },
+  "tower_mg": {
+    "range": 70,
+    "damage": 10,
+    "reload": 0.25,
+    "damageType": "small_arms",
+    "delivery": "hitscan",
+    "targets": [
+      "ground",
+      "air"
+    ],
+    "mount": "turret",
+    "accuracy": 0.55
+  }
+}
