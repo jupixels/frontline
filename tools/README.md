@@ -27,6 +27,18 @@ The script prints final size, dimensions and clip names, so you can check them. 
 
 The processed output **is** committed: GitHub Pages can't serve Git LFS files, so they can't go there.
 
+## Adding sounds
+
+Sound entries copy every `.mp3` under `prefix` in the zip to `out`. Optional fields:
+
+- `files`: only these names (relative to `prefix`)
+- `encode`: re-encode with ffmpeg (must be on `PATH`, or set `FFMPEG=<path>`). Output is MP3:
+  - `bitrate` (default `64k`), mono unless `stereo: true`, `sampleRate` (default 44100)
+  - `maxSeconds`: trim to this length with a short fade-out
+  - `split: n`: the file holds several takes separated by silence (the `02_weapons` recordings do); write up to `n` of them as `name_1.mp3`, `name_2.mp3`, ...
+
+Entries without `encode` don't need ffmpeg.
+
 ## Licenses
 
 Anything marked `CC-BY` needs a credit line in the in-game credits. The list is in `docs/GAME_PLAN.md` §3.

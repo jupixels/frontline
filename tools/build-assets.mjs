@@ -6,9 +6,10 @@
 // normalizes scale to meters, drops unlisted clips, compresses textures to WebP and geometry
 // with meshopt. Output goes to public/assets/ and is committed (Pages can't serve LFS).
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { homedir } from 'node:os';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { dirname, join, resolve, basename } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { homedir, tmpdir } from 'node:os';
 import { unzipSync } from 'fflate';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
@@ -95,14 +96,73 @@ for (const [zip, list] of byZip) {
   }
 }
 
-const sounds = manifest.sounds.filter((s) => !only || s.out.includes(only));
+// Sounds: copied as-is, or re-encoded with ffmpeg when the entry has `encode` (see tools/README.md).
+const FFMPEG = process.env.FFMPEG ?? 'ffmpeg';
+// Input goes through a temp file: ffmpeg stops reading early when trimming, which breaks stdin pipes.
+const tmpIn = join(tmpdir(), `frontline-sound-${process.pid}.mp3`);
+process.on('exit', () => rmSync(tmpIn, { force: true }));
+function runFfmpeg(args, input) {
+  writeFileSync(tmpIn, input);
+  args = args.map((a) => (a === 'pipe:0' ? tmpIn : a));
+  const r = spawnSync(FFMPEG, ['-hide_banner', '-nostats', ...args], { maxBuffer: 1 << 28 });
+  if (r.error) throw new Error(`Can't run ffmpeg (${r.error.message}). Install it or set FFMPEG=<path>; sound entries with "encode" need it.`);
+  if (r.status !== 0) throw new Error(`ffmpeg failed: ${r.stderr.toString().slice(-500)}`);
+  return r;
+}
+
+// Non-silent [start, end) regions, for recordings that hold several shots separated by silence.
+function soundRegions(data) {
+  const log = runFfmpeg(['-i', 'pipe:0', '-af', 'silencedetect=n=-40dB:d=0.25', '-f', 'null', '-'], data).stderr.toString();
+  const marks = [...log.matchAll(/silence_(start|end): ([\d.]+)/g)].map((m) => [m[1], Number(m[2])]);
+  const regions = [];
+  let start = 0;
+  for (const [kind, t] of marks) {
+    if (kind === 'start') {
+      if (t - start > 0.15) regions.push([start, t]);
+      start = Infinity;
+    } else start = t;
+  }
+  const dur = log.match(/Duration: (\d+):(\d+):([\d.]+)/);
+  const end = dur ? Number(dur[1]) * 3600 + Number(dur[2]) * 60 + Number(dur[3]) : Infinity;
+  if (end - start > 0.15) regions.push([start, Infinity]);
+  return regions;
+}
+
+function encodeSound(data, e, start = 0, end = Infinity) {
+  const from = Math.max(0, start - 0.02);
+  // Silence detection cuts reverb tails short, so keep a bit past the detected end.
+  let dur = Math.min(end + 0.3 - from, e.maxSeconds ?? Infinity);
+  const filters = [];
+  if (Number.isFinite(dur)) filters.push(`afade=t=out:st=${Math.max(0, dur - 0.12).toFixed(3)}:d=0.12`);
+  const args = ['-i', 'pipe:0', '-ss', from.toFixed(3)];
+  if (Number.isFinite(dur)) args.push('-t', dur.toFixed(3));
+  if (filters.length) args.push('-af', filters.join(','));
+  args.push('-ac', e.stereo ? '2' : '1', '-ar', String(e.sampleRate ?? 44100), '-b:a', e.bitrate ?? '64k', '-f', 'mp3', 'pipe:1');
+  return runFfmpeg(args, data).stdout;
+}
+
+const sounds = manifest.sounds.filter((s) => !only || s.out.includes(only) || s.prefix.includes(only));
 for (const s of sounds) {
   const files = zipFiles(s.zip, [s.prefix]);
   let n = 0;
+  let bytes = 0;
   for (const [name, data] of Object.entries(files)) {
     if (!name.endsWith('.mp3') || name.endsWith('/')) continue;
-    write(s.out + name.slice(s.prefix.length), data);
-    n++;
+    const rel = name.slice(s.prefix.length);
+    if (s.files && !s.files.includes(rel)) continue;
+    const outs = [];
+    if (!s.encode) outs.push([rel, data]);
+    else if (!s.encode.split) outs.push([rel, encodeSound(data, s.encode)]);
+    else {
+      const regions = soundRegions(data).slice(0, s.encode.split);
+      const stem = rel.replace(/\.mp3$/, '');
+      regions.forEach(([a, b], i) => outs.push([`${stem}_${i + 1}.mp3`, encodeSound(data, s.encode, a, b)]));
+    }
+    for (const [out, d] of outs) {
+      write(s.out + out, d);
+      bytes += d.byteLength;
+      n++;
+    }
   }
-  console.log(`${s.out}  ${n} files`);
+  console.log(`${s.out}  ${n} files  ${(bytes / 1024).toFixed(0)} KB${s.encode ? '  (encoded)' : ''}  from ${basename(s.prefix)}`);
 }
