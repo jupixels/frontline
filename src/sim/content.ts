@@ -7,7 +7,6 @@ import rulesJson from '../../data/rules.json';
 import structuresJson from '../../data/structures.json';
 import weaponsJson from '../../data/weapons.json';
 import type { ArmorClass, Domain, MapDef, UnitDef } from '../shared/data';
-import type { Vec2 } from '../shared/types';
 
 export type DamageType = 'small_arms' | 'ap' | 'he' | 'aa' | 'torpedo';
 /** What a weapon can shoot at. Structures count as 'ground'. */
@@ -35,6 +34,8 @@ export interface WeaponDef {
   mount: 'turret' | 'hull';
   /** Chance a direct shot hits, 0..1. */
   accuracy: number;
+  /** Suppression added to infantry per hit (near misses add a third). Default from damage type. */
+  suppression?: number;
 }
 
 export interface FacingArmor {
@@ -60,6 +61,10 @@ export interface SimUnitDef extends UnitDef {
   abilities?: string[];
   /** Automatic logistics unit (supply truck): not commandable, doesn't capture. */
   logistics?: boolean;
+  /** Carries other units: seats and which armor classes may board. */
+  transport?: { seats: number; carries: ArmorClass[] };
+  /** Seats this unit takes in a transport (default: infantry 1, light 4, heavy 6). */
+  seats?: number;
 }
 
 /** Active ability. Effect parameters are per ability id; unused ones are omitted. */
@@ -122,6 +127,12 @@ export interface StructureDef {
   grantsTier?: number;
   heal?: { radius: number; perSecond: number };
   weapons?: string[];
+  /** Infantry seats for garrisoning. Occupants fire out and only the building can be hit. */
+  garrison?: number;
+  /** Owning one (complete, powered) charges the superweapon. */
+  superweapon?: boolean;
+  /** Counts toward nothing and can't be built: map-placed neutral cover (ruins). */
+  neutral?: boolean;
 }
 
 export type DamageTable = Record<DamageType, Record<ArmorClass, number>>;
@@ -165,23 +176,22 @@ export interface RulesDef {
   readinessMin: number;
   readinessDecayPerSecond: number;
   readinessRecoverPerSecond: number;
+  /** Superweapon: seconds to charge, warning time, blast radius and damage. */
+  superweaponSeconds?: number;
+  superweaponWarningSeconds?: number;
+  superweaponRadius?: number;
+  superweaponDamage?: number;
+  pausesPerPlayer?: number;
+  /** Seconds a pause lasts before the game resumes by itself. */
+  pauseMaxSeconds?: number;
+  /** Ticket-bleed multiplier while a team holds every point (pushes a dominant side to finish). */
+  sweepBleedMult?: number;
 }
 
-export type MapShape =
-  | { shape: 'rect'; x: number; z: number; w: number; d: number }
-  | { shape: 'circle'; x: number; z: number; r: number };
 
-/** Proposed additions to shared MapDef. All optional so old maps still load. */
-export interface SimMapDef extends MapDef {
-  /** Impassable for ground and naval (cliffs, rocks, dense forest). */
-  obstacles?: MapShape[];
-  /** Water: naval only. */
-  water?: MapShape[];
-  /** Capture points. */
-  points?: (Vec2 & { radius?: number })[];
-  /** Supply depots built near one earn more. */
-  supplyNodes?: Vec2[];
-}
+export type { MapShape } from '../shared/terrain';
+/** Maps carry points, supply nodes, terrain etc. in the shared MapDef now. */
+export type SimMapDef = MapDef;
 
 /** What the sim needs. units + map are required (shared contract); the rest default to data/. */
 export interface SimContent {

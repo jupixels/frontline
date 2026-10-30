@@ -5,7 +5,6 @@ import { GameRenderer } from '../render/renderer';
 import type { SimEvent } from '../shared/events';
 import type { MatchSetup, PlayerId } from '../shared/types';
 import { TICK_MS } from '../shared/types';
-import type { SimMapDef } from '../sim/content';
 import { Simulation } from '../sim/simulation';
 import type { MatchMode, MatchUi, UiApp } from '../ui';
 import { STRUCTURES, UNITS, mapDef, simContent } from './content';
@@ -51,7 +50,7 @@ export class Match {
     app.setLoadingProgress(0.3, 'Building the battlefield');
     this.sim = new Simulation(setup, simContent(setup.mapId));
     app.setLoadingProgress(0.6, 'Loading units');
-    this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: setup.players, localPlayer, map: map as SimMapDef });
+    this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: setup.players, localPlayer, map });
     this.renderer.setQuality(app.settings.get().graphics);
     const localTeam = setup.players.find((p) => p.id === localPlayer)?.team;
     this.audio = new AudioManager(localPlayer, { team: localTeam, units: UNITS });

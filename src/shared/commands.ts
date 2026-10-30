@@ -15,7 +15,27 @@ export type Command =
   | { type: 'setRally'; factory: EntityId; at: Vec2 }
   /** Activate an ability (data/abilities.json). `at` for point abilities, `targetId` for unit abilities. */
   | { type: 'useAbility'; units: EntityId[]; ability: string; at?: Vec2; targetId?: EntityId; queue?: boolean }
+  /** Attack-move back and forth between where each unit stands and `target` until told otherwise. */
+  | { type: 'patrol'; units: EntityId[]; target: Vec2; queue?: boolean }
+  /** Board a transport (IFV, transport heli, transport ship) or garrison a building/trench. */
+  | { type: 'enter'; units: EntityId[]; target: EntityId; queue?: boolean }
+  /** Containers drop their passengers: buildings at once, transports after moving to `at` (if given). */
+  | { type: 'unload'; units: EntityId[]; at?: Vec2; queue?: boolean }
+  /**
+   * Hold a drawn frontline: units spread along the polyline by role, facing away from their side.
+   * With `line` set, the units reinforce that existing line instead (weak spots first).
+   */
+  | { type: 'holdLine'; units: EntityId[]; points: Vec2[]; line?: number }
+  /** Push a whole frontline forward (negative pulls it back) by `distance` meters. */
+  | { type: 'advanceLine'; line: number; distance: number }
+  /** Dissolve a frontline; its units stay where they are. */
+  | { type: 'disbandLine'; line: number }
+  /** Fire the player's superweapon (cruise missile) at a point. */
+  | { type: 'superweapon'; at: Vec2 }
+  /** Online pause vote: true asks to pause (passes with half the human players), false resumes. */
+  | { type: 'pauseVote'; paused: boolean }
   | { type: 'surrender' };
+
 
 export type UseAbilityCommand = Extract<Command, { type: 'useAbility' }>;
 

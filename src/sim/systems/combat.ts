@@ -3,7 +3,11 @@ import type { TargetLayer, WeaponDef } from '../content';
 import { dcos, dsin, headingTo, turnToward, TWO_PI, wrapAngle } from '../math/dmath';
 import type { Entity, Projectile, World } from '../world';
 import { hiddenFrom, smokeBlocks } from './abilities';
+import { ejectAll, isPassenger } from './containers';
+import { leaveLine } from './lines';
 import { driveToward, followPath, nextOrder, relaxTurret, setPath } from './movement';
+import { coverMult, hasLos, heightBonus } from './terrain';
+import { gainXp, PRONE_DAMAGE, rankAccuracy, suppress } from './veterancy';
 
 /** Re-evaluate auto-targets this often (staggered by entity id). */
 const RETARGET_TICKS = 10;
@@ -26,11 +30,17 @@ function dist2(a: Vec2, b: Vec2): number {
   return dx * dx + dz * dz;
 }
 
-/** Longest range among weapons that can hit `t` (0 if none). */
-function rangeVs(e: Entity, t: Entity): number {
+/** Longest range among weapons that can hit `t` (0 if none), with the high-ground bonus. */
+function rangeVs(world: World, e: Entity, t: Entity): number {
   let r = 0;
   for (const w of e.weapons) if (canHit(w.def, t.layer) && w.def.range > r) r = w.def.range;
-  return r;
+  return r > 0 ? r * heightBonus(world, e, t) : 0;
+}
+
+/** Has a lobbed weapon that can hit `t` (fires on team vision, no line of sight needed). */
+function indirectVs(e: Entity, t: Entity): boolean {
+  for (const w of e.weapons) if (w.def.delivery === 'indirect' && canHit(w.def, t.layer)) return true;
+  return false;
 }
 
 function maxRange(e: Entity): number {
@@ -49,9 +59,9 @@ function bestMultiplier(world: World, e: Entity, t: Entity): number {
   return m;
 }
 
-/** Structures with weapons need to be complete and (for defenses) powered. */
+/** Structures with weapons need to be complete and (for defenses) powered. Passengers can't fire. */
 function armed(world: World, e: Entity): boolean {
-  if (e.weapons.length === 0 || e.dead) return false;
+  if (e.weapons.length === 0 || e.dead || isPassenger(world, e)) return false;
   if (e.kind === 'structure') {
     if (e.buildProgress < 1) return false;
     const p = world.players.get(e.owner);
@@ -64,9 +74,11 @@ function validTarget(world: World, e: Entity, t: Entity | undefined): t is Entit
   return !!t && !t.dead && t.kind !== 'point' && world.areEnemies(e.team, t.team) && bestMultiplier(world, e, t) > 0;
 }
 
-/** Visible to `e`'s team, not ambush-hidden, and not behind smoke. */
+/** Visible to `e`'s team, not ambush-hidden, not behind smoke, and in line of sight for direct fire. */
 function canSeeTarget(world: World, e: Entity, t: Entity): boolean {
-  return world.fog.teamVisible(e.team, t.pos.x, t.pos.z) && !hiddenFrom(world, t, e.team) && !smokeBlocks(world, e.pos, t.pos);
+  if (t.inside) return false;
+  if (!world.fog.teamVisible(e.team, t.pos.x, t.pos.z) || hiddenFrom(world, t, e.team) || smokeBlocks(world, e.pos, t.pos)) return false;
+  return indirectVs(e, t) || hasLos(world, e, t);
 }
 
 /** Nearest worthwhile visible enemy within `range`. Prefers units, then what our weapons hurt most. */
@@ -75,13 +87,15 @@ function acquire(world: World, e: Entity, range: number): EntityId {
   let bestScore = Infinity;
   world.spatial.query(e.pos.x, e.pos.z, range, (t, d2) => {
     if (!validTarget(world, e, t)) return;
-    if (d2 > rangeVs(e, t) * rangeVs(e, t) && d2 > e.sight * e.sight) return;
+    const rv = rangeVs(world, e, t);
+    if (d2 > rv * rv && d2 > e.sight * e.sight) return;
+    // Garrisoned buildings are worth shooting at (they hold infantry); empty ones much less.
+    const structMult = t.kind === 'structure' ? (t.cargo.length ? 1.5 : 3) : 1;
+    const score = (Math.sqrt(d2) / (0.25 + bestMultiplier(world, e, t))) * structMult;
+    if (!(score < bestScore || (score === bestScore && t.id < best))) return;
     if (!canSeeTarget(world, e, t)) return;
-    const score = (Math.sqrt(d2) / (0.25 + bestMultiplier(world, e, t))) * (t.kind === 'structure' ? 3 : 1);
-    if (score < bestScore || (score === bestScore && t.id < best)) {
-      bestScore = score;
-      best = t.id;
-    }
+    bestScore = score;
+    best = t.id;
   });
   return best;
 }
@@ -111,10 +125,10 @@ export function targetingSystem(world: World): void {
         forced = true;
       }
     }
-    const isUnit = e.kind === 'unit';
+    const isUnit = e.kind === 'unit' && !e.inside;
     const cur = e.order;
     const dug = e.entrench !== 'none';
-    const engages = isUnit && !dug && (!cur || cur.kind === 'attack' || (cur.kind === 'move' && cur.attackMove));
+    const engages = isUnit && !dug && (!cur || cur.kind === 'attack' || cur.kind === 'patrol' || (cur.kind === 'move' && cur.attackMove));
     const mr = maxRange(e);
     const acqRange = engages ? Math.max(mr, e.sight) : mr;
 
@@ -144,9 +158,11 @@ export function targetingSystem(world: World): void {
     if (!t) continue;
 
     const d = Math.sqrt(dist2(e.pos, t.pos));
-    const range = rangeVs(e, t);
-    const hold = cur?.kind === 'hold' || dug;
-    if (engages && d > range * 0.92) {
+    const range = rangeVs(world, e, t);
+    const hold = cur?.kind === 'hold' || cur?.kind === 'line' || dug;
+    // A forced target out of sight: close in until there's a line of fire.
+    const blind = forced && !indirectVs(e, t) && !hasLosCached(world, e, t);
+    if (engages && (d > range * 0.92 || blind)) {
       e.busy = true;
       if (!e.path || !e.chasing || world.tick % CHASE_REPATH_TICKS === e.id % CHASE_REPATH_TICKS) setPath(world, e, t.pos);
       e.chasing = true;
@@ -177,14 +193,22 @@ export function weaponsSystem(world: World): void {
     const dz = t.pos.z - e.pos.z;
     const d = Math.sqrt(dx * dx + dz * dz);
     const bearing = headingTo(dx, dz);
+    const bonus = heightBonus(world, e, t);
+    const garrisoned = e.inside !== 0;
+    if (t.inside || (e.kind === 'unit' && !hasLosCached(world, e, t))) {
+      relaxTurret(e);
+      continue;
+    }
     if (e.turretHeading !== undefined) {
       const rate = e.unit?.turretTurnRate ?? 2.5;
       e.turretHeading = turnToward(e.turretHeading, bearing, rate * TICK_SECONDS);
     }
     for (const w of e.weapons) {
       const def = w.def;
-      if (w.cooldown > 0 || !canHit(def, t.layer) || d > def.range || d < (def.minRange ?? 0)) continue;
-      if (def.mount === 'turret') {
+      if (w.cooldown > 0 || !canHit(def, t.layer) || d > def.range * bonus || d < (def.minRange ?? 0)) continue;
+      if (garrisoned) {
+        // Firing out of a building or trench: no turning needed.
+      } else if (def.mount === 'turret') {
         if (e.turretHeading !== undefined && Math.abs(wrapAngle(bearing - e.turretHeading)) > TURRET_CONE) continue;
       } else {
         if (Math.abs(wrapAngle(bearing - e.heading)) > HULL_CONE) continue;
@@ -220,6 +244,15 @@ export function launchIndirect(world: World, e: Entity, weapon: string, def: Wea
   });
 }
 
+/** Line of fire for direct weapons, re-checked every few ticks per shooter (it's the costly part). */
+function hasLosCached(world: World, e: Entity, t: Entity): boolean {
+  if (e.losTarget === t.id && world.tick - e.losAt < 5 && world.tick >= e.losAt) return e.losOk;
+  e.losTarget = t.id;
+  e.losAt = world.tick;
+  e.losOk = indirectVs(e, t) || hasLos(world, e, t);
+  return e.losOk;
+}
+
 function fire(world: World, e: Entity, weapon: string, def: WeaponDef, t: Entity, d: number): void {
   const at = { x: t.pos.x, z: t.pos.z };
   let mult = 1;
@@ -229,11 +262,12 @@ function fire(world: World, e: Entity, weapon: string, def: WeaponDef, t: Entity
     e.ambush = false;
     world.proposed.push({ type: 'revealed', id: e.id });
   }
-  // Morale: low readiness also costs accuracy.
-  const accuracy = def.accuracy * (0.6 + 0.4 * e.readiness);
+  // Morale: low readiness costs accuracy; veterans shoot better, pinned infantry much worse.
+  const accuracy = Math.min(0.98, def.accuracy * (0.6 + 0.4 * e.readiness) * rankAccuracy(e) * (e.pinned ? 0.5 : 1));
   if (def.delivery === 'hitscan') {
     world.emit({ type: 'fired', id: e.id, weapon, target: t.id, at });
     if (world.rng.next() < accuracy) applyDamage(world, t, def.damage * mult, def, e.pos, e.id);
+    else suppress(world, t, def, 1 / 3);
     return;
   }
   if (def.delivery === 'indirect') {
@@ -280,6 +314,7 @@ export function projectileSystem(world: World): void {
     } else if (t && !t.dead && p.def.delivery !== 'indirect') {
       // A miss lands near where the target was aimed at.
       at = { x: p.at.x + (world.rng.next() - 0.5) * 6, z: p.at.z + (world.rng.next() - 0.5) * 6 };
+      suppress(world, t, p.def, 1 / 3);
     }
     world.emit({ type: 'impact', weapon: p.weapon, at });
     if (p.def.splash) splash(world, p, at, direct);
@@ -325,10 +360,16 @@ export function applyDamage(world: World, t: Entity, base: number, def: WeaponDe
   if (def.damageType !== 'aa' && def.damageType !== 'torpedo') mult *= facingMultiplier(t, from);
   if (t.entrench === 'entrenched') mult *= t.entrenchDamage;
   if (t.type === 'hq' && world.suddenDeath) mult *= world.content.rules.suddenDeathHqDamageMult;
+  mult *= coverMult(world, t, def);
+  if (t.pinned && (def.damageType === 'small_arms' || def.damageType === 'he')) mult *= PRONE_DAMAGE;
   const dmg = base * mult;
   if (dmg <= 0) return;
+  const dealt = Math.min(dmg, t.hp);
   t.hp -= dmg;
+  t.hurtAt = world.tick;
   world.emit({ type: 'hit', id: t.id, by, damage: dmg, at: { x: t.pos.x, z: t.pos.z } });
+  suppress(world, t, def, 1);
+  if (by !== undefined) gainXp(world, by, t, dealt);
   const owner = world.players.get(t.owner);
   if (owner && world.tick - owner.lastAlertTick >= ALERT_TICKS) {
     owner.lastAlertTick = world.tick;
@@ -343,10 +384,14 @@ export function applyDamage(world: World, t: Entity, base: number, def: WeaponDe
 
 /** Removes dead entities: died + removed events, ticket cost for lost units. */
 export function deathSystem(world: World): void {
+  // Containers first: their cargo bails out (buildings, IFVs) or goes down with them (helis, ships).
+  for (const e of world.entities.values()) if (e.dead && e.cargo.length) ejectAll(world, e, true);
   const dead: Entity[] = [];
   for (const e of world.entities.values()) if (e.dead) dead.push(e);
   for (const e of dead) {
+    if (e.line) leaveLine(world, e);
     world.emit({ type: 'died', id: e.id, killer: e.killer });
+
     if (e.kind === 'unit' && !world.players.get(e.owner)?.defeated) {
       const team = world.teams.get(e.team);
       if (team) team.tickets -= e.cp * world.content.rules.unitLossTicketsPerCp;

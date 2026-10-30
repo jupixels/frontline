@@ -1,4 +1,5 @@
-import type { EntityState, PlayerState, SimView } from '../shared/entities';
+import type { EntityState, FrontlineView, PauseView, PlayerState, SimView, SuperweaponView } from '../shared/entities';
+import { assignSpawns } from '../shared/maps';
 import type { SimEvent } from '../shared/events';
 import { SIM_HZ, type EntityId, type MatchSetup, type PlayerId, type TeamId, type Tick, type Vec2 } from '../shared/types';
 import type { AnyPlayerCommand, EconomyView, FogView, ProductionView, ProposedEvent, SimViewExt } from './contracts';
@@ -10,6 +11,11 @@ import { buildable, canPlace, economySystem, producible } from './systems/econom
 import { logisticsSystem, readinessSystem } from './systems/logistics';
 import { avoidanceSystem, movementSystem } from './systems/movement';
 import { applyCommands } from './systems/orders';
+import { canEnter, cargoSystem } from './systems/containers';
+import { lineSystem } from './systems/lines';
+import { pauseSystem, votesNeeded } from './systems/pause';
+import { superweaponStatus, superweaponSystem } from './systems/superweapon';
+import { veterancySystem } from './systems/veterancy';
 import { captureSystem, victorySystem } from './systems/victory';
 import { canCommand, World, type SimContent } from './world';
 
@@ -39,7 +45,13 @@ export class Simulation implements SimView, SimViewExt {
     this.world.fog.update();
   }
 
+  /** Steps taken (lockstep turn clock); keeps counting while paused. */
   get tick(): Tick {
+    return this.world.steps;
+  }
+
+  /** Game time in ticks; stands still while paused. */
+  get gameTick(): Tick {
     return this.world.tick;
   }
 
@@ -64,13 +76,23 @@ export class Simulation implements SimView, SimViewExt {
     w.events = [];
     w.proposed = [];
     applyCommands(w, commands);
+    pauseSystem(w);
+    w.steps++;
+    if (w.paused) {
+      this.proposedEvents = w.proposed;
+      return w.events;
+    }
     if (w.tick % w.content.rules.fogUpdateTicks === 0) w.fog.update();
     targetingSystem(w);
     movementSystem(w);
     avoidanceSystem(w);
+    cargoSystem(w);
+    lineSystem(w);
     weaponsSystem(w);
     projectileSystem(w);
     abilitySystem(w);
+    veterancySystem(w);
+    superweaponSystem(w);
     economySystem(w);
     logisticsSystem(w);
     readinessSystem(w);
@@ -86,10 +108,10 @@ export class Simulation implements SimView, SimViewExt {
   hash(): number {
     const h = new StateHasher();
     const w = this.world;
-    h.num(w.tick);
+    h.num(w.tick).num(w.steps).num(w.paused ? 1 : 0).num(w.pauseVotes.length);
     for (const n of w.rng.state()) h.num(n);
     for (const t of w.teams.values()) h.num(t.id).num(t.tickets).num(t.defeated ? 1 : 0);
-    for (const p of w.players.values()) h.num(p.id).num(p.supply).num(p.power).num(p.tickets).num(p.defeated ? 1 : 0).num(p.cp).num(p.tier);
+    for (const p of w.players.values()) h.num(p.id).num(p.supply).num(p.power).num(p.tickets).num(p.defeated ? 1 : 0).num(p.cp).num(p.tier).num(p.superCharge).num(p.pausesLeft);
     for (const e of w.entities.values()) {
       h.num(e.id).str(e.type).num(e.owner).num(e.pos.x).num(e.pos.z).num(e.heading).num(e.hp);
       h.num(e.target).num(e.buildProgress).num(e.captureProgress).num(e.capturer);
@@ -99,7 +121,14 @@ export class Simulation implements SimView, SimViewExt {
       for (const a of e.abilities) h.num(a.cooldown);
       h.str(e.entrench).num(e.entrenchAt).num(e.boostUntil).num(e.ambush ? 1 : 0).num(e.readiness).num(e.stock).num(e.truck).num(e.truckReadyAt);
       if (e.haul) h.num(e.haul.source).str(e.haul.phase).num(e.haul.cargo);
+      h.num(e.inside).num(e.cargo.length).num(e.suppression).num(e.xp).num(e.rank).num(e.maxHp).num(e.line);
+      if (e.lineSlot) h.num(e.lineSlot.x).num(e.lineSlot.z);
     }
+    for (const l of w.lines.values()) {
+      h.num(l.id).num(l.owner).num(l.facing).num(l.units.length);
+      for (const p of l.points) h.num(p.x).num(p.z);
+    }
+    for (const m of w.missiles) h.num(m.player).num(m.at.x).num(m.at.z).num(m.arrive);
     for (const p of w.projectiles) h.num(p.shooter).num(p.at.x).num(p.at.z).num(p.arrive).num(p.hits ? 1 : 0).num(p.mult);
     for (const s of w.smokes) h.num(s.at.x).num(s.at.z).num(s.until);
     for (const b of w.barrages) h.num(b.caster).num(b.left).num(b.next);
@@ -193,16 +222,55 @@ export class Simulation implements SimView, SimViewExt {
     return !!e && canCommand(this.world, player, e);
   }
 
+  lines(player: PlayerId): readonly FrontlineView[] {
+    const team = this.world.teamOf(player);
+    const out: FrontlineView[] = [];
+    for (const l of this.world.lines.values()) if (l.team === team) out.push(l);
+    return out;
+  }
+
+  superweapon(player: PlayerId): SuperweaponView | null {
+    return superweaponStatus(this.world, player);
+  }
+
+  get pause(): PauseView {
+    const w = this.world;
+    const left: Record<number, number> = {};
+    for (const p of w.players.values()) left[p.id] = p.pausesLeft;
+    return { paused: w.paused, votes: w.pauseVotes, needed: votesNeeded(w), left };
+  }
+
+  heightAt(x: number, z: number): number {
+    return this.world.heightAt(x, z);
+  }
+
+  canEnter(unit: EntityId, container: EntityId): boolean {
+    const u = this.world.entities.get(unit);
+    const c = this.world.entities.get(container);
+    return !!u && !!c && canEnter(this.world, u, c);
+  }
+
+  reachable(domain: 'ground' | 'naval', a: Vec2, b: Vec2): boolean {
+    return this.world.nav.reachable(domain, a, b);
+  }
+
   private spawnMap(): void {
     const { map, rules } = this.world.content;
     for (const p of map.points ?? []) this.world.spawnPoint(p, p.radius ?? rules.pointRadius);
+    for (const s of map.structures ?? []) {
+      if (!this.world.content.structures[s.type]) continue;
+      const quarter = 1.5707963267948966;
+      this.world.spawnStructure(s.type, -1, { x: s.x, z: s.z }, Math.round((s.rotation ?? 0) / quarter) * quarter, true);
+    }
   }
 
   private spawnStartingArmies(): void {
     const w = this.world;
     const { map } = w.content;
+    const spawns = assignSpawns(map, w.setup.players);
     for (const slot of w.setup.players) {
-      const spawn = map.spawns[slot.id % map.spawns.length];
+      const spawn = map.spawns[spawns.get(slot.id) ?? slot.id % map.spawns.length];
+
       // Face the map center, snapped to 90 degrees so the footprint stays axis-aligned.
       const heading = headingTo(-spawn.x, -spawn.z);
       const quarter = 1.5707963267948966;

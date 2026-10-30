@@ -17,6 +17,50 @@ export interface EntityState {
   readonly maxHp: number;
   /** True while the unit is moving this tick (drives Move/Idle animation). */
   readonly moving: boolean;
+  /** Transport or garrisoned structure this unit is inside (hidden from the map), if any. */
+  readonly inside?: EntityId;
+  /** Units carried by this transport / garrisoning this structure. */
+  readonly cargo?: readonly EntityId[];
+  /** Infantry suppression 0..1. Above SUPPRESS_PINNED the unit is prone: slow and inaccurate. */
+  readonly suppression?: number;
+  /** Veterancy rank 0..3. */
+  readonly rank?: number;
+  /** Frontline the unit holds (SimViewExt.lines), 0 = none. */
+  readonly line?: number;
+}
+
+/** Suppression level at which infantry go prone. */
+export const SUPPRESS_PINNED = 0.5;
+
+/** A drawn frontline (holdLine). Allies see each other's lines. */
+export interface FrontlineView {
+  readonly id: number;
+  readonly owner: PlayerId;
+  readonly points: readonly Vec2[];
+  /** Unit heading the line faces (away from the owner's side). */
+  readonly facing: Heading;
+  readonly units: readonly EntityId[];
+  /** Per point segment, 0..1 relative strength (weak spots get reinforcements first). */
+  readonly strength: readonly number[];
+}
+
+/** Strategic superweapon of a player (cruise missile from the Strategic Command). */
+export interface SuperweaponView {
+  /** Structure that fires it. */
+  readonly site: EntityId;
+  /** 0..1 charge; 1 = ready. */
+  readonly charge: number;
+  readonly ready: boolean;
+}
+
+/** Online pause vote state. */
+export interface PauseView {
+  readonly paused: boolean;
+  /** Players who voted to pause (while not paused). */
+  readonly votes: readonly PlayerId[];
+  readonly needed: number;
+  /** Pauses each player has left. */
+  readonly left: Readonly<Record<number, number>>;
 }
 
 export interface PlayerState {
@@ -95,13 +139,28 @@ export interface SimViewExt {
   stock(id: EntityId): number;
   /** Whether `player` may give orders to `id` (owner, or shared command). */
   canCommand(player: PlayerId, id: EntityId): boolean;
+  /** Frontlines owned by `player` and allies. */
+  lines(player: PlayerId): readonly FrontlineView[];
+  /** The player's superweapon, if they have built one. */
+  superweapon(player: PlayerId): SuperweaponView | null;
+  readonly pause: PauseView;
+  /** Ground height at (x, z) (bridge decks included), same as the renderer draws. */
+  heightAt(x: number, z: number): number;
+  /** Whether `unit` may board/garrison `container` right now (type, seats, ownership). */
+  canEnter(unit: EntityId, container: EntityId): boolean;
+  /** Static terrain reachability (ignores structures): can `domain` travel from a to b? */
+  reachable(domain: 'ground' | 'naval', a: Vec2, b: Vec2): boolean;
   /** Match over: winning team, or null while playing. */
   readonly winner: TeamId | null;
 }
 
 /** Read-only view of the simulation that other modules depend on. */
 export interface SimView {
+  /** Step counter (lockstep turns). Keeps counting while the game is paused. */
   readonly tick: Tick;
+  /** Game time in ticks: stops while paused. Use it for clocks and countdowns. */
+  readonly gameTick?: Tick;
+
   entities(): Iterable<EntityState>;
   get(id: EntityId): EntityState | undefined;
   player(id: PlayerId): PlayerState | undefined;

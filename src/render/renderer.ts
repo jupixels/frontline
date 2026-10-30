@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import type { Command } from '../shared/commands';
 import structuresJson from '../../data/structures.json';
 import weaponsJson from '../../data/weapons.json';
-import type { UnitDef } from '../shared/data';
+import type { MapDef, UnitDef } from '../shared/data';
+import { TerrainModel } from '../shared/terrain';
 import type { SimView, SimViewExt } from '../shared/entities';
 import type { SimEvent } from '../shared/events';
 import { TICK_SECONDS, type EntityId, type PlayerId, type PlayerSlot, type Vec2 } from '../shared/types';
@@ -16,7 +17,7 @@ import { PostStack } from './post';
 import { LodInstancer } from './lod';
 import { gpuName, initialQuality, QUALITY, type QualityLevel, type QualitySettings } from './quality';
 import { CapturePointView } from './points';
-import { Terrain, WATER_LEVEL, type MapFeatures } from './terrain';
+import { Terrain, WATER_LEVEL } from './terrain';
 import { UnitView, type ViewDef } from './units';
 import { Vfx, type MuzzleSize } from './vfx';
 import { Water } from './water';
@@ -29,12 +30,10 @@ export interface RenderSetup {
   players: PlayerSlot[];
   /** Whose eyes the fog of war uses. Defaults to the first human slot. */
   localPlayer?: PlayerId;
-  /** Terrain seed. TODO(sim): should come from MapDef once maps carry terrain. */
-  terrainSeed?: number;
   /** Structure models and footprints, keyed like data/structures.json. Defaults to that file. */
   structures?: Record<string, RenderStructureDef>;
-  /** The map's water and obstacle shapes (SimMapDef.water / .obstacles) so the ground matches the sim. */
-  map?: MapFeatures;
+  /** The map: terrain, water, forests, bridges, props and atmosphere, exactly as the sim plays it. */
+  map?: MapDef;
 }
 
 /** What the renderer needs per structure type (a subset of data/structures.json entries). */
@@ -143,7 +142,7 @@ export class GameRenderer implements Picker {
 
     this.env = new Environment(this.scene, r);
     this.structureDefs = setup.structures ?? (structuresJson as unknown as Record<string, RenderStructureDef>);
-    this.terrain = new Terrain({ mapSize: setup.mapSize, seed: setup.terrainSeed ?? 1, features: setup.map });
+    this.terrain = new Terrain({ model: new TerrainModel(setup.map ?? { size: setup.mapSize }) });
     this.scene.add(this.terrain.mesh);
     this.cam.groundHeight = (x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL);
     this.water = new Water(this.terrain, this.env.sunDir, this.env.sun.color);
@@ -341,10 +340,10 @@ export class GameRenderer implements Picker {
           break;
         case 'incoming':
           // Shown to everyone (the sim reveals it so targets can dodge).
-          this.markers.incoming(ev.at.x, ev.at.z, ev.radius, Math.max(0.5, (ev.arrive - sim.tick) * TICK_SECONDS));
+          this.markers.incoming(ev.at.x, ev.at.z, ev.radius, Math.max(0.5, (ev.arrive - (sim.gameTick ?? sim.tick)) * TICK_SECONDS));
           break;
         case 'smoke':
-          this.vfx.smokeScreen(ev.at.x, ev.at.z, ev.radius, Math.max(1, (ev.until - sim.tick) * TICK_SECONDS));
+          this.vfx.smokeScreen(ev.at.x, ev.at.z, ev.radius, Math.max(1, (ev.until - (sim.gameTick ?? sim.tick)) * TICK_SECONDS));
           break;
         case 'placed':
         case 'built':

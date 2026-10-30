@@ -8,7 +8,7 @@ export type SimEvent =
   | { type: 'spawned'; id: EntityId }
   | { type: 'removed'; id: EntityId }
   | { type: 'died'; id: EntityId; killer?: EntityId }
-  | { type: 'ordered'; player: PlayerId; units: EntityId[]; order: 'move' | 'attack' | 'stop' | 'hold' | 'build' }
+  | { type: 'ordered'; player: PlayerId; units: EntityId[]; order: 'move' | 'attack' | 'stop' | 'hold' | 'build' | 'patrol' | 'enter' | 'unload' | 'line' }
   | { type: 'fired'; id: EntityId; weapon: string; target?: EntityId; at: Vec2 }
   | { type: 'hit'; id: EntityId; by?: EntityId; damage: number; at: Vec2 }
   | { type: 'impact'; weapon: string; at: Vec2 }
@@ -35,6 +35,22 @@ export type SimEvent =
   /** An ambushing unit fired or was spotted and is visible again. */
   | { type: 'revealed'; id: EntityId }
   /** A supply truck delivered cargo to its HQ. */
-  | { type: 'delivered'; truck: EntityId; player: PlayerId; amount: number };
+  | { type: 'delivered'; truck: EntityId; player: PlayerId; amount: number }
+  /** Infantry went prone under fire (`pinned`) or recovered. */
+  | { type: 'suppressed'; id: EntityId; pinned: boolean }
+  /** A unit gained a veterancy rank (1..3). */
+  | { type: 'promoted'; id: EntityId; rank: number }
+  /** A unit boarded/garrisoned (`entered`) or left (`exited`) a container. */
+  | { type: 'boarded'; id: EntityId; container: EntityId; entered: boolean }
+  /** Superweapon launched: everyone sees the impact point and countdown (early warning). */
+  | { type: 'superweaponLaunched'; player: PlayerId; site: EntityId; at: Vec2; radius: number; arrive: Tick }
+  | { type: 'superweaponImpact'; player: PlayerId; at: Vec2; radius: number }
+  /** A player's superweapon finished charging. */
+  | { type: 'superweaponReady'; player: PlayerId }
+  /** Frontline created, changed (advance / reinforce) or removed. */
+  | { type: 'line'; line: number; owner: PlayerId; change: 'formed' | 'advanced' | 'reinforced' | 'disbanded' }
+  | { type: 'pauseVote'; player: PlayerId; paused: boolean; votes: number; needed: number }
+  | { type: 'paused'; paused: boolean; by: PlayerId };
+
 
 export type SimEventType = SimEvent['type'];

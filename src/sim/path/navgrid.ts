@@ -1,10 +1,20 @@
 import type { Domain } from '../../shared/data';
+import { CLIFF_SLOPE, DEEP_WATER, TerrainModel, WATER_LEVEL } from '../../shared/terrain';
 import type { Vec2 } from '../../shared/types';
-import type { MapShape, SimMapDef } from '../content';
+import type { SimMapDef } from '../content';
 
 export const TERRAIN_LAND = 0;
 export const TERRAIN_BLOCKED = 1;
 export const TERRAIN_WATER = 2;
+/** Bridge over water: ground units cross on the deck, ships pass underneath. */
+export const TERRAIN_BRIDGE = 3;
+
+/** Per-cell terrain flags (NavGrid.flags). */
+export const FLAG_FOREST = 1;
+export const FLAG_ROAD = 2;
+/** Fordable water: ground units wade slowly. */
+export const FLAG_SHALLOW = 4;
+export const FLAG_BRIDGE = 8;
 
 /** Axis-aligned cell rectangle, inclusive. */
 export interface CellRect {
@@ -23,6 +33,11 @@ export class NavGrid {
   readonly rows: number;
   readonly half: number;
   readonly terrain: Uint8Array;
+  /** Ground height (bridge deck on bridges) at each cell center. */
+  readonly heights: Float64Array;
+  /** FLAG_* bits per cell. */
+  readonly flags: Uint8Array;
+  readonly model: TerrainModel;
   /** Number of structures covering each cell. */
   readonly occupancy: Uint8Array;
   /** Bumped whenever occupancy changes so cached flow fields know to rebuild. */
@@ -37,23 +52,154 @@ export class NavGrid {
     this.half = map.size / 2;
     this.cols = Math.ceil(map.size / cellSize);
     this.rows = this.cols;
-    this.terrain = new Uint8Array(this.cols * this.rows);
-    this.occupancy = new Uint8Array(this.cols * this.rows);
-    for (const s of map.water ?? []) this.paint(s, TERRAIN_WATER);
-    for (const s of map.obstacles ?? []) this.paint(s, TERRAIN_BLOCKED);
+    const n = this.cols * this.rows;
+    this.terrain = new Uint8Array(n);
+    this.occupancy = new Uint8Array(n);
+    this.heights = new Float64Array(n);
+    this.flags = new Uint8Array(n);
+    this.model = new TerrainModel(map);
+    this.classify();
   }
 
-  private paint(s: MapShape, value: number): void {
-    for (let cz = 0; cz < this.rows; cz++) {
-      for (let cx = 0; cx < this.cols; cx++) {
+  /** Heights, water, cliffs (sheer slopes and rock shapes), forests, roads and bridges per cell. */
+  private classify(): void {
+    const m = this.model;
+    const { cols, rows } = this;
+    const ground = new Float64Array(cols * rows);
+    for (let cz = 0; cz < rows; cz++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const i = cz * cols + cx;
         const x = this.centerX(cx);
         const z = this.centerZ(cz);
-        let inside: boolean;
-        if (s.shape === 'rect') inside = Math.abs(x - s.x) <= s.w / 2 && Math.abs(z - s.z) <= s.d / 2;
-        else inside = (x - s.x) * (x - s.x) + (z - s.z) * (z - s.z) <= s.r * s.r;
-        if (inside) this.terrain[cz * this.cols + cx] = value;
+        const h = m.height(x, z);
+        ground[i] = h;
+        let f = 0;
+        if (m.forests.length && m.isForest(x, z)) f |= FLAG_FOREST;
+        if (m.roads.length && m.isRoad(x, z)) f |= FLAG_ROAD;
+        const deck = m.bridges.length ? m.bridgeDeck(x, z) : null;
+        if (deck !== null) {
+          f |= FLAG_BRIDGE;
+          this.heights[i] = deck;
+          this.terrain[i] = h < DEEP_WATER ? TERRAIN_BRIDGE : TERRAIN_LAND;
+        } else {
+          this.heights[i] = h;
+          if (h < DEEP_WATER) this.terrain[i] = TERRAIN_WATER;
+          else if (h < WATER_LEVEL - 0.05) f |= FLAG_SHALLOW;
+        }
+        this.flags[i] = f;
       }
     }
+    // Cliffs: rock shapes, and land too steep to climb to any neighbor.
+    const limit = CLIFF_SLOPE * this.cellSize;
+    for (let cz = 0; cz < rows; cz++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const i = cz * cols + cx;
+        if (this.terrain[i] !== TERRAIN_LAND || this.flags[i] & FLAG_BRIDGE) continue;
+        if (m.cliffs.length && m.isCliff(this.centerX(cx), this.centerZ(cz))) {
+          this.terrain[i] = TERRAIN_BLOCKED;
+          continue;
+        }
+        const h = ground[i];
+        let steep = false;
+        for (let k = 0; k < 4 && !steep; k++) {
+          const x = cx + (k === 0 ? 1 : k === 1 ? -1 : 0);
+          const z = cz + (k === 2 ? 1 : k === 3 ? -1 : 0);
+          if (x < 0 || z < 0 || x >= cols || z >= rows) continue;
+          const j = z * cols + x;
+          if (this.flags[j] & FLAG_BRIDGE) continue;
+          const d = ground[j] - h;
+          if (d > limit || -d > limit) steep = true;
+        }
+        if (steep) this.terrain[i] = TERRAIN_BLOCKED;
+      }
+    }
+  }
+
+  private components = new Map<Domain, Int32Array>();
+
+  /** Connected regions of static terrain (structures ignored) for `domain`, labelled per cell. */
+  private regions(domain: Domain): Int32Array {
+    let comp = this.components.get(domain);
+    if (comp) return comp;
+    const { cols, rows } = this;
+    comp = new Int32Array(cols * rows).fill(-1);
+    const open = (i: number) => {
+      const t = this.terrain[i];
+      return t === TERRAIN_BRIDGE || (domain === 'ground' ? t === TERRAIN_LAND : t === TERRAIN_WATER);
+    };
+    let label = 0;
+    const stack: number[] = [];
+    for (let i = 0; i < comp.length; i++) {
+      if (comp[i] >= 0 || !open(i)) continue;
+      comp[i] = label;
+      stack.push(i);
+      while (stack.length) {
+        const c = stack.pop()!;
+        const cx = c % cols;
+        const cz = (c - cx) / cols;
+        for (let k = 0; k < 4; k++) {
+          const x = cx + (k === 0 ? 1 : k === 1 ? -1 : 0);
+          const z = cz + (k === 2 ? 1 : k === 3 ? -1 : 0);
+          if (x < 0 || z < 0 || x >= cols || z >= rows) continue;
+          const j = z * cols + x;
+          if (comp[j] < 0 && open(j)) {
+            comp[j] = label;
+            stack.push(j);
+          }
+        }
+      }
+      label++;
+    }
+    this.components.set(domain, comp);
+    return comp;
+  }
+
+  /** Can `domain` travel from a to b over static terrain? (Nearest open cell to each end.) */
+  reachable(domain: Domain, a: Vec2, b: Vec2): boolean {
+    if (domain === 'air') return true;
+    const comp = this.regions(domain);
+    const ia = this.nearestStatic(a, comp);
+    const ib = this.nearestStatic(b, comp);
+    return ia >= 0 && ib >= 0 && comp[ia] === comp[ib];
+  }
+
+  private nearestStatic(p: Vec2, comp: Int32Array): number {
+    const cx = this.cellX(p.x);
+    const cz = this.cellZ(p.z);
+    for (let ring = 0; ring <= 12; ring++) {
+      for (let dz = -ring; dz <= ring; dz++) {
+        for (let dx = -ring; dx <= ring; dx++) {
+          if (Math.abs(dx) !== ring && Math.abs(dz) !== ring) continue;
+          const x = cx + dx;
+          const z = cz + dz;
+          if (x < 0 || z < 0 || x >= this.cols || z >= this.rows) continue;
+          const i = z * this.cols + x;
+          if (comp[i] >= 0) return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  /** Bilinear ground height (bridge decks included) at (x, z). */
+  heightAt(x: number, z: number): number {
+    const fx = (x + this.half) / this.cellSize - 0.5;
+    const fz = (z + this.half) / this.cellSize - 0.5;
+    const ix = Math.max(0, Math.min(this.cols - 2, Math.floor(fx)));
+    const iz = Math.max(0, Math.min(this.rows - 2, Math.floor(fz)));
+    const tx = Math.max(0, Math.min(1, fx - ix));
+    const tz = Math.max(0, Math.min(1, fz - iz));
+    const c = this.cols;
+    const h = this.heights;
+    const a = h[iz * c + ix];
+    const b = h[iz * c + ix + 1];
+    const d = h[(iz + 1) * c + ix];
+    const e = h[(iz + 1) * c + ix + 1];
+    return a + (b - a) * tx + (d - a) * tz + (a - b - d + e) * tx * tz;
+  }
+
+  flagsAt(p: Vec2): number {
+    return this.flags[this.cellOf(p)];
   }
 
   cellX(x: number): number {
@@ -86,6 +232,7 @@ export class NavGrid {
     if (domain === 'air') return true;
     if (this.occupancy[i] > 0) return false;
     const t = this.terrain[i];
+    if (t === TERRAIN_BRIDGE) return true;
     return domain === 'ground' ? t === TERRAIN_LAND : t === TERRAIN_WATER;
   }
 
@@ -112,7 +259,7 @@ export class NavGrid {
     for (let cz = r.z0; cz <= r.z1; cz++) {
       for (let cx = r.x0; cx <= r.x1; cx++) {
         const i = cz * this.cols + cx;
-        if (this.terrain[i] !== TERRAIN_LAND || this.occupancy[i] > 0) return false;
+        if (this.terrain[i] !== TERRAIN_LAND || this.occupancy[i] > 0 || this.flags[i] & (FLAG_SHALLOW | FLAG_BRIDGE)) return false;
       }
     }
     if (!shore) return true;

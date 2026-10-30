@@ -149,7 +149,20 @@ export function defeat(world: World, player: PlayerId): void {
   world.emit({ type: 'defeated', player });
   for (const e of world.entities.values()) {
     if (e.owner !== player) continue;
-    if (e.kind === 'point') {
+    if (e.kind === 'structure' && e.homeOwner === NEUTRAL) {
+      // A garrisoned neutral ruin goes back to neutral; its occupants are lost with their player.
+      for (const id of e.cargo) {
+        const u = world.entities.get(id);
+        if (u) {
+          u.dead = true;
+          u.hp = 0;
+          u.inside = 0;
+        }
+      }
+      e.cargo = [];
+      e.owner = NEUTRAL;
+      e.team = -1;
+    } else if (e.kind === 'point') {
       e.owner = NEUTRAL;
       e.team = -1;
       e.captureProgress = 0;

@@ -455,7 +455,7 @@ export class MatchUi {
 
   /** End the match from outside (e.g. everyone else left). */
   endMatch(winnerTeam: TeamId | null, reason?: string): void {
-    this.finish(winnerTeam, this.ctx.sim.tick, reason);
+    this.finish(winnerTeam, this.ctx.sim.gameTick ?? this.ctx.sim.tick, reason);
   }
 
   setNetStatus(s: NetStatus): void {
@@ -471,7 +471,7 @@ export class MatchUi {
   frame(dt: number): void {
     const now = performance.now();
     this.input.prune();
-    this.topbar.update(this.ctx.sim.tick, dt, { showFps: this.ctx.settings.get().showFps, pingMs: this.net.pingMs });
+    this.topbar.update(this.ctx.sim.gameTick ?? this.ctx.sim.tick, dt, { showFps: this.ctx.settings.get().showFps, pingMs: this.net.pingMs });
     this.minimap.update(now);
     this.selection.update(now);
     this.card.update(now);
