@@ -4,7 +4,7 @@
 // eight-player map adds a mirror across x = z (eight-fold),
 // so every side gets exactly the same ground. Edit this file, not the JSON.
 
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -63,16 +63,58 @@ const ROCKS = ['models/env/rock_large_a.glb', 'models/env/rock_large_b.glb', 'mo
 const BUSHES = ['models/env/bush_small.glb', 'models/env/bush_large.glb', 'models/env/bush_detailed.glb'];
 const OIL = ['models/buildings/props/gas_tank.glb', 'models/buildings/props/barrel.glb', 'models/buildings/props/explosive_barrel.glb', 'models/buildings/props/container_02.glb'];
 
-/** Sandbags ring and crates at a capture point (props only). */
-function pointDressing(p, k = 0) {
+/** Sandbag walls facing outward from the map center, crates and a barrel at a capture point (props only). */
+function pointDressing(p) {
   const props = [];
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2 + k;
-    props.push({ model: 'models/buildings/props/sandbags.glb', x: r1(p.x + Math.cos(a) * 11), z: r1(p.z + Math.sin(a) * 11), rotation: r1(a + Math.PI / 2) });
+  // Facing away from the middle keeps twin points identical under the map's symmetry.
+  const out = p.x || p.z ? Math.atan2(p.z, p.x) : 0;
+  for (const arc of [out, out + Math.PI]) {
+    for (let i = -2; i <= 2; i++) {
+      const a = arc + i * 0.2;
+      props.push({ model: DRESS.sandbagWall, x: r1(p.x + Math.cos(a) * 13), z: r1(p.z + Math.sin(a) * 13), rotation: r1(Math.PI / 2 - a) });
+    }
   }
-  props.push({ model: 'models/buildings/props/wooden_box.glb', x: r1(p.x + 4), z: r1(p.z - 3), rotation: 0.4 });
-  props.push({ model: 'models/buildings/props/barrel.glb', x: r1(p.x - 3), z: r1(p.z + 5) });
+  for (const side of [-1, 1]) {
+    const a = out + side * Math.PI / 2;
+    props.push({ model: DRESS.sandbagWall, x: r1(p.x + Math.cos(a) * 15), z: r1(p.z + Math.sin(a) * 15), rotation: r1(Math.PI / 2 - a) });
+  }
+  props.push({ model: 'models/buildings/props/wooden_box.glb', x: r1(p.x + Math.cos(out + 0.6) * 6), z: r1(p.z + Math.sin(out + 0.6) * 6), rotation: 0.4 });
+  props.push({ model: 'models/buildings/props/barrel.glb', x: r1(p.x + Math.cos(out - 2.4) * 6), z: r1(p.z + Math.sin(out - 2.4) * 6) });
   return props;
+}
+
+// --- dressing (render only: the sim never reads `dressing` or props) ---------------------------
+// Placeholders until the models session's Meshy props land: swap the paths here and regenerate.
+const DRESS = {
+  sandbagWall: 'models/buildings/props/sandbags.glb',
+  ruinedWall: 'models/buildings/props/wall_02.glb',
+  fuelTank: 'models/buildings/props/gas_tank.glb',
+  barrier: 'models/buildings/props/barrier.glb',
+  block: 'models/buildings/props/concrete_block.glb',
+  lamp: 'models/buildings/props/light_pole.glb',
+  containers: ['models/buildings/props/container_01.glb', 'models/buildings/props/container_02.glb', 'models/buildings/props/container_03.glb'],
+};
+/** Burnt-out vehicles reuse the unit models, drawn charred. */
+const wreck = (unit, x, z, rotation) => ({ model: `models/${unit}.glb`, x, z, rotation, burnt: true });
+const prop = (model, x, z, rotation = 0) => ({ model, x, z, rotation });
+
+const TAU = Math.PI * 2;
+const wrap = (a) => r1(((a % TAU) + TAU) % TAU);
+/** Areas and props turn with the map: a quarter turn of the position is -90 degrees of heading. */
+const rotArea = (a, k) => ({ ...rotXZ(a, k), rotation: wrap((a.rotation ?? 0) - (k * Math.PI) / 2) });
+const mirArea = (a) => ({ ...a, x: a.z, z: a.x, rotation: wrap(Math.PI / 2 - (a.rotation ?? 0)) });
+S.area = (items, n) => sym(items, n, rotArea);
+
+/** A field `w` x `d` meters turned by `rotation`. */
+const field = (x, z, w, d, rotation, crop) => ({ x, z, w, d, rotation, crop });
+/** The field's edge as a line of `kind`, leaving a gate in the middle of the near (-z) side. */
+function around(f, kind) {
+  const c = Math.cos(f.rotation ?? 0);
+  const s = Math.sin(f.rotation ?? 0);
+  const at = (lx, lz) => [r1(f.x + lx * c + lz * s), r1(f.z - lx * s + lz * c)];
+  const w = f.w / 2 + 2;
+  const d = f.d / 2 + 2;
+  return { kind, points: [at(-4, -d), at(-w, -d), at(-w, d), at(w, d), at(w, -d), at(4, -d)] };
 }
 
 /** Oil-well clutter at a supply node (props only). */
@@ -86,12 +128,19 @@ function nodeDressing(n, i) {
 }
 
 function write(map) {
-  map.props = [...(map.props ?? []), ...(map.points ?? []).flatMap((p, i) => pointDressing(p, i * 0.3)), ...(map.supplyNodes ?? []).flatMap(nodeDressing)];
+  map.props = [...(map.props ?? []), ...(map.points ?? []).flatMap((p) => pointDressing(p)), ...(map.supplyNodes ?? []).flatMap(nodeDressing)];
   writeFileSync(join(out, `${map.id}.json`), JSON.stringify(map, null, 1) + '\n');
   console.log(`${map.id}: ${map.points.length} points, ${map.supplyNodes.length} nodes, ${map.spawns.length} spawns`);
 }
 
 // --- Valley Pass (1v1) ------------------------------------------------------------------------
+const VALLEY_FIELDS = [
+  field(90, 175, 70, 45, 0.1, 'wheat'),
+  field(330, 150, 60, 40, -0.2, 'green'),
+  field(-310, 175, 60, 40, 0.15, 'furrow'),
+  field(-300, 110, 50, 35, 0.4, 'wheat'),
+  field(-180, 330, 50, 40, -0.1, 'green'),
+];
 // Two plateau bases above a river valley. Each base has two exits (center pass + one flank pass)
 // between sheer ridges. Three bridges and two fords cross the river; the Bridge point sits low in
 // the middle, overlooked by hills on both banks, so it's easy to take and hard to keep.
@@ -153,6 +202,27 @@ write({
   points: [P(0, 0, 'Bridge', 32), ...S.xz([P(-380, 95, 'West Mill'), P(170, 300, 'Farmstead')], 2).map((p, i) => ({ ...p, name: [`West Mill`, 'South Farm', 'East Mill', 'North Farm'][i] }))],
   supplyNodes: S.xz([{ x: -120, z: 380 }, { x: 130, z: 405 }, { x: -280, z: 145 }, { x: 110, z: 75 }], 2),
   structures: S.struct([{ type: 'ruin', x: -405, z: 125 }, { type: 'ruin', x: 46, z: 58 }, { type: 'ruin', x: 196, z: 322, rotation: 1.5708 }], 2),
+  dressing: {
+    fields: S.area(VALLEY_FIELDS, 2),
+    lines: [
+      ...S.line(VALLEY_FIELDS.map((f, i) => around(f, i % 2 ? 'fence' : 'wall')), 2),
+      // Power down the valley road to the river bank, and on to the West Mill.
+      ...S.line([{ kind: 'power', points: [[16, 250], [8, 150], [40, 40]] }, { kind: 'power', points: [[8, 150], [-120, 122], [-250, 100]] }], 2),
+    ],
+  },
+  props: S.area(
+    [
+      wreck('tank_mbt', 40, 82, 2.6),
+      wreck('jeep', -60, 190, 1.2),
+      wreck('supply_truck', 232, 50, 0.4),
+      wreck('tank_light', -215, 50, 2.3),
+      prop(DRESS.ruinedWall, 215, 300),
+      prop(DRESS.ruinedWall, 182, 345, 1.57),
+      prop(DRESS.ruinedWall, -430, 105, 0.3),
+      prop(DRESS.ruinedWall, -386, 146, 1.2),
+    ],
+    2,
+  ),
   scatter: [
     { models: ROCKS, area: { shape: 'rect', x: 0, z: 0, w: 1100, d: 1100 }, count: 160, scale: [0.6, 1.6] },
     { models: BUSHES, area: { shape: 'rect', x: 0, z: 0, w: 1100, d: 1100 }, count: 420, scale: [0.8, 1.6] },
@@ -160,6 +230,7 @@ write({
 });
 
 // --- Coastal Strait (2v2) ---------------------------------------------------------------------
+const COAST_FIELDS = [field(-150, 300, 60, 40, 0.2, 'green'), field(75, 290, 50, 35, 0, 'furrow')];
 // Two mainland coasts across a strait. The Lighthouse island in the middle is reached over two
 // long bridges (chokepoints, and naval guns cover the whole island). The west and east isles are
 // only reachable by transport ship or helicopter: amphibious landings decide them.
@@ -230,6 +301,29 @@ write({
   ],
   supplyNodes: S.xz([{ x: -170, z: 430 }, { x: 170, z: 430 }, { x: -300, z: 280 }, { x: 300, z: 300 }, { x: -400, z: 45 }, { x: 40, z: 32 }], 2),
   structures: S.struct([{ type: 'ruin', x: -350, z: 330 }, { type: 'ruin', x: 410, z: 290, rotation: 1.5708 }, { type: 'ruin', x: -455, z: -12 }, { type: 'ruin', x: 30, z: -40 }], 2),
+  dressing: {
+    fields: S.area(COAST_FIELDS, 2),
+    lines: [...S.line(COAST_FIELDS.map((f) => around(f, 'wall')), 2), ...S.line([{ kind: 'power', points: [[-150, 372], [-14, 322], [150, 372]] }], 2)],
+    // Piers run from the beach (+z end) out over the water.
+    docks: S.area([{ x: -380, z: 236, w: 8, d: 40, rotation: 0 }, { x: -335, z: 232, w: 6, d: 28, rotation: 0 }, { x: 400, z: 234, w: 10, d: 36, rotation: 0 }], 2),
+  },
+  props: S.area(
+    [
+      prop(DRESS.containers[0], 445, 262),
+      prop(DRESS.containers[1], 445, 266.5),
+      prop(DRESS.containers[2], 428, 250, 1.57),
+      prop(DRESS.fuelTank, 350, 268, 1.57),
+      prop(DRESS.fuelTank, 358, 268, 1.57),
+      prop(DRESS.lamp, -372, 258),
+      prop(DRESS.lamp, 392, 256),
+      prop(DRESS.lamp, 40, 30),
+      wreck('tank_light', 40, 252, 1),
+      wreck('supply_truck', -250, 245, 2.2),
+      wreck('jeep', 250, 250, 0.5),
+      wreck('ifv', -410, 50, 2),
+    ],
+    2,
+  ),
   scatter: [
     { models: ROCKS, area: { shape: 'rect', x: 0, z: 400, w: 1200, d: 340 }, count: 90, scale: [0.6, 1.5] },
     { models: ROCKS, area: { shape: 'rect', x: 0, z: -400, w: 1200, d: 340 }, count: 90, scale: [0.6, 1.5] },
@@ -288,6 +382,31 @@ write({
   points: [P(0, 0, 'Oilfield', 34), ...S.xz([P(0, 330, 'Pumping Station'), P(-300, 300, 'Depot')], 4).map((p, i) => ({ ...p, name: ['South Station', 'SW Depot', 'West Station', 'NW Depot', 'North Station', 'NE Depot', 'East Station', 'SE Depot'][i] }))],
   supplyNodes: [...S.xz([{ x: -360, z: 330 }, { x: -320, z: 380 }, { x: 60, z: 360 }, { x: -60, z: 300 }], 4), ...S.xz([{ x: 45, z: 45 }], 4)],
   structures: S.struct([{ type: 'ruin', x: 30, z: 305 }, { type: 'ruin', x: -275, z: 280, rotation: 1.5708 }], 4),
+  dressing: {
+    lines: S.line(
+      [
+        { kind: 'pipe', points: [[-318, 268], [-348, 140], [-348, 30]] },
+        { kind: 'pipe', points: [[-60, 300], [-42, 312], [-28, 312]] },
+        { kind: 'power', points: [[14, 300], [14, 150], [14, 42]] },
+      ],
+      4,
+    ),
+  },
+  props: S.area(
+    [
+      prop(DRESS.fuelTank, -350, 250, 1.57),
+      prop(DRESS.fuelTank, -358, 250, 1.57),
+      prop(DRESS.fuelTank, -366, 250, 1.57),
+      prop(DRESS.fuelTank, 82, 18, 0.8),
+      prop(DRESS.barrier, 30, 300),
+      prop(DRESS.barrier, -30, 300),
+      prop(DRESS.block, 0, 296),
+      wreck('tank_mbt', -162, 350, 1.9),
+      wreck('supply_truck', -352, 108, 0.1),
+      wreck('jeep', -120, 150, 2.5),
+    ],
+    4,
+  ),
   scatter: [
     { models: ROCKS, area: { shape: 'rect', x: 0, z: 0, w: 1200, d: 1200 }, count: 260, scale: [0.6, 2] },
     { models: ['models/env/bush_small.glb', 'models/env/tree_stump.glb'], area: { shape: 'rect', x: 0, z: 0, w: 1200, d: 1200 }, count: 120, scale: [0.6, 1.2] },
@@ -316,7 +435,7 @@ function sym8(items, rot, mir) {
     for (const base of [it, mir(it)]) {
       for (let k = 0; k < 4; k++) {
         const c = rot(base, k);
-        const key = JSON.stringify(c);
+        const key = JSON.stringify(c.points ? { ...c, points: c.points.map(String).sort() } : c);
         if (seen.has(key)) continue;
         seen.add(key);
         outItems.push(c);
@@ -326,6 +445,7 @@ function sym8(items, rot, mir) {
   return outItems;
 }
 const S8 = {
+  area: (items) => sym8(items, rotArea, mirArea),
   xz: (items) => sym8(items, rotXZ, mirXZ),
   shape: (items) => sym8(items, rotShape, mirShape),
   line: (items) => sym8(items, rotLine, mirLine),
@@ -375,6 +495,7 @@ function compass(x, z) {
   };
   const isle = diag(250);
   const ridge = diag(800);
+  const fields = [field(520, 0, 56, 40, Math.PI / 2, 'green'), field(790, 0, 70, 46, Math.PI / 2, 'furrow')];
   write({
     id: 'inland_sea',
     name: 'Inland Sea',
@@ -425,6 +546,20 @@ function compass(x, z) {
     ],
     supplyNodes: S8.xz([xz(pol(770, 17)), xz(pol(700, 31)), xz(pol(480, 7)), xz(pol(255, 49)), xz(diag(850)), xz(diag(60))]),
     structures: S8.struct([{ type: 'ruin', x: 465, z: 0 }, { type: 'ruin', ...xz(diag(770)) }, { type: 'ruin', x: 0, z: 40 }]),
+    dressing: {
+      // Items on an axis face along it (rotation pi/2) so their mirror image is their own rotated copy.
+      fields: S8.area(fields),
+      lines: S8.line(fields.map((f, i) => around(f, i ? 'wall' : 'fence'))),
+      docks: S8.area([{ x: 378, z: 0, w: 7, d: 30, rotation: Math.PI / 2 }]),
+    },
+    props: S8.area([
+      prop(DRESS.containers[0], 420, 40, Math.PI / 2),
+      prop(DRESS.lamp, 398, 8),
+      wreck('tank_mbt', ...pol(760, 47), 1),
+      wreck('ifv', ...pol(700, 51), 2.2),
+      prop(DRESS.ruinedWall, ...pol(790, 41), 0.6),
+      prop(DRESS.ruinedWall, ...pol(812, 44), 2.1),
+    ]),
     scatter: [
       { models: ROCKS, area: { shape: 'rect', x: 0, z: 0, w: 1800, d: 1800 }, count: 320, scale: [0.6, 1.6] },
       { models: BUSHES, area: { shape: 'rect', x: 0, z: 0, w: 1800, d: 1800 }, count: 560, scale: [0.8, 1.5] },
@@ -440,6 +575,7 @@ function compass(x, z) {
 // on the isthmus roads. 180-degree symmetric.
 {
   const SZ = -640;
+  const fields = [field(-230, -760, 60, 40, 0, 'wheat'), field(230, -760, 60, 40, 0, 'furrow')];
   const southCoast = [];
   for (let x = -590; x <= 590; x += 29.5) southCoast.push([r1(x), r1(-395 + 16 * Math.cos(x / 70) + 10 * Math.cos(x / 31 + 1))]);
   // East shore from the south coast's end up to where the rotated south coast (the north coast) begins.
@@ -537,6 +673,37 @@ function compass(x, z) {
       { x: 40, z: 30 },
       { x: -40, z: -30 },
     ],
+    dressing: {
+      fields: S.area(fields, 2),
+      lines: [
+        ...S.line(fields.map((f) => around(f, 'wall')), 2),
+        ...S.line(
+          [
+            { kind: 'pipe', points: [[-612, -380], [-618, -120], [-615, 120], [-612, 255]] },
+            { kind: 'power', points: [[-625, -420], [-628, -235], [-680, -30]] },
+          ],
+          2,
+        ),
+      ],
+      // Jetties from the coves out into the gulf (+z is the water on this coast).
+      docks: S.area([{ x: -230, z: -392, w: 7, d: 30, rotation: Math.PI }, { x: 230, z: -405, w: 7, d: 30, rotation: Math.PI }], 2),
+    },
+    props: S.area(
+      [
+        prop(DRESS.fuelTank, -780, -340),
+        prop(DRESS.fuelTank, -780, -335),
+        prop(DRESS.fuelTank, -780, -330),
+        prop(DRESS.fuelTank, -765, -352, 1.57),
+        prop(DRESS.containers[0], -200, -425),
+        prop(DRESS.containers[2], 258, -428, 1.57),
+        prop(DRESS.ruinedWall, -255, -470, 0.2),
+        prop(DRESS.ruinedWall, 205, -472, 1.4),
+        wreck('tank_mbt', -700, -150, 0.3),
+        wreck('ifv', -740, 85, 2),
+        wreck('jeep', -665, -335, 1.1),
+      ],
+      2,
+    ),
     structures: [
       ...S.struct([{ type: 'ruin', x: -680, z: -40 }, { type: 'ruin', x: -255, z: -455 }, { type: 'ruin', x: 205, z: -455, rotation: 1.5708 }, { type: 'ruin', x: -420, z: 50 }], 2),
       { type: 'ruin', x: 20, z: -40 },
@@ -547,4 +714,16 @@ function compass(x, z) {
       { models: BUSHES, area: { shape: 'rect', x: 0, z: 0, w: 1700, d: 1700 }, count: 520, scale: [0.8, 1.5] },
     ],
   });
+}
+
+// --- Sandbox (hand-made test map): light dressing only -------------------------------------------
+{
+  const file = join(out, 'sandbox.json');
+  const map = JSON.parse(readFileSync(file, 'utf8'));
+  map.props = [
+    ...map.points.flatMap((p) => pointDressing(p)),
+    ...S.area([wreck('tank_light', 0, 88, 1.57), prop(DRESS.barrier, -100, 40, 1.57), prop(DRESS.block, -96, 30, 0.3)], 2),
+  ];
+  writeFileSync(file, JSON.stringify(map, null, 1) + '\n');
+  console.log(`sandbox: ${map.props.length} props`);
 }

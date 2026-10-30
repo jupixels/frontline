@@ -932,283 +932,969 @@
    "rotation": 4.7
   }
  ],
- "scatter": [
-  {
-   "models": [
-    "models/env/rock_large_a.glb",
-    "models/env/rock_large_b.glb",
-    "models/env/rock_small_a.glb",
-    "models/env/rock_tall_a.glb",
-    "models/env/rock_stone_large.glb"
-   ],
-   "area": {
-    "shape": "rect",
-    "x": 0,
-    "z": 0,
-    "w": 1100,
-    "d": 1100
+ "dressing": {
+  "fields": [
+   {
+    "x": 90,
+    "z": 175,
+    "w": 70,
+    "d": 45,
+    "rotation": 0.1,
+    "crop": "wheat"
    },
-   "count": 160,
-   "scale": [
-    0.6,
-    1.6
-   ]
-  },
-  {
-   "models": [
-    "models/env/bush_small.glb",
-    "models/env/bush_large.glb",
-    "models/env/bush_detailed.glb"
-   ],
-   "area": {
-    "shape": "rect",
-    "x": 0,
-    "z": 0,
-    "w": 1100,
-    "d": 1100
+   {
+    "x": 330,
+    "z": 150,
+    "w": 60,
+    "d": 40,
+    "rotation": 6.1,
+    "crop": "green"
    },
-   "count": 420,
-   "scale": [
-    0.8,
-    1.6
-   ]
-  }
- ],
+   {
+    "x": -310,
+    "z": 175,
+    "w": 60,
+    "d": 40,
+    "rotation": 0.2,
+    "crop": "furrow"
+   },
+   {
+    "x": -300,
+    "z": 110,
+    "w": 50,
+    "d": 35,
+    "rotation": 0.4,
+    "crop": "wheat"
+   },
+   {
+    "x": -180,
+    "z": 330,
+    "w": 50,
+    "d": 40,
+    "rotation": 6.2,
+    "crop": "green"
+   },
+   {
+    "x": -90,
+    "z": -175,
+    "w": 70,
+    "d": 45,
+    "rotation": 3.2,
+    "crop": "wheat"
+   },
+   {
+    "x": -330,
+    "z": -150,
+    "w": 60,
+    "d": 40,
+    "rotation": 2.9,
+    "crop": "green"
+   },
+   {
+    "x": 310,
+    "z": -175,
+    "w": 60,
+    "d": 40,
+    "rotation": 3.3,
+    "crop": "furrow"
+   },
+   {
+    "x": 300,
+    "z": -110,
+    "w": 50,
+    "d": 35,
+    "rotation": 3.5,
+    "crop": "wheat"
+   },
+   {
+    "x": 180,
+    "z": -330,
+    "w": 50,
+    "d": 40,
+    "rotation": 3,
+    "crop": "green"
+   }
+  ],
+  "lines": [
+   {
+    "kind": "wall",
+    "points": [
+     [
+      83.6,
+      151
+     ],
+     [
+      50.7,
+      154.3
+     ],
+     [
+      55.6,
+      203.1
+     ],
+     [
+      129.3,
+      195.7
+     ],
+     [
+      124.4,
+      146.9
+     ],
+     [
+      91.5,
+      150.2
+     ]
+    ]
+   },
+   {
+    "kind": "fence",
+    "points": [
+     [
+      330.5,
+      127.6
+     ],
+     [
+      303,
+      122.1
+     ],
+     [
+      294.3,
+      165.2
+     ],
+     [
+      357,
+      177.9
+     ],
+     [
+      365.7,
+      134.8
+     ],
+     [
+      338.3,
+      129.2
+     ]
+    ]
+   },
+   {
+    "kind": "wall",
+    "points": [
+     [
+      -317.2,
+      153.8
+     ],
+     [
+      -344.9,
+      158
+     ],
+     [
+      -338.4,
+      201.5
+     ],
+     [
+      -275.1,
+      192
+     ],
+     [
+      -281.6,
+      148.5
+     ],
+     [
+      -309.3,
+      152.6
+     ]
+    ]
+   },
+   {
+    "kind": "fence",
+    "points": [
+     [
+      -311.3,
+      93.6
+     ],
+     [
+      -332.5,
+      102.6
+     ],
+     [
+      -317.3,
+      138.5
+     ],
+     [
+      -267.5,
+      117.4
+     ],
+     [
+      -282.7,
+      81.5
+     ],
+     [
+      -303.9,
+      90.5
+     ]
+    ]
+   },
+   {
+    "kind": "wall",
+    "points": [
+     [
+      -181.8,
+      307.7
+     ],
+     [
+      -204.7,
+      305.4
+     ],
+     [
+      -209.1,
+      349.2
+     ],
+     [
+      -155.3,
+      354.6
+     ],
+     [
+      -150.9,
+      310.8
+     ],
+     [
+      -173.8,
+      308.5
+     ]
+    ]
+   },
+   {
+    "kind": "wall",
+    "points": [
+     [
+      -83.6,
+      -151
+     ],
+     [
+      -50.7,
+      -154.3
+     ],
+     [
+      -55.6,
+      -203.1
+     ],
+     [
+      -129.3,
+      -195.7
+     ],
+     [
+      -124.4,
+      -146.9
+     ],
+     [
+      -91.5,
+      -150.2
+     ]
+    ]
+   },
+   {
+    "kind": "fence",
+    "points": [
+     [
+      -330.5,
+      -127.6
+     ],
+     [
+      -303,
+      -122.1
+     ],
+     [
+      -294.3,
+      -165.2
+     ],
+     [
+      -357,
+      -177.9
+     ],
+     [
+      -365.7,
+      -134.8
+     ],
+     [
+      -338.3,
+      -129.2
+     ]
+    ]
+   },
+   {
+    "kind": "wall",
+    "points": [
+     [
+      317.2,
+      -153.8
+     ],
+     [
+      344.9,
+      -158
+     ],
+     [
+      338.4,
+      -201.5
+     ],
+     [
+      275.1,
+      -192
+     ],
+     [
+      281.6,
+      -148.5
+     ],
+     [
+      309.3,
+      -152.6
+     ]
+    ]
+   },
+   {
+    "kind": "fence",
+    "points": [
+     [
+      311.3,
+      -93.6
+     ],
+     [
+      332.5,
+      -102.6
+     ],
+     [
+      317.3,
+      -138.5
+     ],
+     [
+      267.5,
+      -117.4
+     ],
+     [
+      282.7,
+      -81.5
+     ],
+     [
+      303.9,
+      -90.5
+     ]
+    ]
+   },
+   {
+    "kind": "wall",
+    "points": [
+     [
+      181.8,
+      -307.7
+     ],
+     [
+      204.7,
+      -305.4
+     ],
+     [
+      209.1,
+      -349.2
+     ],
+     [
+      155.3,
+      -354.6
+     ],
+     [
+      150.9,
+      -310.8
+     ],
+     [
+      173.8,
+      -308.5
+     ]
+    ]
+   },
+   {
+    "kind": "power",
+    "points": [
+     [
+      16,
+      250
+     ],
+     [
+      8,
+      150
+     ],
+     [
+      40,
+      40
+     ]
+    ]
+   },
+   {
+    "kind": "power",
+    "points": [
+     [
+      8,
+      150
+     ],
+     [
+      -120,
+      122
+     ],
+     [
+      -250,
+      100
+     ]
+    ]
+   },
+   {
+    "kind": "power",
+    "points": [
+     [
+      -16,
+      -250
+     ],
+     [
+      -8,
+      -150
+     ],
+     [
+      -40,
+      -40
+     ]
+    ]
+   },
+   {
+    "kind": "power",
+    "points": [
+     [
+      -8,
+      -150
+     ],
+     [
+      120,
+      -122
+     ],
+     [
+      250,
+      -100
+     ]
+    ]
+   }
+  ]
+ },
  "props": [
   {
+   "model": "models/tank_mbt.glb",
+   "x": 40,
+   "z": 82,
+   "rotation": 2.6,
+   "burnt": true
+  },
+  {
+   "model": "models/jeep.glb",
+   "x": -60,
+   "z": 190,
+   "rotation": 1.2,
+   "burnt": true
+  },
+  {
+   "model": "models/supply_truck.glb",
+   "x": 232,
+   "z": 50,
+   "rotation": 0.4,
+   "burnt": true
+  },
+  {
+   "model": "models/tank_light.glb",
+   "x": -215,
+   "z": 50,
+   "rotation": 2.3,
+   "burnt": true
+  },
+  {
+   "model": "models/buildings/props/wall_02.glb",
+   "x": 215,
+   "z": 300,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/wall_02.glb",
+   "x": 182,
+   "z": 345,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/wall_02.glb",
+   "x": -430,
+   "z": 105,
+   "rotation": 0.3
+  },
+  {
+   "model": "models/buildings/props/wall_02.glb",
+   "x": -386,
+   "z": 146,
+   "rotation": 1.2
+  },
+  {
+   "model": "models/tank_mbt.glb",
+   "x": -40,
+   "z": -82,
+   "rotation": 5.7,
+   "burnt": true
+  },
+  {
+   "model": "models/jeep.glb",
+   "x": 60,
+   "z": -190,
+   "rotation": 4.3,
+   "burnt": true
+  },
+  {
+   "model": "models/supply_truck.glb",
+   "x": -232,
+   "z": -50,
+   "rotation": 3.5,
+   "burnt": true
+  },
+  {
+   "model": "models/tank_light.glb",
+   "x": 215,
+   "z": -50,
+   "rotation": 5.4,
+   "burnt": true
+  },
+  {
+   "model": "models/buildings/props/wall_02.glb",
+   "x": -215,
+   "z": -300,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/wall_02.glb",
+   "x": -182,
+   "z": -345,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/wall_02.glb",
+   "x": 430,
+   "z": -105,
+   "rotation": 3.4
+  },
+  {
+   "model": "models/buildings/props/wall_02.glb",
+   "x": 386,
+   "z": -146,
+   "rotation": 4.3
+  },
+  {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 11,
+   "x": 12,
+   "z": -5.1,
+   "rotation": 2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 12.7,
+   "z": -2.6,
+   "rotation": 1.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 13,
    "z": 0,
    "rotation": 1.6
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 5.5,
-   "z": 9.5,
-   "rotation": 2.6
+   "x": 12.7,
+   "z": 2.6,
+   "rotation": 1.4
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -5.5,
-   "z": 9.5,
-   "rotation": 3.7
+   "x": 12,
+   "z": 5.1,
+   "rotation": 1.2
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -11,
+   "x": -12,
+   "z": 5.1,
+   "rotation": -1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -12.7,
+   "z": 2.6,
+   "rotation": -1.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -13,
    "z": 0,
-   "rotation": 4.7
+   "rotation": -1.6
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -5.5,
-   "z": -9.5,
-   "rotation": 5.8
+   "x": -12.7,
+   "z": -2.6,
+   "rotation": -1.8
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 5.5,
-   "z": -9.5,
-   "rotation": 6.8
+   "x": -12,
+   "z": -5.1,
+   "rotation": -2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 0,
+   "z": -15,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 0,
+   "z": 15,
+   "rotation": 0
   },
   {
    "model": "models/buildings/props/wooden_box.glb",
-   "x": 4,
-   "z": -3,
+   "x": 5,
+   "z": 3.4,
    "rotation": 0.4
   },
   {
    "model": "models/buildings/props/barrel.glb",
-   "x": -3,
-   "z": 5
+   "x": -4.4,
+   "z": -4.1
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -369.5,
-   "z": 98.3,
-   "rotation": 1.9
+   "x": -390.4,
+   "z": 102.8,
+   "rotation": -0.9
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -377.6,
-   "z": 105.7,
-   "rotation": 2.9
+   "x": -391.7,
+   "z": 100.6,
+   "rotation": -1.1
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -388.1,
-   "z": 102.5,
-   "rotation": 4
+   "x": -392.6,
+   "z": 98.2,
+   "rotation": -1.3
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -390.5,
-   "z": 91.7,
-   "rotation": 5
+   "x": -393,
+   "z": 95.6,
+   "rotation": -1.5
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -382.4,
-   "z": 84.3,
-   "rotation": 6.1
+   "x": -392.8,
+   "z": 93,
+   "rotation": -1.7
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -371.9,
-   "z": 87.5,
-   "rotation": 7.1
+   "x": -369.6,
+   "z": 87.2,
+   "rotation": -4.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -368.3,
+   "z": 89.4,
+   "rotation": -4.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -367.4,
+   "z": 91.8,
+   "rotation": -4.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -367,
+   "z": 94.4,
+   "rotation": -4.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -367.2,
+   "z": 97,
+   "rotation": -4.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -376.4,
+   "z": 109.6,
+   "rotation": 0.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -383.6,
+   "z": 80.4,
+   "rotation": -2.9
   },
   {
    "model": "models/buildings/props/wooden_box.glb",
-   "x": -376,
-   "z": 92,
+   "x": -385.6,
+   "z": 92.9,
    "rotation": 0.4
   },
   {
    "model": "models/buildings/props/barrel.glb",
-   "x": -383,
-   "z": 100
+   "x": -374.7,
+   "z": 97.9
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 179.1,
-   "z": 306.2,
+   "x": 180.3,
+   "z": 307.9,
+   "rotation": 0.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 178.5,
+   "z": 309.8,
+   "rotation": 0.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 176.4,
+   "z": 311.3,
+   "rotation": 0.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 174,
+   "z": 312.4,
+   "rotation": 0.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 171.5,
+   "z": 312.9,
+   "rotation": 0.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 159.7,
+   "z": 292.1,
+   "rotation": -2.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 161.5,
+   "z": 290.2,
+   "rotation": -2.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 163.6,
+   "z": 288.7,
+   "rotation": -2.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 166,
+   "z": 287.6,
+   "rotation": -2.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 168.5,
+   "z": 287.1,
+   "rotation": -3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 183.1,
+   "z": 292.6,
+   "rotation": 2.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 156.9,
+   "z": 307.4,
+   "rotation": -1.1
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 169.5,
+   "z": 306,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 171.3,
+   "z": 294.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 390.4,
+   "z": -102.8,
    "rotation": 2.2
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 169.2,
-   "z": 311,
-   "rotation": 3.2
+   "x": 391.7,
+   "z": -100.6,
+   "rotation": 2
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 160.1,
-   "z": 304.8,
-   "rotation": 4.3
+   "x": 392.6,
+   "z": -98.2,
+   "rotation": 1.8
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 160.9,
-   "z": 293.8,
-   "rotation": 5.3
+   "x": 393,
+   "z": -95.6,
+   "rotation": 1.6
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 170.8,
-   "z": 289,
-   "rotation": 6.4
+   "x": 392.8,
+   "z": -93,
+   "rotation": 1.4
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 179.9,
-   "z": 295.2,
-   "rotation": 7.4
+   "x": 369.6,
+   "z": -87.2,
+   "rotation": -0.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 368.3,
+   "z": -89.4,
+   "rotation": -1.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 367.4,
+   "z": -91.8,
+   "rotation": -1.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 367,
+   "z": -94.4,
+   "rotation": -1.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 367.2,
+   "z": -97,
+   "rotation": -1.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 376.4,
+   "z": -109.6,
+   "rotation": 3.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 383.6,
+   "z": -80.4,
+   "rotation": 0.2
   },
   {
    "model": "models/buildings/props/wooden_box.glb",
-   "x": 174,
-   "z": 297,
+   "x": 385.6,
+   "z": -92.9,
    "rotation": 0.4
   },
   {
    "model": "models/buildings/props/barrel.glb",
-   "x": 167,
-   "z": 305
+   "x": 374.7,
+   "z": -97.9
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 386.8,
-   "z": -86.4,
-   "rotation": 2.5
+   "x": -180.3,
+   "z": -307.9,
+   "rotation": 4.1
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 376,
-   "z": -84.8,
-   "rotation": 3.5
+   "x": -178.5,
+   "z": -309.8,
+   "rotation": 3.9
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 369.1,
-   "z": -93.4,
-   "rotation": 4.6
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 373.2,
-   "z": -103.6,
-   "rotation": 5.6
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 384,
-   "z": -105.2,
-   "rotation": 6.7
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 390.9,
-   "z": -96.6,
-   "rotation": 7.7
-  },
-  {
-   "model": "models/buildings/props/wooden_box.glb",
-   "x": 384,
-   "z": -98,
-   "rotation": 0.4
-  },
-  {
-   "model": "models/buildings/props/barrel.glb",
-   "x": 377,
-   "z": -90
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -166,
-   "z": -289.7,
-   "rotation": 2.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -176.9,
-   "z": -291.4,
-   "rotation": 3.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -180.9,
-   "z": -301.7,
-   "rotation": 4.9
+   "x": -176.4,
+   "z": -311.3,
+   "rotation": 3.7
   },
   {
    "model": "models/buildings/props/sandbags.glb",
    "x": -174,
-   "z": -310.3,
-   "rotation": 5.9
+   "z": -312.4,
+   "rotation": 3.5
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -163.1,
-   "z": -308.6,
-   "rotation": 7
+   "x": -171.5,
+   "z": -312.9,
+   "rotation": 3.3
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -159.1,
-   "z": -298.3,
-   "rotation": 8
+   "x": -159.7,
+   "z": -292.1,
+   "rotation": 0.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -161.5,
+   "z": -290.2,
+   "rotation": 0.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -163.6,
+   "z": -288.7,
+   "rotation": 0.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -166,
+   "z": -287.6,
+   "rotation": 0.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -168.5,
+   "z": -287.1,
+   "rotation": 0.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -183.1,
+   "z": -292.6,
+   "rotation": 5.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -156.9,
+   "z": -307.4,
+   "rotation": 2.1
   },
   {
    "model": "models/buildings/props/wooden_box.glb",
-   "x": -166,
-   "z": -303,
+   "x": -169.5,
+   "z": -306,
    "rotation": 0.4
   },
   {
    "model": "models/buildings/props/barrel.glb",
-   "x": -173,
-   "z": -295
+   "x": -171.3,
+   "z": -294.2
   },
   {
    "model": "models/buildings/props/gas_tank.glb",
@@ -1385,6 +2071,48 @@
    "x": -108,
    "z": -86,
    "rotation": 3.7
+  }
+ ],
+ "scatter": [
+  {
+   "models": [
+    "models/env/rock_large_a.glb",
+    "models/env/rock_large_b.glb",
+    "models/env/rock_small_a.glb",
+    "models/env/rock_tall_a.glb",
+    "models/env/rock_stone_large.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1100,
+    "d": 1100
+   },
+   "count": 160,
+   "scale": [
+    0.6,
+    1.6
+   ]
+  },
+  {
+   "models": [
+    "models/env/bush_small.glb",
+    "models/env/bush_large.glb",
+    "models/env/bush_detailed.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1100,
+    "d": 1100
+   },
+   "count": 420,
+   "scale": [
+    0.8,
+    1.6
+   ]
   }
  ]
 }
