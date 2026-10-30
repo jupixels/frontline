@@ -179,5 +179,12 @@ Edit `tools/make-maps.mjs`, not the JSON. Features are written once and copied w
 sides) or 90-degree (four corners) rotational symmetry, or eight-fold (90-degree turns plus a mirror
 across x = z, for the eight-player Inland Sea; `S8` and `ring8`), and `terrain.symmetry` makes the random
 relief match, so every spawn gets identical ground. `tests/maps.test.ts` checks the result:
-buildable bases, reachable points, and exact symmetry. The terrain format is `TerrainDef` in
+buildable bases, reachable points, exact symmetry, and dressing that stays clear of spawns, points
+and roads.
+
+Each map also carries render-only `dressing` (fields, fences, dry-stone walls, power lines,
+pipelines, docks) and props, including burnt-out wrecks (`burnt: true` draws a unit model charred).
+`src/render/scenery.ts` draws them; the sim never reads them, so they don't block movement or give
+cover (neutral ruins in `structures` do). The `DRESS` table at the top of the dressing helpers holds
+placeholder models for props the models session is making: swap a path there and regenerate. The terrain format is `TerrainDef` in
 `src/shared/terrain.ts`; the sim and the renderer both read it.

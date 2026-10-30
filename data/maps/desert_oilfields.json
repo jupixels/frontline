@@ -1273,470 +1273,1213 @@
    "rotation": 0
   }
  ],
- "scatter": [
-  {
-   "models": [
-    "models/env/rock_large_a.glb",
-    "models/env/rock_large_b.glb",
-    "models/env/rock_small_a.glb",
-    "models/env/rock_tall_a.glb",
-    "models/env/rock_stone_large.glb"
-   ],
-   "area": {
-    "shape": "rect",
-    "x": 0,
-    "z": 0,
-    "w": 1200,
-    "d": 1200
+ "dressing": {
+  "lines": [
+   {
+    "kind": "pipe",
+    "points": [
+     [
+      -318,
+      268
+     ],
+     [
+      -348,
+      140
+     ],
+     [
+      -348,
+      30
+     ]
+    ]
    },
-   "count": 260,
-   "scale": [
-    0.6,
-    2
-   ]
-  },
-  {
-   "models": [
-    "models/env/bush_small.glb",
-    "models/env/tree_stump.glb"
-   ],
-   "area": {
-    "shape": "rect",
-    "x": 0,
-    "z": 0,
-    "w": 1200,
-    "d": 1200
+   {
+    "kind": "pipe",
+    "points": [
+     [
+      -60,
+      300
+     ],
+     [
+      -42,
+      312
+     ],
+     [
+      -28,
+      312
+     ]
+    ]
    },
-   "count": 120,
-   "scale": [
-    0.6,
-    1.2
-   ]
-  }
- ],
+   {
+    "kind": "power",
+    "points": [
+     [
+      14,
+      300
+     ],
+     [
+      14,
+      150
+     ],
+     [
+      14,
+      42
+     ]
+    ]
+   },
+   {
+    "kind": "pipe",
+    "points": [
+     [
+      -268,
+      -318
+     ],
+     [
+      -140,
+      -348
+     ],
+     [
+      -30,
+      -348
+     ]
+    ]
+   },
+   {
+    "kind": "pipe",
+    "points": [
+     [
+      -300,
+      -60
+     ],
+     [
+      -312,
+      -42
+     ],
+     [
+      -312,
+      -28
+     ]
+    ]
+   },
+   {
+    "kind": "power",
+    "points": [
+     [
+      -300,
+      14
+     ],
+     [
+      -150,
+      14
+     ],
+     [
+      -42,
+      14
+     ]
+    ]
+   },
+   {
+    "kind": "pipe",
+    "points": [
+     [
+      318,
+      -268
+     ],
+     [
+      348,
+      -140
+     ],
+     [
+      348,
+      -30
+     ]
+    ]
+   },
+   {
+    "kind": "pipe",
+    "points": [
+     [
+      60,
+      -300
+     ],
+     [
+      42,
+      -312
+     ],
+     [
+      28,
+      -312
+     ]
+    ]
+   },
+   {
+    "kind": "power",
+    "points": [
+     [
+      -14,
+      -300
+     ],
+     [
+      -14,
+      -150
+     ],
+     [
+      -14,
+      -42
+     ]
+    ]
+   },
+   {
+    "kind": "pipe",
+    "points": [
+     [
+      268,
+      318
+     ],
+     [
+      140,
+      348
+     ],
+     [
+      30,
+      348
+     ]
+    ]
+   },
+   {
+    "kind": "pipe",
+    "points": [
+     [
+      300,
+      60
+     ],
+     [
+      312,
+      42
+     ],
+     [
+      312,
+      28
+     ]
+    ]
+   },
+   {
+    "kind": "power",
+    "points": [
+     [
+      300,
+      -14
+     ],
+     [
+      150,
+      -14
+     ],
+     [
+      42,
+      -14
+     ]
+    ]
+   }
+  ]
+ },
  "props": [
   {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -350,
+   "z": 250,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -358,
+   "z": 250,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -366,
+   "z": 250,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 82,
+   "z": 18,
+   "rotation": 0.8
+  },
+  {
+   "model": "models/buildings/props/barrier.glb",
+   "x": 30,
+   "z": 300,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/barrier.glb",
+   "x": -30,
+   "z": 300,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/concrete_block.glb",
+   "x": 0,
+   "z": 296,
+   "rotation": 0
+  },
+  {
+   "model": "models/tank_mbt.glb",
+   "x": -162,
+   "z": 350,
+   "rotation": 1.9,
+   "burnt": true
+  },
+  {
+   "model": "models/supply_truck.glb",
+   "x": -352,
+   "z": 108,
+   "rotation": 0.1,
+   "burnt": true
+  },
+  {
+   "model": "models/jeep.glb",
+   "x": -120,
+   "z": 150,
+   "rotation": 2.5,
+   "burnt": true
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -250,
+   "z": -350,
+   "rotation": 6.3
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -250,
+   "z": -358,
+   "rotation": 6.3
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -250,
+   "z": -366,
+   "rotation": 6.3
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -18,
+   "z": 82,
+   "rotation": 5.5
+  },
+  {
+   "model": "models/buildings/props/barrier.glb",
+   "x": -300,
+   "z": 30,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/barrier.glb",
+   "x": -300,
+   "z": -30,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/concrete_block.glb",
+   "x": -296,
+   "z": 0,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/tank_mbt.glb",
+   "x": -350,
+   "z": -162,
+   "rotation": 0.3,
+   "burnt": true
+  },
+  {
+   "model": "models/supply_truck.glb",
+   "x": -108,
+   "z": -352,
+   "rotation": 4.8,
+   "burnt": true
+  },
+  {
+   "model": "models/jeep.glb",
+   "x": -150,
+   "z": -120,
+   "rotation": 0.9,
+   "burnt": true
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 350,
+   "z": -250,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 358,
+   "z": -250,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 366,
+   "z": -250,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -82,
+   "z": -18,
+   "rotation": 3.9
+  },
+  {
+   "model": "models/buildings/props/barrier.glb",
+   "x": -30,
+   "z": -300,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/barrier.glb",
+   "x": 30,
+   "z": -300,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/concrete_block.glb",
+   "x": 0,
+   "z": -296,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/tank_mbt.glb",
+   "x": 162,
+   "z": -350,
+   "rotation": 5,
+   "burnt": true
+  },
+  {
+   "model": "models/supply_truck.glb",
+   "x": 352,
+   "z": -108,
+   "rotation": 3.2,
+   "burnt": true
+  },
+  {
+   "model": "models/jeep.glb",
+   "x": 120,
+   "z": -150,
+   "rotation": 5.6,
+   "burnt": true
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 250,
+   "z": 350,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 250,
+   "z": 358,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 250,
+   "z": 366,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 18,
+   "z": -82,
+   "rotation": 2.4
+  },
+  {
+   "model": "models/buildings/props/barrier.glb",
+   "x": 300,
+   "z": -30,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/barrier.glb",
+   "x": 300,
+   "z": 30,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/concrete_block.glb",
+   "x": 296,
+   "z": 0,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/tank_mbt.glb",
+   "x": 350,
+   "z": 162,
+   "rotation": 3.5,
+   "burnt": true
+  },
+  {
+   "model": "models/supply_truck.glb",
+   "x": 108,
+   "z": 352,
+   "rotation": 1.7,
+   "burnt": true
+  },
+  {
+   "model": "models/jeep.glb",
+   "x": 150,
+   "z": 120,
+   "rotation": 4.1,
+   "burnt": true
+  },
+  {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 11,
+   "x": 12,
+   "z": -5.1,
+   "rotation": 2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 12.7,
+   "z": -2.6,
+   "rotation": 1.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 13,
    "z": 0,
    "rotation": 1.6
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 5.5,
-   "z": 9.5,
-   "rotation": 2.6
+   "x": 12.7,
+   "z": 2.6,
+   "rotation": 1.4
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -5.5,
-   "z": 9.5,
-   "rotation": 3.7
+   "x": 12,
+   "z": 5.1,
+   "rotation": 1.2
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -11,
+   "x": -12,
+   "z": 5.1,
+   "rotation": -1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -12.7,
+   "z": 2.6,
+   "rotation": -1.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -13,
    "z": 0,
-   "rotation": 4.7
+   "rotation": -1.6
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -5.5,
-   "z": -9.5,
-   "rotation": 5.8
+   "x": -12.7,
+   "z": -2.6,
+   "rotation": -1.8
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 5.5,
-   "z": -9.5,
-   "rotation": 6.8
-  },
-  {
-   "model": "models/buildings/props/wooden_box.glb",
-   "x": 4,
-   "z": -3,
-   "rotation": 0.4
-  },
-  {
-   "model": "models/buildings/props/barrel.glb",
-   "x": -3,
-   "z": 5
+   "x": -12,
+   "z": -5.1,
+   "rotation": -2
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 10.5,
-   "z": 333.3,
-   "rotation": 1.9
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 2.4,
-   "z": 340.7,
-   "rotation": 2.9
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -8.1,
-   "z": 337.5,
-   "rotation": 4
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -10.5,
-   "z": 326.7,
-   "rotation": 5
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -2.4,
-   "z": 319.3,
-   "rotation": 6.1
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 8.1,
-   "z": 322.5,
-   "rotation": 7.1
-  },
-  {
-   "model": "models/buildings/props/wooden_box.glb",
-   "x": 4,
-   "z": 327,
-   "rotation": 0.4
-  },
-  {
-   "model": "models/buildings/props/barrel.glb",
-   "x": -3,
-   "z": 335
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -290.9,
-   "z": 306.2,
-   "rotation": 2.2
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -300.8,
-   "z": 311,
-   "rotation": 3.2
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -309.9,
-   "z": 304.8,
-   "rotation": 4.3
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -309.1,
-   "z": 293.8,
-   "rotation": 5.3
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -299.2,
-   "z": 289,
-   "rotation": 6.4
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -290.1,
-   "z": 295.2,
-   "rotation": 7.4
-  },
-  {
-   "model": "models/buildings/props/wooden_box.glb",
-   "x": -296,
-   "z": 297,
-   "rotation": 0.4
-  },
-  {
-   "model": "models/buildings/props/barrel.glb",
-   "x": -303,
-   "z": 305
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -323.2,
-   "z": 8.6,
-   "rotation": 2.5
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -334,
-   "z": 10.2,
-   "rotation": 3.5
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -340.9,
-   "z": 1.6,
-   "rotation": 4.6
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -336.8,
-   "z": -8.6,
-   "rotation": 5.6
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -326,
-   "z": -10.2,
-   "rotation": 6.7
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -319.1,
-   "z": -1.6,
-   "rotation": 7.7
-  },
-  {
-   "model": "models/buildings/props/wooden_box.glb",
-   "x": -326,
-   "z": -3,
-   "rotation": 0.4
-  },
-  {
-   "model": "models/buildings/props/barrel.glb",
-   "x": -333,
-   "z": 5
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -296,
-   "z": -289.7,
-   "rotation": 2.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -306.9,
-   "z": -291.4,
-   "rotation": 3.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -310.9,
-   "z": -301.7,
-   "rotation": 4.9
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -304,
-   "z": -310.3,
-   "rotation": 5.9
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -293.1,
-   "z": -308.6,
-   "rotation": 7
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -289.1,
-   "z": -298.3,
-   "rotation": 8
-  },
-  {
-   "model": "models/buildings/props/wooden_box.glb",
-   "x": -296,
-   "z": -303,
-   "rotation": 0.4
-  },
-  {
-   "model": "models/buildings/props/barrel.glb",
-   "x": -303,
-   "z": -295
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 0.8,
-   "z": -319,
+   "x": 0,
+   "z": -15,
    "rotation": 3.1
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -9.1,
-   "z": -323.8,
+   "x": 0,
+   "z": 15,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 5,
+   "z": 3.4,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -4.4,
+   "z": -4.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.1,
+   "z": 342,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 2.6,
+   "z": 342.7,
+   "rotation": 0.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 0,
+   "z": 343,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -2.6,
+   "z": 342.7,
+   "rotation": -0.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.1,
+   "z": 342,
+   "rotation": -0.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.1,
+   "z": 318,
+   "rotation": -2.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -2.6,
+   "z": 317.3,
+   "rotation": -2.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 0,
+   "z": 317,
+   "rotation": -3.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 2.6,
+   "z": 317.3,
+   "rotation": -3.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.1,
+   "z": 318,
+   "rotation": -3.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 15,
+   "z": 330,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -15,
+   "z": 330,
+   "rotation": -1.6
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -3.4,
+   "z": 335,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 4.1,
+   "z": 325.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -304.9,
+   "z": 312,
+   "rotation": -0.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -307.2,
+   "z": 310.8,
+   "rotation": -0.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -309.2,
+   "z": 309.2,
+   "rotation": -0.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -310.8,
+   "z": 307.2,
+   "rotation": -1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -312,
+   "z": 304.9,
+   "rotation": -1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -295.1,
+   "z": 288,
+   "rotation": -3.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -292.8,
+   "z": 289.2,
+   "rotation": -3.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -290.8,
+   "z": 290.8,
+   "rotation": -3.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -289.2,
+   "z": 292.8,
+   "rotation": -4.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -288,
+   "z": 295.1,
+   "rotation": -4.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -289.4,
+   "z": 310.6,
+   "rotation": 0.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -310.6,
+   "z": 289.4,
+   "rotation": -2.4
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -305.9,
+   "z": 301.1,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -294,
+   "z": 299.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -342,
+   "z": 5.1,
+   "rotation": -1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -342.7,
+   "z": 2.6,
+   "rotation": -1.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -343,
+   "z": 0,
+   "rotation": -1.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -342.7,
+   "z": -2.6,
+   "rotation": -1.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -342,
+   "z": -5.1,
+   "rotation": -2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -318,
+   "z": -5.1,
+   "rotation": -4.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -317.3,
+   "z": -2.6,
+   "rotation": -4.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -317,
+   "z": 0,
+   "rotation": -4.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -317.3,
+   "z": 2.6,
+   "rotation": -4.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -318,
+   "z": 5.1,
+   "rotation": -5.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -330,
+   "z": 15,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -330,
+   "z": -15,
+   "rotation": -3.1
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -335,
+   "z": -3.4,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -325.6,
+   "z": 4.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -312,
+   "z": -304.9,
+   "rotation": 4.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -310.8,
+   "z": -307.2,
    "rotation": 4.1
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -9.9,
-   "z": -334.8,
-   "rotation": 5.2
+   "x": -309.2,
+   "z": -309.2,
+   "rotation": 3.9
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": -0.8,
-   "z": -341,
-   "rotation": 6.2
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 9.1,
-   "z": -336.2,
-   "rotation": 7.3
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 9.9,
-   "z": -325.2,
-   "rotation": 8.3
-  },
-  {
-   "model": "models/buildings/props/wooden_box.glb",
-   "x": 4,
-   "z": -333,
-   "rotation": 0.4
-  },
-  {
-   "model": "models/buildings/props/barrel.glb",
-   "x": -3,
-   "z": -325
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 297.5,
-   "z": -289.3,
-   "rotation": 3.4
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 289.5,
-   "z": -296.8,
-   "rotation": 4.4
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 292,
-   "z": -307.5,
-   "rotation": 5.5
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 302.5,
-   "z": -310.7,
-   "rotation": 6.5
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 310.5,
-   "z": -303.2,
-   "rotation": 7.6
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 308,
-   "z": -292.5,
-   "rotation": 8.6
-  },
-  {
-   "model": "models/buildings/props/wooden_box.glb",
-   "x": 304,
-   "z": -303,
-   "rotation": 0.4
-  },
-  {
-   "model": "models/buildings/props/barrel.glb",
-   "x": 297,
-   "z": -295
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 324.4,
-   "z": 9.5,
+   "x": -307.2,
+   "z": -310.8,
    "rotation": 3.7
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 319,
-   "z": -0.1,
+   "x": -304.9,
+   "z": -312,
+   "rotation": 3.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -288,
+   "z": -295.1,
+   "rotation": 1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -289.2,
+   "z": -292.8,
+   "rotation": 1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -290.8,
+   "z": -290.8,
+   "rotation": 0.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -292.8,
+   "z": -289.2,
+   "rotation": 0.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -295.1,
+   "z": -288,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -310.6,
+   "z": -289.4,
+   "rotation": 5.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -289.4,
+   "z": -310.6,
+   "rotation": 2.4
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -301.1,
+   "z": -305.9,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -299.7,
+   "z": -294
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.1,
+   "z": -342,
+   "rotation": 3.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -2.6,
+   "z": -342.7,
+   "rotation": 3.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 0,
+   "z": -343,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 2.6,
+   "z": -342.7,
+   "rotation": 2.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.1,
+   "z": -342,
+   "rotation": 2.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.1,
+   "z": -318,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 2.6,
+   "z": -317.3,
+   "rotation": 0.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 0,
+   "z": -317,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -2.6,
+   "z": -317.3,
+   "rotation": -0.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.1,
+   "z": -318,
+   "rotation": -0.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -15,
+   "z": -330,
    "rotation": 4.7
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 324.6,
-   "z": -9.6,
-   "rotation": 5.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 335.6,
-   "z": -9.5,
-   "rotation": 6.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 341,
-   "z": 0.1,
-   "rotation": 7.9
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 335.4,
-   "z": 9.6,
-   "rotation": 8.9
+   "x": 15,
+   "z": -330,
+   "rotation": 1.6
   },
   {
    "model": "models/buildings/props/wooden_box.glb",
-   "x": 334,
-   "z": -3,
+   "x": 3.4,
+   "z": -335,
    "rotation": 0.4
   },
   {
    "model": "models/buildings/props/barrel.glb",
-   "x": 327,
-   "z": 5
+   "x": -4.1,
+   "z": -325.6
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 291.9,
-   "z": 307.4,
-   "rotation": 4
+   "x": 304.9,
+   "z": -312,
+   "rotation": 2.8
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 289.5,
-   "z": 296.7,
-   "rotation": 5
+   "x": 307.2,
+   "z": -310.8,
+   "rotation": 2.6
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 297.6,
-   "z": 289.3,
-   "rotation": 6.1
+   "x": 309.2,
+   "z": -309.2,
+   "rotation": 2.4
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 308.1,
-   "z": 292.6,
-   "rotation": 7.1
+   "x": 310.8,
+   "z": -307.2,
+   "rotation": 2.2
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 310.5,
-   "z": 303.3,
-   "rotation": 8.2
+   "x": 312,
+   "z": -304.9,
+   "rotation": 2
   },
   {
    "model": "models/buildings/props/sandbags.glb",
-   "x": 302.4,
-   "z": 310.7,
-   "rotation": 9.2
+   "x": 295.1,
+   "z": -288,
+   "rotation": -0.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 292.8,
+   "z": -289.2,
+   "rotation": -0.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 290.8,
+   "z": -290.8,
+   "rotation": -0.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 289.2,
+   "z": -292.8,
+   "rotation": -1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 288,
+   "z": -295.1,
+   "rotation": -1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 289.4,
+   "z": -310.6,
+   "rotation": 3.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 310.6,
+   "z": -289.4,
+   "rotation": 0.8
   },
   {
    "model": "models/buildings/props/wooden_box.glb",
-   "x": 304,
-   "z": 297,
+   "x": 305.9,
+   "z": -301.1,
    "rotation": 0.4
   },
   {
    "model": "models/buildings/props/barrel.glb",
-   "x": 297,
-   "z": 305
+   "x": 294,
+   "z": -299.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 342,
+   "z": -5.1,
+   "rotation": 2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 342.7,
+   "z": -2.6,
+   "rotation": 1.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 343,
+   "z": 0,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 342.7,
+   "z": 2.6,
+   "rotation": 1.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 342,
+   "z": 5.1,
+   "rotation": 1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 318,
+   "z": 5.1,
+   "rotation": -1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 317.3,
+   "z": 2.6,
+   "rotation": -1.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 317,
+   "z": 0,
+   "rotation": -1.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 317.3,
+   "z": -2.6,
+   "rotation": -1.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 318,
+   "z": -5.1,
+   "rotation": -2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 330,
+   "z": -15,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 330,
+   "z": 15,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 335,
+   "z": 3.4,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 325.6,
+   "z": -4.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 312,
+   "z": 304.9,
+   "rotation": 1.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 310.8,
+   "z": 307.2,
+   "rotation": 1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 309.2,
+   "z": 309.2,
+   "rotation": 0.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 307.2,
+   "z": 310.8,
+   "rotation": 0.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 304.9,
+   "z": 312,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 288,
+   "z": 295.1,
+   "rotation": -2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 289.2,
+   "z": 292.8,
+   "rotation": -2.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 290.8,
+   "z": 290.8,
+   "rotation": -2.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 292.8,
+   "z": 289.2,
+   "rotation": -2.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 295.1,
+   "z": 288,
+   "rotation": -2.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 310.6,
+   "z": 289.4,
+   "rotation": 2.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 289.4,
+   "z": 310.6,
+   "rotation": -0.8
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 301.1,
+   "z": 305.9,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 299.7,
+   "z": 294
   },
   {
    "model": "models/buildings/props/gas_tank.glb",
@@ -2177,6 +2920,47 @@
    "x": 47,
    "z": -56,
    "rotation": 7.3
+  }
+ ],
+ "scatter": [
+  {
+   "models": [
+    "models/env/rock_large_a.glb",
+    "models/env/rock_large_b.glb",
+    "models/env/rock_small_a.glb",
+    "models/env/rock_tall_a.glb",
+    "models/env/rock_stone_large.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1200,
+    "d": 1200
+   },
+   "count": 260,
+   "scale": [
+    0.6,
+    2
+   ]
+  },
+  {
+   "models": [
+    "models/env/bush_small.glb",
+    "models/env/tree_stump.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1200,
+    "d": 1200
+   },
+   "count": 120,
+   "scale": [
+    0.6,
+    1.2
+   ]
   }
  ]
 }

@@ -4,6 +4,7 @@
     { "name": "frontline-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "--port", "5173", "--strictPort"], "port": 5173 },
     { "name": "phase2-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "--port", "5191", "--strictPort"], "port": 5191 },
     { "name": "phase3-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "--port", "5182", "--strictPort"], "port": 5182 },
-    { "name": "maps8-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "--port", "5195", "--strictPort"], "port": 5195 }
+    { "name": "maps8-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "--port", "5195", "--strictPort"], "port": 5195 },
+    { "name": "dressing-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "--port", "5197", "--strictPort"], "port": 5197 }
   ]
 }

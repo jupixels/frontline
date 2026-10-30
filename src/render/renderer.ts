@@ -161,7 +161,7 @@ export class GameRenderer implements Picker {
     }
     this.scene.add(this.water.mesh);
     this.quality = QUALITY[initialQuality(gpuName(r.getContext()))];
-    this.scenery = new Scenery(setup.map ?? { id: '', name: '', size: setup.mapSize, spawns: [] }, model, (x, z) => this.terrain.heightAt(x, z), this.quality.level !== 'low');
+    this.scenery = new Scenery(setup.map ?? { id: '', name: '', size: setup.mapSize, spawns: [] }, model, (x, z) => this.terrain.heightAt(x, z), this.quality.level);
     this.scene.add(this.scenery.group);
     this.decals = new DecalMap(setup.mapSize * 1.3, this.quality.decalResolution);
     this.terrain.setDecals(this.decals.texture, this.decals.bounds);
@@ -258,7 +258,7 @@ export class GameRenderer implements Picker {
     this.quality = q;
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, q.pixelRatio));
     this.env.setShadowMapSize(q.shadowMapSize);
-    this.scenery?.setShadows(level === 'high' || level === 'ultra');
+    this.scenery?.setQuality(level);
     this.vfx.setQuality(q);
     this.post.apply(q);
     this.resize();
@@ -575,6 +575,7 @@ export class GameRenderer implements Picker {
     this.time += dt;
     this.frameNo++;
     this.cam.update(dt);
+    this.scenery.update(this.cam.viewDistance);
     const camera = this.cam.camera;
     camera.updateMatrixWorld();
     _frustum.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));

@@ -8,6 +8,7 @@ import gulf from '../data/maps/iron_gulf.json';
 import type { MapDef, UnitDef } from '../src/shared/data';
 import { assignSpawns } from '../src/shared/maps';
 import { TerrainModel } from '../src/shared/terrain';
+import type { DressingArea, MapDressing } from '../src/render/scenery';
 import type { MatchSetup } from '../src/shared/types';
 import { Simulation } from '../src/sim/simulation';
 
@@ -111,6 +112,61 @@ describe.each(MAPS.map((m) => [m.id, m] as const))('map %s', (_id, map) => {
     for (const y of yards) expect(sim.reachable('naval', w0!, water(y)!)).toBe(true);
     // Some point can only be taken from the sea (or the air).
     expect((map.points ?? []).some((p) => !sim.reachable('ground', map.spawns[0], p))).toBe(true);
+  });
+
+  it('dressing stays on open land, clear of spawns, points and roads (docks reach the water)', () => {
+    const t = new TerrainModel(map);
+    type P = { x: number; z: number };
+    const dressing = (map as MapDef & { dressing?: MapDressing }).dressing ?? {};
+    const near = (q: P, list: readonly P[], r: number) => list.some((o) => Math.hypot(o.x - q.x, o.z - q.z) < r);
+    const pointClear = (q: P, pad: number) => !(map.points ?? []).some((o) => Math.hypot(o.x - q.x, o.z - q.z) < (o.radius ?? 25) + pad);
+    const ground = (q: P, what: string, opts: { road?: boolean; forest?: boolean } = {}) => {
+      expect.soft(t.height(q.x, q.z), `${what} on land`).toBeGreaterThan(0.4);
+      expect.soft(t.isCliff(q.x, q.z), `${what} off cliffs`).toBe(false);
+      if (!opts.road) expect.soft(t.isRoad(q.x, q.z), `${what} off roads`).toBe(false);
+      if (!opts.forest) expect.soft(t.isForest(q.x, q.z), `${what} out of woods`).toBe(false);
+      expect.soft(near(q, map.spawns, 150), `${what} clear of spawns`).toBe(false);
+    };
+    const corners = (a: DressingArea, pad = 0): P[] => {
+      const c = Math.cos(a.rotation ?? 0);
+      const s = Math.sin(a.rotation ?? 0);
+      return [[0, 0], [-1, -1], [-1, 1], [1, -1], [1, 1]].map(([u, v]) => {
+        const lx = (u * a.w) / 2 + u * pad;
+        const lz = (v * a.d) / 2 + v * pad;
+        return { x: a.x + lx * c + lz * s, z: a.z - lx * s + lz * c };
+      });
+    };
+    for (const f of dressing.fields ?? []) for (const q of corners(f)) {
+      ground(q, `field ${f.x},${f.z}`);
+      expect.soft(pointClear(q, 5), `field ${f.x},${f.z} clear of points`).toBe(true);
+    }
+    for (const l of dressing.lines ?? []) {
+      for (let i = 0; i < l.points.length - 1; i++) {
+        const [ax, az] = l.points[i];
+        const [bx, bz] = l.points[i + 1];
+        const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 4);
+        for (let k = 0; k <= n; k++) {
+          const q = { x: ax + ((bx - ax) * k) / n, z: az + ((bz - az) * k) / n };
+          expect.soft(pointClear(q, 2), `${l.kind} ${ax},${az} clear of points`).toBe(true);
+          expect.soft(near(q, map.spawns, 120), `${l.kind} ${ax},${az} clear of spawns`).toBe(false);
+          // Power lines may span rivers and cross roads; the rest sit on dry ground.
+          if (l.kind !== 'power') ground(q, `${l.kind} ${ax},${az}`, { road: true, forest: l.kind === 'fence' });
+        }
+      }
+    }
+    for (const d of dressing.docks ?? []) {
+      const c = Math.cos(d.rotation ?? 0);
+      const s = Math.sin(d.rotation ?? 0);
+      const end = (v: number) => ({ x: d.x + ((v * d.d) / 2) * s, z: d.z + ((v * d.d) / 2) * c });
+      expect.soft(t.height(end(1).x, end(1).z), `dock ${d.x},${d.z} starts on land`).toBeGreaterThan(0);
+      expect.soft(t.height(end(-1).x, end(-1).z), `dock ${d.x},${d.z} reaches water`).toBeLessThan(-0.5);
+      expect.soft(near(end(0), map.spawns, 150), `dock ${d.x},${d.z} clear of spawns`).toBe(false);
+    }
+    for (const p of (map.props ?? []) as (MapDef['props'] & object)[number][]) {
+      if (!(p as { burnt?: boolean }).burnt) continue;
+      ground(p, `wreck ${p.model} ${p.x},${p.z}`);
+      expect.soft(pointClear(p, 8), `wreck ${p.x},${p.z} clear of points`).toBe(true);
+    }
   });
 
   it('naval maps have water every naval yard can reach from both sides', () => {
