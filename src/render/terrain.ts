@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { fbm, smoothstep, TerrainModel, WATER_LEVEL } from '../shared/terrain';
+import { fbm, smoothstep, TerrainModel, valueNoise, WATER_LEVEL } from '../shared/terrain';
 import { generateTerrainTextures, loadTerrainTextures, type TerrainTextureSet } from './terrainTextures';
 
 export { WATER_LEVEL };
@@ -12,8 +12,17 @@ export function terrainHeight(x: number, z: number, model: TerrainModel): number
   return model.height(x, z);
 }
 
+/** How the ground reads under this map's weather. */
+export interface GroundMood {
+  /** 0..1: how much grass is sun-bleached straw. */
+  dry: number;
+  /** 0..1: rain-darkened, glossier ground. */
+  wet: number;
+}
+
 export interface TerrainOptions {
   model: TerrainModel;
+  mood?: GroundMood;
   /** Side length of the rendered terrain (covers the map plus scenic surroundings). */
   extent?: number;
   segments?: number;
@@ -35,10 +44,18 @@ export class Terrain {
   /** Half-float height texture covering `extent`, used by water for depth/foam. */
   readonly heightTexture: THREE.DataTexture;
   readonly splatTexture: THREE.DataTexture;
+  /** RGBA = gravel, dry grass, wetness, cliff. */
+  readonly splat2Texture: THREE.DataTexture;
+  /** Grass cover 0..255 per height sample (what's left after rock, sand, roads...). Drives grass tufts. */
+  private grassCover!: Uint8Array;
   readonly uniforms: {
     tAlbedo: { value: THREE.DataArrayTexture };
     tDetail: { value: THREE.DataArrayTexture };
     tSplat: { value: THREE.Texture };
+    tSplat2: { value: THREE.Texture };
+    tNoise: { value: THREE.Texture };
+    uDry: { value: number };
+    uWet: { value: number };
     tDecal: { value: THREE.Texture | null };
     uTerrainBounds: { value: THREE.Vector4 };
     uDecalBounds: { value: THREE.Vector4 };
@@ -77,13 +94,17 @@ export class Terrain {
     geo.computeBoundingSphere();
 
     this.heightTexture = this.buildHeightTexture();
-    this.splatTexture = this.buildSplatTexture(geo);
+    [this.splatTexture, this.splat2Texture] = this.buildSplatTextures(geo);
 
     const tex = generateTerrainTextures();
     this.uniforms = {
       tAlbedo: { value: tex.albedo },
       tDetail: { value: tex.detail },
       tSplat: { value: this.splatTexture },
+      tSplat2: { value: this.splat2Texture },
+      tNoise: { value: noiseTexture() },
+      uDry: { value: opts.mood?.dry ?? 0.35 },
+      uWet: { value: opts.mood?.wet ?? 0 },
       tDecal: { value: null },
       uTerrainBounds: { value: new THREE.Vector4(this.min, this.min, this.extent, this.extent) },
       uDecalBounds: { value: new THREE.Vector4(-1, -1, 2, 2) },
@@ -197,6 +218,15 @@ export class Terrain {
     return out.set(-hx, 2 * e, -hz).normalize();
   }
 
+  /** Grass cover 0..1 at (x, z): 0 on rock, sand, roads, water and forest floor. */
+  grassAt(x: number, z: number): number {
+    const n = this.n;
+    const i = Math.round((x - this.min) / this.step);
+    const j = Math.round((z - this.min) / this.step);
+    if (i < 0 || j < 0 || i > n || j > n) return 0;
+    return this.grassCover[j * (n + 1) + i] / 255;
+  }
+
   isWater(x: number, z: number): boolean {
     return this.heightAt(x, z) < WATER_LEVEL - 0.15;
   }
@@ -245,10 +275,16 @@ export class Terrain {
     return tex;
   }
 
-  /** RGBA = dirt, rock, sand, mud weights (grass = remainder), from slope, height, forests, roads and style. */
-  private buildSplatTexture(geo: THREE.BufferGeometry): THREE.DataTexture {
+  /**
+   * Two splat maps from slope, height, curvature, water, forests, roads and noise:
+   * A: RGBA = dirt, rock, sand, mud (grass = remainder); B: RGBA = gravel, dry grass, wetness, cliff.
+   * Grass cover per sample is kept on the CPU for the grass tufts.
+   */
+  private buildSplatTextures(geo: THREE.BufferGeometry): [THREE.DataTexture, THREE.DataTexture] {
     const w = this.n + 1;
     const data = new Uint8Array(w * w * 4);
+    const data2 = new Uint8Array(w * w * 4);
+    this.grassCover = new Uint8Array(w * w);
     const nrm = geo.attributes.normal as THREE.BufferAttribute;
     const pos = geo.attributes.position as THREE.BufferAttribute;
     const m = this.model;
@@ -256,6 +292,8 @@ export class Terrain {
     const desert = m.style === 'desert';
     const coastal = m.style === 'coastal';
     const half = this.mapSize / 2;
+    const H = this.heights;
+    const at = (i: number, j: number) => H[Math.min(Math.max(j, 0), w - 1) * w + Math.min(Math.max(i, 0), w - 1)];
     for (let v = 0; v < pos.count; v++) {
       const x = pos.getX(v);
       const z = pos.getZ(v);
@@ -263,28 +301,55 @@ export class Terrain {
       const i = Math.round((x - this.min) / this.step);
       const j = Math.round((z - this.min) / this.step);
       const ny = nrm.getY(v);
+      // Convexity over ~4 samples: ridges/hilltops positive, gullies negative.
+      const ring = (at(i - 3, j) + at(i + 3, j) + at(i, j - 3) + at(i, j + 3)) / 4;
+      const convex = THREE.MathUtils.clamp((h - ring) / 1.5, -1, 1);
       const inside = Math.abs(x) < half + 40 && Math.abs(z) < half + 40;
       const cliff = inside && m.hasCliffs && m.isCliff(x, z) ? 1 : 0;
-      const rock = Math.max(smoothstep(0.88, 0.7, ny), smoothstep(22, 45, h) * 0.85, cliff * 0.95);
-      let sand = smoothstep(coastal ? 3.4 : 2.4, 1.0, h) * (1 - rock);
-      const patches = fbm(x / 75, z / 75, seed + 21, 3);
-      let dirt = smoothstep(0.5, 0.75, patches) * 0.8 * (1 - rock) * (1 - sand);
-      const wet = fbm(x / 45, z / 45, seed + 33, 3);
-      let mud = smoothstep(0.6, 0.72, wet) * smoothstep(5.5, 2.5, h) * 0.9 * (1 - rock) * (1 - sand);
+      const n1 = fbm(x / 75, z / 75, seed + 21, 3);
+      const n2 = fbm(x / 31, z / 31, seed + 27, 3);
+      const n3 = fbm(x / 140, z / 140, seed + 29, 2);
+
+      // Rock on steep slopes, cliffs, high ground and a few outcrops on crests.
+      const steep = smoothstep(0.9, 0.72, ny);
+      const outcrop = smoothstep(0.66, 0.78, n2) * smoothstep(0.1, 0.5, convex) * (desert ? 0.7 : 0.55);
+      const rock = Math.min(1, Math.max(steep, smoothstep(22, 45, h) * 0.85, cliff * 0.95, outcrop));
+      // Shore: sand band above the waterline, wet ground at it.
+      const shoreH = coastal ? 3.4 : 2.2;
+      let sand = smoothstep(shoreH, 0.9, h) * (1 - rock);
+      const wet = smoothstep(1.3, 0.25, h) * (1 - rock * 0.5);
+      let dirt = smoothstep(0.5, 0.75, n1) * 0.75 * (1 - rock) * (1 - sand);
+      // Mud in wet hollows and along river banks (not on beaches).
+      const hollow = smoothstep(-0.05, -0.45, convex);
+      let mud = Math.max(
+        smoothstep(0.6, 0.72, fbm(x / 45, z / 45, seed + 33, 3)) * smoothstep(5.5, 2.5, h) * 0.9,
+        hollow * smoothstep(0.45, 0.65, n2) * 0.7,
+        coastal ? 0 : wet * 0.8,
+      ) * (1 - rock) * (1 - sand * 0.7);
+      // Gravel: scree at the foot of steep ground, scattered patches.
+      let gravel = Math.max(smoothstep(0.96, 0.86, ny) * (1 - steep) * 0.75, smoothstep(0.72, 0.8, n1) * smoothstep(0.4, 0.6, n3) * 0.6) * (1 - sand);
+      // Sun-bleached grass on crests and in broad patches.
+      let dry = Math.min(1, smoothstep(0.45, 0.7, n3) * 0.8 + Math.max(0, convex) * 0.5 + smoothstep(0.6, 0.8, n2) * 0.25);
       if (desert) {
-        // Desert: sand everywhere, packed dirt patches, rock on slopes.
-        sand = Math.max(sand, (1 - rock) * (0.75 + 0.25 * patches));
-        dirt = smoothstep(0.55, 0.8, patches) * 0.6 * (1 - rock);
+        // Desert: sand everywhere, packed dirt and gravel pans, rock on slopes.
+        sand = Math.max(sand, (1 - rock) * (0.75 + 0.25 * n1));
+        dirt = smoothstep(0.55, 0.8, n1) * 0.55 * (1 - rock);
+        gravel = Math.max(gravel, smoothstep(0.6, 0.75, n3) * 0.6 * (1 - rock));
         mud = 0;
+        dry = 1;
       }
-      if (inside && m.forests.length && m.isForest(x, z)) {
+      const forest = inside && m.forests.length > 0 && m.isForest(x, z);
+      if (forest) {
         // Forest floor: dark dirt and leaf litter.
         dirt = Math.max(dirt, 0.55);
         mud = Math.max(mud, desert ? 0 : 0.3);
         sand *= 0.3;
+        gravel *= 0.3;
       }
-      if (inside && m.roads.length && m.isRoad(x, z)) {
-        dirt = 0.95;
+      const road = inside && m.roads.length > 0 && m.isRoad(x, z);
+      if (road) {
+        dirt = 0.85;
+        gravel = Math.max(gravel, 0.5);
         mud = 0;
         sand = desert ? 0.3 : 0;
       }
@@ -292,24 +357,61 @@ export class Terrain {
       let g = rock;
       let b = sand;
       let a = mud;
-      const sum = r + g + b + a;
+      let gr = gravel;
+      const sum = r + g + b + a + gr;
       if (sum > 1) {
         r /= sum;
         g /= sum;
         b /= sum;
         a /= sum;
+        gr /= sum;
       }
       const o = (j * w + i) * 4;
       data[o] = r * 255;
       data[o + 1] = g * 255;
       data[o + 2] = b * 255;
       data[o + 3] = a * 255;
+      data2[o] = gr * 255;
+      data2[o + 1] = dry * 255;
+      data2[o + 2] = wet * 255;
+      data2[o + 3] = Math.max(cliff, steep) * 255;
+      const grass = Math.max(0, 1 - r - g - b - a - gr) * (h > 0.6 ? 1 : 0) * (forest || road ? 0 : 1);
+      this.grassCover[j * w + i] = grass * 255;
     }
-    const tex = new THREE.DataTexture(data, w, w, THREE.RGBAFormat, THREE.UnsignedByteType);
-    tex.minFilter = tex.magFilter = THREE.LinearFilter;
-    tex.needsUpdate = true;
-    return tex;
+    const make = (d: Uint8Array) => {
+      const tex = new THREE.DataTexture(d, w, w, THREE.RGBAFormat, THREE.UnsignedByteType);
+      tex.minFilter = tex.magFilter = THREE.LinearFilter;
+      tex.needsUpdate = true;
+      return tex;
+    };
+    return [make(data), make(data2)];
   }
+}
+
+/** Tileable 256² value noise: R/G/B at three frequencies, A per-cell random. Breaks up texture tiling. */
+let sharedNoise: THREE.DataTexture | null = null;
+export function noiseTexture(): THREE.DataTexture {
+  if (sharedNoise && sharedNoise.image) return sharedNoise;
+  const size = 256;
+  const d = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = x / size;
+      const v = y / size;
+      const o = (y * size + x) * 4;
+      d[o] = fbm(u * 4, v * 4, 901, 3, 4) * 255;
+      d[o + 1] = fbm(u * 12, v * 12, 902, 3, 12) * 255;
+      d[o + 2] = fbm(u * 40, v * 40, 903, 2, 40) * 255;
+      d[o + 3] = valueNoise(Math.floor(u * 32) + 0.5, Math.floor(v * 32) + 0.5, 904, 32) * 255;
+    }
+  }
+  sharedNoise = new THREE.DataTexture(d, size, size, THREE.RGBAFormat, THREE.UnsignedByteType);
+  sharedNoise.wrapS = sharedNoise.wrapT = THREE.RepeatWrapping;
+  sharedNoise.minFilter = THREE.LinearMipmapLinearFilter;
+  sharedNoise.magFilter = THREE.LinearFilter;
+  sharedNoise.generateMipmaps = true;
+  sharedNoise.needsUpdate = true;
+  return sharedNoise;
 }
 
 function patchTerrainShader(shader: THREE.WebGLProgramParametersWithUniforms, uniforms: Terrain['uniforms']): void {
@@ -332,44 +434,82 @@ precision highp sampler2DArray;
 uniform sampler2DArray tAlbedo;
 uniform sampler2DArray tDetail;
 uniform sampler2D tSplat;
+uniform sampler2D tSplat2;
+uniform sampler2D tNoise;
 uniform sampler2D tDecal;
 uniform vec4 uTerrainBounds;
 uniform vec4 uDecalBounds;
 uniform float uTile;
+uniform float uDry;
+uniform float uWet;
 varying vec3 vTWorld;
 varying vec3 vTNormal;
 `;
 
-// Height-blended splatting over 5 layers. Each albedo is sampled at two scales (one rotated)
-// to break up tiling; a very low-frequency sample adds macro color variation.
+// Height-blended splatting over 6 layers (grass, dirt, rock, sand, mud, gravel). Anti-tiling: each layer
+// is sampled at two scales whose mix is driven by world noise; rock on steep ground is projected
+// triplanar so cliffs don't smear. A second splat adds bleached grass, wet shores and cliff tint.
 const TERRAIN_FRAG_ALBEDO = /* glsl */ `
 vec2 tUv = vTWorld.xz / uTile;
 vec2 tUv2 = mat2(0.8, -0.6, 0.6, 0.8) * vTWorld.xz / (uTile * 4.7);
 // Explicit gradients: the layer loop below branches per pixel, where implicit derivatives are undefined.
 vec2 gx1 = dFdx(tUv), gy1 = dFdy(tUv), gx2 = dFdx(tUv2), gy2 = dFdy(tUv2);
-vec4 sw = texture2D(tSplat, (vTWorld.xz - uTerrainBounds.xy) / uTerrainBounds.zw);
-float w[5];
-w[0] = max(0.0, 1.0 - sw.r - sw.g - sw.b - sw.a);
-w[1] = sw.r; w[2] = sw.g; w[3] = sw.b; w[4] = sw.a;
-vec4 dt[5];
+vec2 sUv = (vTWorld.xz - uTerrainBounds.xy) / uTerrainBounds.zw;
+vec4 sw = texture2D(tSplat, sUv);
+vec4 sw2 = texture2D(tSplat2, sUv);
+vec4 nz = texture2D(tNoise, vTWorld.xz / 260.0);
+vec4 nz2 = texture2D(tNoise, vTWorld.zx / 57.0 + 0.37);
+// Noise jitter of the splat weights so borders meander instead of following the height grid.
+float jit = (nz2.g - 0.5) * 0.35;
+float w[6];
+w[1] = clamp(sw.r + jit * sw.r, 0.0, 1.0);
+w[2] = sw.g;
+w[3] = clamp(sw.b - jit * 0.5 * sw.b, 0.0, 1.0);
+w[4] = clamp(sw.a + jit * sw.a, 0.0, 1.0);
+w[5] = clamp(sw2.r + jit * sw2.r, 0.0, 1.0);
+w[0] = max(0.0, 1.0 - w[1] - w[2] - w[3] - w[4] - w[5]);
+float scaleMix = smoothstep(0.3, 0.7, nz.g);
+vec4 dt[6];
 float hmax = -1.0;
-float hb[5];
-for (int i = 0; i < 5; i++) {
+float hb[6];
+for (int i = 0; i < 6; i++) {
   dt[i] = textureGrad(tDetail, vec3(tUv, float(i)), gx1, gy1);
   hb[i] = w[i] + dt[i].b * 0.6;
   hmax = max(hmax, w[i] > 0.001 ? hb[i] : -1.0);
 }
+vec3 n0w = normalize(vTNormal);
+float slopeK = smoothstep(0.85, 0.6, n0w.y);
+// Triplanar UVs and their gradients, taken outside the branching loop.
+vec2 uvx = vTWorld.zy / uTile;
+vec2 uvz = vTWorld.xy / uTile;
+vec2 gxx = dFdx(uvx), gyx = dFdy(uvx), gxz = dFdx(uvz), gyz = dFdy(uvz);
 float wsum = 0.0;
 vec3 tAlb = vec3(0.0);
 float tRough = 0.0;
 vec2 tN = vec2(0.0);
 float tCav = 0.0;
-for (int i = 0; i < 5; i++) {
+for (int i = 0; i < 6; i++) {
   float k = w[i] > 0.001 ? max(hb[i] - hmax + 0.35, 0.0) : 0.0;
   if (k <= 0.0) continue;
   vec4 a = textureGrad(tAlbedo, vec3(tUv, float(i)), gx1, gy1);
   vec4 a2 = textureGrad(tAlbedo, vec3(tUv2, float(i)), gx2, gy2);
-  a = mix(a, a2, 0.5);
+  a = mix(a, a2, 0.3 + 0.4 * scaleMix);
+  if (i == 2 && slopeK > 0.01) {
+    // Triplanar rock: project from the side on cliffs.
+    vec3 bw = abs(n0w);
+    bw = bw / (bw.x + bw.y + bw.z);
+    vec4 ax = textureGrad(tAlbedo, vec3(uvx, 2.0), gxx, gyx);
+    vec4 az = textureGrad(tAlbedo, vec3(uvz, 2.0), gxz, gyz);
+    vec4 tri = ax * bw.x + a * bw.y + az * bw.z;
+    a = mix(a, tri, slopeK);
+  }
+  if (i == 0) {
+    // Grass: lush/bleached variation. Straw where the splat says dry, scaled by the map's mood.
+    float dry = clamp(sw2.g * (0.4 + uDry) + (nz.r - 0.5) * 0.5 * uDry, 0.0, 1.0);
+    vec3 straw = vec3(dot(a.rgb, vec3(0.3, 0.59, 0.11))) * vec3(1.32, 1.12, 0.68);
+    a.rgb = mix(a.rgb, straw, dry * 0.85);
+    a.rgb *= 0.86 + 0.28 * nz2.b;
+  }
   tAlb += a.rgb * k;
   tRough += a.a * k;
   tN += (dt[i].rg * 2.0 - 1.0) * k;
@@ -377,10 +517,15 @@ for (int i = 0; i < 5; i++) {
   wsum += k;
 }
 tAlb /= wsum; tRough /= wsum; tN /= wsum; tCav /= wsum;
-// Two very low-frequency samples of the grass height channel as macro variation (kills visible tiling).
-float macro = texture(tDetail, vec3(vTWorld.xz / 173.0, 0.0)).b * 0.6 + texture(tDetail, vec3(vTWorld.zx / 61.0, 3.0)).b * 0.4;
-tAlb *= 0.72 + macro * 0.56;
+// Broad macro variation in brightness and hue (kills visible tiling at RTS zoom).
+tAlb *= 0.78 + nz.r * 0.44;
+tAlb *= mix(vec3(1.0), vec3(1.06, 1.0, 0.9), smoothstep(0.4, 0.8, nz.b));
 tAlb *= mix(1.0, tCav, 0.6);
+// Wet shores and rain: darker, glossier. Puddle-ish glossy spots in rain.
+float wetK = clamp(sw2.b + uWet * (0.45 + 0.4 * smoothstep(0.55, 0.75, nz2.r)), 0.0, 1.0);
+tAlb *= 1.0 - wetK * 0.42;
+tRough = mix(tRough, 0.32, wetK * 0.75);
+tN *= 1.0 - wetK * 0.4;
 
 vec2 dUv = (vTWorld.xz - uDecalBounds.xy) / uDecalBounds.zw;
 vec4 decal = (dUv.x > 0.0 && dUv.x < 1.0 && dUv.y > 0.0 && dUv.y < 1.0) ? texture2D(tDecal, dUv) : vec4(0.0);

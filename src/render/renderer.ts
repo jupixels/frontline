@@ -11,10 +11,13 @@ import type { Picker } from '../shared/view';
 import { RtsCamera } from './camera';
 import { DecalKind, DecalMap } from './decals';
 import { atmosphereFor, Environment } from './environment';
+import { GrassField } from './grass';
+import { Weather } from './weather';
+import { BattleScars } from './scars';
 import { Scenery } from './scenery';
 import { MISSILE_ARC, TacticalLayer } from './tactical';
 import { FogOfWar, LocalVisionSource, SimFogSource, type VisibilitySource } from './fog';
-import { CommandMarkers, HealthBars } from './overlay';
+import { CommandMarkers, HealthBars, TeamRings, type TeamRingMode } from './overlay';
 import { PostStack } from './post';
 import { LodInstancer } from './lod';
 import { gpuName, initialQuality, QUALITY, type QualityLevel, type QualitySettings } from './quality';
@@ -106,10 +109,13 @@ export class GameRenderer implements Picker {
   readonly vfx: Vfx;
   readonly fog: FogOfWar;
   readonly scenery: Scenery;
+  private readonly grass: GrassField;
+  private readonly weather: Weather;
   private readonly tactical: TacticalLayer;
   private readonly post: PostStack;
   private readonly overlay = new THREE.Scene();
   private readonly healthBars = new HealthBars();
+  private readonly teamRings = new TeamRings();
   private readonly markers: CommandMarkers;
   private readonly views = new Map<EntityId, UnitView>();
   private readonly points = new Map<EntityId, CapturePointView>();
@@ -119,6 +125,7 @@ export class GameRenderer implements Picker {
   private readonly paths: PathLines;
   private readonly listeners: [EventTarget, string, EventListener][] = [];
   private readonly wrecks: UnitView[] = [];
+  private readonly scars: BattleScars;
   /** Far-LOD instancers per unit type. */
   private readonly lods = new Map<string, LodInstancer>();
   private readonly teamColors = new Map<number, THREE.Color>();
@@ -151,14 +158,14 @@ export class GameRenderer implements Picker {
     this.env = new Environment(this.scene, r, atmosphere);
     this.structureDefs = setup.structures ?? (structuresJson as unknown as Record<string, RenderStructureDef>);
     const model = new TerrainModel(setup.map ?? { size: setup.mapSize });
-    this.terrain = new Terrain({ model });
+    this.terrain = new Terrain({ model, mood: atmosphere.ground });
     this.scene.add(this.terrain.mesh);
     this.cam.groundHeight = (x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL);
     this.water = new Water(this.terrain, this.env.sunDir, this.env.sun.color);
-    if (atmosphere.water) {
-      (this.water.uniforms.uShallow.value as THREE.Color).set(atmosphere.water[0]);
-      (this.water.uniforms.uDeep.value as THREE.Color).set(atmosphere.water[1]);
-    }
+    this.water.setMood(atmosphere);
+    this.grass = new GrassField(this.terrain, atmosphere);
+    this.weather = new Weather(atmosphere);
+    this.scene.add(this.grass.mesh, this.weather.mesh);
     this.scene.add(this.water.mesh);
     this.quality = QUALITY[initialQuality(gpuName(r.getContext()))];
     this.scenery = new Scenery(setup.map ?? { id: '', name: '', size: setup.mapSize, spawns: [] }, model, (x, z) => this.terrain.heightAt(x, z), this.quality.level);
@@ -166,6 +173,8 @@ export class GameRenderer implements Picker {
     this.decals = new DecalMap(setup.mapSize * 1.3, this.quality.decalResolution);
     this.terrain.setDecals(this.decals.texture, this.decals.bounds);
     this.water.setDecals(this.decals.texture, this.decals.bounds);
+    this.scars = new BattleScars((x, z) => this.terrain.heightAt(x, z));
+    this.scene.add(this.scars.group);
     void this.terrain.loadTextures(this.quality.level === 'ultra' ? 1024 : 512);
     void this.env.loadHdri();
 
@@ -183,6 +192,7 @@ export class GameRenderer implements Picker {
     this.scene.add(this.markers.group);
     this.paths = new PathLines((x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL));
     this.scene.add(this.paths.mesh);
+    this.scene.add(this.teamRings.mesh);
     this.overlay.add(this.healthBars.mesh);
 
     for (const p of setup.players) this.teamColors.set(p.id, new THREE.Color(p.color));
@@ -193,6 +203,7 @@ export class GameRenderer implements Picker {
     if (this.localPlayer < 0) this.fog.enabled = false;
     this.computeAllies();
     this.post = new PostStack(r, this.scene, this.cam.camera, this.fog.texture, this.fog.bounds);
+    this.post.setMood(atmosphere);
 
     this.post.fog.enabled = this.fog.enabled;
     this.setQuality(this.quality.level);
@@ -242,7 +253,10 @@ export class GameRenderer implements Picker {
     this.wrecks.length = 0;
     this.points.clear();
     this.decals.dispose();
+    this.scars.dispose();
     this.scenery.dispose();
+    this.grass.dispose();
+    this.weather.dispose();
     this.tactical.dispose();
     this.vfx.dispose();
     this.post.dispose();
@@ -260,6 +274,9 @@ export class GameRenderer implements Picker {
     this.env.setShadowMapSize(q.shadowMapSize);
     this.scenery?.setQuality(level);
     this.vfx.setQuality(q);
+    this.grass.setQuality(q);
+    this.weather.setQuality(q);
+    this.decals.setTrackFade(this.scars.setQuality(level));
     this.post.apply(q);
     this.resize();
     try {
@@ -281,6 +298,7 @@ export class GameRenderer implements Picker {
   setLocalPlayer(id: PlayerId): void {
     this.localPlayer = id;
     this.computeAllies();
+    for (const v of this.views.values()) v.setXray(this.xrayColor(v.owner));
     this.fog.setSource(this.makeVisionSource());
     this.simFogAttached = false;
     this.setFogEnabled(id >= 0);
@@ -300,6 +318,11 @@ export class GameRenderer implements Picker {
 
   private makeVisionSource(): VisibilitySource {
     return new LocalVisionSource(128, this.setup.mapSize, this.setup.units, this.setup.players, this.localPlayer);
+  }
+
+  /** Own units show a see-through silhouette when hidden behind something. */
+  private xrayColor(owner: PlayerId): THREE.Color | null {
+    return owner === this.localPlayer ? (this.teamColors.get(owner) ?? null) : null;
   }
 
   private computeAllies(): void {
@@ -335,6 +358,8 @@ export class GameRenderer implements Picker {
           if (v.becomeWreck()) {
             this.onDeath(v);
             this.wrecks.push(v);
+            this.scars.keepWreck(v);
+            if (v.cls === 'structure') this.leaveRubble(v);
           } else v.dispose();
           break;
         }
@@ -472,6 +497,7 @@ export class GameRenderer implements Picker {
     if (!def) return undefined;
     v = new UnitView(id, def, e.owner, this.teamColors.get(e.owner) ?? new THREE.Color('#ffffff'), this.terrain);
     v.capturePrev(e);
+    v.setXray(this.xrayColor(e.owner));
     v.setSelected(this.selection.has(id));
     this.scene.add(v.root);
     this.views.set(id, v);
@@ -513,6 +539,11 @@ export class GameRenderer implements Picker {
   /** Path lines for the selection only (default), or for every own unit with orders. */
   setPathLines(mode: PathLineMode): void {
     this.paths.mode = mode;
+  }
+
+  /** Team rings under units: always, fading in at far zoom (default), or off. */
+  setTeamRings(mode: TeamRingMode): void {
+    this.teamRings.mode = mode;
   }
 
   setSelection(ids: Iterable<EntityId>): void {
@@ -590,6 +621,8 @@ export class GameRenderer implements Picker {
 
     this.env.updateShadows(this.cam.target, this.cam.viewDistance);
     this.water.update(this.time);
+    this.grass.update(this.cam.target, this.cam.viewDistance, this.time);
+    this.weather.update(this.cam.target, this.time);
     this.vfx.update(dt);
     this.decals.update(this.renderer, dt);
 
@@ -597,6 +630,14 @@ export class GameRenderer implements Picker {
     this.renderer.autoClear = false;
     this.renderer.render(this.overlay, camera);
     this.renderer.autoClear = true;
+  }
+
+  /** A destroyed building leaves a rubble pile and a wide burn mark that stay for the rest of the match. */
+  private leaveRubble(v: UnitView): void {
+    const [w, d] = v.def.footprint ?? [10, 10];
+    const p = v.root.position;
+    this.decals.stamp(DecalKind.Scorch, p.x, p.z, w * 1.1, d * 1.1, v.root.rotation.y, 0.9);
+    this.scars.addRubble(p.x, p.z, w, d, v.root.rotation.y);
   }
 
   /** A demolished building folds down in a cloud of dust (no fire, no wreck: it wasn't destroyed). */
@@ -680,6 +721,7 @@ export class GameRenderer implements Picker {
     const q = this.quality;
     const soldiers: { v: UnitView; d: number; type: string }[] = [];
     const vehicles: { v: UnitView; d: number; type: string }[] = [];
+    this.teamRings.begin();
     for (const e of sim.entities()) {
       const v = this.ensureView(sim, e.id);
       if (!v) continue;
@@ -697,10 +739,18 @@ export class GameRenderer implements Picker {
       // LOD'd units skip their mixer; it catches up (accumulated dt) when they come back to full detail.
       v.update(e, alpha, dt, visible && v.rigVisible && this.animateThisFrame(v, camPos));
       if (!visible) continue;
+      if (!v.dying && v.cls !== 'structure' && v.cls !== 'jet') {
+        const p = v.root.position;
+        // Ground units already stand on the ground; helicopters and ships need it looked up.
+        const ground = v.cls === 'infantry' || v.cls === 'vehicle' ? p.y : Math.max(this.terrain.heightAt(p.x, p.z), WATER_LEVEL);
+        _v.set(p.x, ground + 0.3, p.z);
+        this.teamRings.add(_v, v.def.radius * (v.cls === 'infantry' ? 2 : 1.15), v.teamColor);
+      }
       if (v.cls === 'infantry') soldiers.push({ v, d: v.dying ? -1 : d, type: e.type });
       else if (v.cls === 'vehicle') vehicles.push({ v, d: v.dying ? -1 : d, type: e.type });
       if (e.moving && !v.dying && v.cls !== 'infantry') this.groundEffects(v, dt);
     }
+    this.teamRings.end();
 
     // LOD: the nearest N units within range keep their full animated model; the rest are drawn by
     // the per-type instancers.
@@ -716,7 +766,7 @@ export class GameRenderer implements Picker {
       const lod = this.lods.get(type);
       const full = !lod?.ready || d < 0 || (d < range && i < cap);
       v.setRigVisible(full);
-      if (!full) lod!.add(v, this.time);
+      if (!full) lod!.add(v, this.time, this.xrayColor(v.owner));
     });
   }
 
@@ -731,10 +781,10 @@ export class GameRenderer implements Picker {
     v.trackAcc += v.speed * dt;
     if (v.cls === 'vehicle') {
       const tracked = !!v.def.turretNode || v.def.armor === 'heavy';
-      if (v.trackAcc > 1.1) {
+      if (v.trackAcc > 1.6) {
         v.trackAcc = 0;
         if (!this.terrain.isWater(p.x, p.z)) {
-          this.decals.stamp(tracked ? DecalKind.Tracks : DecalKind.Wheels, p.x - fx * r * 0.4, p.z - fz * r * 0.4, 1.6, r * 1.25, yaw, tracked ? 0.85 : 0.55);
+          this.decals.stamp(tracked ? DecalKind.Tracks : DecalKind.Wheels, p.x - fx * r * 0.4, p.z - fz * r * 0.4, 1.9, r * 1.25, yaw, tracked ? 0.6 : 0.4);
         }
       }
       if (this.quality.dustTrails && v.speed > 1.5) this.vfx.dust(p.x - fx * r, p.z - fz * r, v.speed, r * 0.6, dt);
@@ -757,6 +807,7 @@ export class GameRenderer implements Picker {
       w.updateWreck(dt, this.animateThisFrame(w, camPos));
       if (!w.deathFxDone && w.crashed) this.onDeath(w);
       if (w.wreckDone) {
+        this.scars.forget(w);
         w.dispose();
         this.wrecks.splice(i, 1);
       }
@@ -764,7 +815,7 @@ export class GameRenderer implements Picker {
   }
 
   private updateOverlays(dt: number): void {
-    this.healthBars.begin();
+    this.healthBars.begin(this.time);
     for (const v of this.views.values()) {
       if (!v.root.visible || !v.isAlive || v.maxHp <= 0) continue;
       const sel = this.selection.has(v.id);

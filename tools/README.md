@@ -117,6 +117,8 @@ npm run assets -- --only tank_mbt
   - `infantry.py`: uniform split (`TeamPaint` vs `Gear`), a weapon built from boxes and tubes on the right hand bone lined up with the
     left hand in the aim pose, the aim pose baked into the idle's arms, a built `Fire` kick, and clip renames to
     the names `render/units.ts` looks up.
+  - Props use `vehicle.py` too, with team paint off (`paint.vMin: 2`) and no parts; they build to
+    `models/buildings/props/<id>.glb`.
   - `--preview <dir>` writes workbench renders for checking cuts (debug colors, not what the game shows).
 - Check raw files in the viewer before building: `/tools/viewer.html?files=/a.glb,/b.glb&len=9.5&rts=110`
   (files must be served by Vite, e.g. copied under `public/`; `rts` frames like the game camera).

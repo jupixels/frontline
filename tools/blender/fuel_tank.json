@@ -1,0 +1,15 @@
+{
+  "input": "raw/fuel_tank/smart.glb",
+  "output": "buildings/props/fuel_tank.glb",
+  "rotateY": 90,
+  "length": 10,
+  "triangles": 2000,
+  "textureSize": 512,
+  "paint": {
+    "vMin": 2,
+    "sMax": 0,
+    "smooth": 0,
+    "detailBelow": 0
+  },
+  "parts": []
+}

@@ -26,24 +26,29 @@ export interface QualitySettings {
   flashLights: number;
   decalResolution: number;
   dustTrails: boolean;
+  /** Grass/weed tufts around the view center (0 = off) and how far they reach in meters. */
+  grassCount: number;
+  grassRadius: number;
+  /** Rain streaks on rainy maps. */
+  rainDrops: number;
 }
 
 export const QUALITY: Record<QualityLevel, QualitySettings> = {
   low: {
     level: 'low', pixelRatio: 1, shadowMapSize: 1024, ao: 'off', bloom: false, smaa: false, tiltShift: false,
-    infantryLodDistance: 40, maxInfantryRigs: 8, vehicleLodDistance: 60, maxVehicleRigs: 8, particles: 0.4, flashLights: 0, decalResolution: 1024, dustTrails: false,
+    infantryLodDistance: 40, maxInfantryRigs: 8, vehicleLodDistance: 60, maxVehicleRigs: 8, particles: 0.4, flashLights: 0, decalResolution: 1024, dustTrails: false, grassCount: 0, grassRadius: 0, rainDrops: 1200,
   },
   medium: {
     level: 'medium', pixelRatio: 1, shadowMapSize: 2048, ao: 'half', bloom: true, smaa: true, tiltShift: false,
-    infantryLodDistance: 60, maxInfantryRigs: 20, vehicleLodDistance: 100, maxVehicleRigs: 20, particles: 0.7, flashLights: 2, decalResolution: 2048, dustTrails: true,
+    infantryLodDistance: 60, maxInfantryRigs: 20, vehicleLodDistance: 100, maxVehicleRigs: 20, particles: 0.7, flashLights: 2, decalResolution: 2048, dustTrails: true, grassCount: 6000, grassRadius: 70, rainDrops: 3000,
   },
   high: {
     level: 'high', pixelRatio: 1, shadowMapSize: 2048, ao: 'full', bloom: true, smaa: true, tiltShift: false,
-    infantryLodDistance: 80, maxInfantryRigs: 30, vehicleLodDistance: 130, maxVehicleRigs: 30, particles: 1, flashLights: 4, decalResolution: 2048, dustTrails: true,
+    infantryLodDistance: 80, maxInfantryRigs: 30, vehicleLodDistance: 130, maxVehicleRigs: 30, particles: 1, flashLights: 4, decalResolution: 2048, dustTrails: true, grassCount: 12000, grassRadius: 95, rainDrops: 5000,
   },
   ultra: {
     level: 'ultra', pixelRatio: 1.5, shadowMapSize: 4096, ao: 'full', bloom: true, smaa: true, tiltShift: true,
-    infantryLodDistance: 140, maxInfantryRigs: 80, vehicleLodDistance: 200, maxVehicleRigs: 60, particles: 1.3, flashLights: 4, decalResolution: 2048, dustTrails: true,
+    infantryLodDistance: 140, maxInfantryRigs: 80, vehicleLodDistance: 200, maxVehicleRigs: 60, particles: 1.3, flashLights: 4, decalResolution: 2048, dustTrails: true, grassCount: 22000, grassRadius: 130, rainDrops: 8000,
   },
 };
 

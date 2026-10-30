@@ -78,6 +78,7 @@ export class SettingsScreen implements Screen {
       ),
       row('Tooltips', 'Costs, counters, cooldowns and hotkeys when hovering buttons.', toggle(s.tooltips, (v) => this.store.update({ tooltips: v }))),
       row('Path lines for all units', 'Show where every unit of yours is headed, not only the selected ones.', toggle(s.allPaths, (v) => this.store.update({ allPaths: v }))),
+      row('Team rings', 'Team-colored rings under units, so a distant army reads by side.', segmented(s.teamRings, [['far', 'Far zoom'], ['always', 'Always'], ['off', 'Off']], (v) => this.store.update({ teamRings: v as Settings['teamRings'] }))),
       row('Show FPS', 'Frame rate and sim tick in the top bar.', toggle(s.showFps, (v) => this.store.update({ showFps: v }))),
     );
   }

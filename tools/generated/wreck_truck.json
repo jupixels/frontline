@@ -1,0 +1,41 @@
+{
+  "id": "wreck_truck",
+  "date": "2026-10-30",
+  "batch": "props",
+  "replaces": "map dressing prop (new; for the maps session)",
+  "style": "tools/generated/STYLE.md, prop",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "Realistic military map prop, generic, no text, no logos, no markings. Single object, entire object in frame, three-quarter view from above, centered on a plain light grey background, no ground, no shadow, soft even overcast lighting, photorealistic 3D render. A burned-out wrecked military 6x6 cargo truck: blackened charred cab, scorched rusty metal, burst tires, collapsed cargo bed frame, soot everywhere.",
+    "taskId": "01a18ee8-0a92-7299-af3d-1abf839bcae5",
+    "file": "raw/wreck_truck/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 2000,
+      "texture": true,
+      "taskId": "01a18ee9-0cb4-7011-88da-0f52518f7b9e",
+      "file": "raw/wreck_truck/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/wreck_truck.json",
+    "output": "buildings/props/wreck_truck.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/props/wreck_truck.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

@@ -116,6 +116,7 @@ const app = new UiApp({
     document.documentElement.dataset.quality = s.graphics;
     match?.renderer.setQuality(s.graphics);
     match?.renderer.setPathLines(s.allPaths ? 'all' : 'selected');
+    match?.renderer.setTeamRings(s.teamRings);
   },
 });
 app.start();

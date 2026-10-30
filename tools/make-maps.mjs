@@ -241,7 +241,7 @@ write({
   name: 'Coastal Strait',
   size: 1200,
   modes: ['2v2', '1v1'],
-  atmosphere: 'overcast',
+  atmosphere: 'rain',
   spawns: [
     { x: -300, z: 445 },
     { x: 300, z: 445 },
@@ -342,7 +342,7 @@ write({
   name: 'Desert Oilfields',
   size: 1200,
   modes: ['1v1', '2v2', 'ffa4'],
-  atmosphere: 'noon',
+  atmosphere: 'haze',
   // Spawn order SW, NE, NW, SE: 1v1 is diagonal, FFA takes one corner each.
   spawns: [dSpawn, rotXZ(dSpawn, 2), rotXZ(dSpawn, 1), rotXZ(dSpawn, 3)].map(({ x, z }) => ({ x, z })),
   sides: [
@@ -501,7 +501,7 @@ function compass(x, z) {
     name: 'Inland Sea',
     size: 1800,
     modes: ['4v4', '3v3', '2v2', '1v1', 'ffa8', 'ffa4'],
-    atmosphere: 'overcast',
+    atmosphere: 'windy',
     // Order: 1v1 opposite, FFA4 every other base, then the rest. Sides: east half against west half,
     // teammates filling outward from the middle of their coast.
     spawns: [rotP(home, 0), rotP(home, 2), rotP(home, 1), rotP(home, 3), rotP(twin, 0), rotP(twin, 2), rotP(twin, 1), rotP(twin, 3)].map(xz),
@@ -601,7 +601,7 @@ function compass(x, z) {
     name: 'Iron Gulf',
     size: 1700,
     modes: ['3v3', '2v2', '1v1', 'ffa6'],
-    atmosphere: 'golden',
+    atmosphere: 'dusk',
     // Order: the middle bases first (1v1 is middle against middle), then the flanks in twin pairs.
     spawns: S.xz([{ x: 0, z: SZ }], 2).concat(S.xz([{ x: -460, z: SZ }], 2), S.xz([{ x: 460, z: SZ }], 2)),
     sides: [

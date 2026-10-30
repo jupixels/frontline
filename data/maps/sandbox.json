@@ -583,5 +583,6 @@
    "z": -30,
    "rotation": 3.4
   }
- ]
+ ],
+ "atmosphere": "clear"
 }
