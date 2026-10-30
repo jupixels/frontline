@@ -175,10 +175,11 @@ def flat_material(name, hex_color, roughness=0.8, metallic=0.0):
     return mat
 
 
-def team_paint(textured):
-    """The renderer tints materials named TeamPaint toward the team color, keeping the texture's detail."""
+def team_paint(textured, name='TeamPaint'):
+    """A copy of the textured material that the renderer tints toward the team color: `TeamPaint` faintly,
+    `TeamAccent` strongly. The texture's detail is kept either way."""
     mat = textured.copy()
-    mat.name = 'TeamPaint'
+    mat.name = name
     return mat
 
 

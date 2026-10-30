@@ -6,8 +6,9 @@ Steps, driven by the JSON config (see tools/blender/tank_mbt.json):
   1. import `input` (relative to ~/Downloads/frontline-generated or FRONTLINE_GENERATED_SRC), join meshes
   2. `rotateY` so it faces +Z, scale to `length` (longest horizontal side, m), center on x/z, sit on y=0
   3. decimate to `triangles`
-  4. split the paint (texture color matching `paint`) into a `TeamPaint` material (same texture) that the
-     renderer tints toward the team color; the rest keeps the Meshy texture as `Detail`
+  4. split the paint (texture color matching `paint`) into `TeamPaint` (faint team tint) and, for upward-facing
+     paint above `accent.minHeight` x height, `TeamAccent` (team color); same texture, so weathering stays;
+     the rest keeps the Meshy texture as `Detail`
   5. cut moving parts out by box (`parts`, game coords) into named nodes with their pivot at `pivot`;
      `cap` fills the hole a turret leaves in the hull deck
   6. clips: `Fire` (barrel recoil), `TurretScan` (keeps P_turret a separate animated node in the renderer),
@@ -54,6 +55,16 @@ common.apply_transform(body, Matrix.Translation(Vector((-(mn.x + mx.x) / 2, -(mn
 mn, mx = common.bounds([body])
 print('size (game x, y, z):', [round(v, 2) for v in common.game(mx - mn)])
 
+# Stray geometry from the generator: `remove` boxes (game coords) delete the faces centered inside them.
+for box in cfg.get('remove', []):
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    gone = [f for f in bm.faces if all(box[2 * k] <= common.game(f.calc_center_median())[k] <= box[2 * k + 1] for k in range(3))]
+    bmesh.ops.delete(bm, geom=gone, context='FACES')
+    bm.to_mesh(body.data)
+    bm.free()
+    print(f'removed {len(gone)} faces in {box}')
+
 # 3. Triangle budget.
 print('triangles:', common.decimate(body, cfg['triangles']))
 
@@ -65,9 +76,16 @@ paint_faces = common.smooth_selection(body, common.classify_faces(body, cfg['pai
 # Running gear (road wheels, tracks) stays textured: faces centered below `detailBelow` meters.
 low = cfg['paint'].get('detailBelow', 0)
 paint_faces = {i for i in paint_faces if body.data.polygons[i].center.z >= low}
-paint = common.team_paint(detail)
-common.assign_material(body, paint_faces, paint)
-print(f'paint: {len(paint_faces)}/{len(body.data.polygons)} faces')
+# Team accent: upward-facing paint high on the model (turret roof, upper deck, cab roof) carries the team
+# color; the rest of the paint only gets a faint tint (see TEAM_PAINT/TEAM_ACCENT in src/render/materials.ts).
+acc = cfg.get('accent', {})
+height = common.bounds([body])[1].z
+accent_faces = {i for i in paint_faces
+                if body.data.polygons[i].normal.z >= acc.get('normalZ', 0.65)
+                and body.data.polygons[i].center.z >= acc.get('minHeight', 0.62) * height}
+common.assign_material(body, paint_faces - accent_faces, common.team_paint(detail))
+common.assign_material(body, accent_faces, common.team_paint(detail, 'TeamAccent'))
+print(f'paint: {len(paint_faces)}/{len(body.data.polygons)} faces, accent {len(accent_faces)}')
 
 
 # 5. Moving parts.
@@ -212,7 +230,7 @@ if cfg['_preview']:
             o.color = {'hull': (0.5, 0.5, 0.45, 1), 'P_turret': (0.9, 0.5, 0.2, 1), 'P_barrel': (0.2, 0.6, 0.9, 1)}.get(o.name, (0.6, 0.6, 0.6, 1))
     common.render_preview(cfg['_preview'], name, common.mesh_objects())
     for m in bpy.data.materials:
-        m.diffuse_color = (0.8, 0.15, 0.1, 1) if m.name == 'TeamPaint' else (0.25, 0.25, 0.25, 1)
+        m.diffuse_color = (0.8, 0.15, 0.1, 1) if m.name == 'TeamAccent' else (0.55, 0.5, 0.35, 1) if m.name == 'TeamPaint' else (0.25, 0.25, 0.25, 1)
     common.render_preview(cfg['_preview'], name + '_mat', common.mesh_objects(), views=('persp', 'top'), color='MATERIAL')
 
 common.export_glb(common.src(cfg['output']))

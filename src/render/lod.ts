@@ -63,8 +63,8 @@ export class LodInstancer {
         if (role === 'camo') {
           material = instancedCamo(soldier ? 0.9 : 2.2);
           tint = 'team';
-        } else if (role === 'tint') {
-          material = createTintMaterial(src, new THREE.Color(1, 1, 1), true);
+        } else if (role === 'tint' || role === 'tintAccent') {
+          material = createTintMaterial(src, new THREE.Color(1, 1, 1), role, true);
           tint = 'team';
         } else if (role === 'accent') {
           const accent = (src as THREE.MeshStandardMaterial).clone();

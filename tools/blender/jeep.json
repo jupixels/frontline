@@ -31,5 +31,9 @@
       ]
     }
   ],
-  "deathLift": 0.2
+  "deathLift": 0.2,
+  "accent": {
+    "minHeight": 0.38,
+    "normalZ": 0.6
+  }
 }

@@ -5,7 +5,7 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { MeshoptSimplifier } from 'meshoptimizer/simplifier';
 import { assetUrl } from '../shared/view';
-import { TEAM_PAINT } from './materials';
+import { TEAM_ACCENT, TEAM_PAINT } from './materials';
 
 /** A loaded unit model, optimized once and cloned per unit. */
 export interface PreparedModel {
@@ -52,7 +52,7 @@ function prepare(gltf: GLTF): PreparedModel {
   let best = -1;
   for (const [m, tris] of triCount) {
     // A model with team paint marks it explicitly; the rest of its textured materials are kept as-is.
-    const n = m.name === TEAM_PAINT ? Infinity : tris;
+    const n = m.name === TEAM_PAINT || m.name === TEAM_ACCENT ? Infinity : tris;
     if (n > best) {
       best = n;
       primaryMaterial = m;

@@ -10,7 +10,7 @@
         4.99,
         7.6
       ],
-      "sizeKB": 252,
+      "sizeKB": 258,
       "clips": [
         "Death",
         "TurretScan",
@@ -39,7 +39,7 @@
         3.4,
         9
       ],
-      "sizeKB": 281,
+      "sizeKB": 285,
       "clips": [
         "Death",
         "TurretScan",
@@ -62,11 +62,11 @@
       "path": "models/at_soldier.glb",
       "kind": "unit",
       "size": [
-        0.82,
-        1.64,
-        0.88
+        0.75,
+        1.83,
+        0.87
       ],
-      "sizeKB": 182,
+      "sizeKB": 188,
       "clips": [
         "Death01",
         "Death02",
@@ -623,7 +623,7 @@
         1.5,
         0.34
       ],
-      "sizeKB": 181,
+      "sizeKB": 187,
       "clips": [
         "Death01",
         "Death02",
@@ -970,11 +970,11 @@
       "path": "models/ifv.glb",
       "kind": "unit",
       "size": [
-        3.65,
         3.82,
+        4,
         7.5
       ],
-      "sizeKB": 263,
+      "sizeKB": 261,
       "clips": [
         "Death",
         "TurretScan",
@@ -1001,7 +1001,7 @@
         2.78,
         4.6
       ],
-      "sizeKB": 220,
+      "sizeKB": 224,
       "clips": [
         "Death",
         "TurretScan"
@@ -1073,7 +1073,7 @@
         1.5,
         0.47
       ],
-      "sizeKB": 199,
+      "sizeKB": 202,
       "clips": [
         "Death01",
         "Death02",
@@ -1102,7 +1102,7 @@
         5.47,
         10
       ],
-      "sizeKB": 193,
+      "sizeKB": 197,
       "clips": [
         "Fire"
       ],
@@ -1126,7 +1126,7 @@
         3.75,
         5.6
       ],
-      "sizeKB": 219,
+      "sizeKB": 224,
       "clips": [
         "Death",
         "TurretScan",
@@ -1153,7 +1153,7 @@
         1.55,
         0.72
       ],
-      "sizeKB": 186,
+      "sizeKB": 191,
       "clips": [
         "Death01",
         "Death02",
@@ -1204,7 +1204,7 @@
         3.35,
         7
       ],
-      "sizeKB": 212,
+      "sizeKB": 215,
       "clips": [],
       "nodes": [],
       "license": "owned (Meshy Pro output)",
@@ -1224,7 +1224,7 @@
         2.83,
         6.8
       ],
-      "sizeKB": 274,
+      "sizeKB": 279,
       "clips": [
         "Death",
         "TurretScan",
@@ -1251,7 +1251,7 @@
         3.19,
         9.5
       ],
-      "sizeKB": 290,
+      "sizeKB": 293,
       "clips": [
         "Death",
         "TurretScan",

@@ -31,5 +31,9 @@
       ]
     }
   ],
-  "recoil": 0.2
+  "recoil": 0.2,
+  "accent": {
+    "minHeight": 0.5,
+    "normalZ": 0.6
+  }
 }

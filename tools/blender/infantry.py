@@ -61,8 +61,21 @@ common.matte(gear, 0.9)
 # `gear` lists what is NOT uniform (skin, tan boots, black gloves and goggles); everything else is uniform.
 gear_faces = common.smooth_selection(body, common.classify_faces(body, cfg['uniform']['gear']), cfg['uniform'].get('smooth', 1))
 faces = set(range(len(body.data.polygons))) - gear_faces
-common.assign_material(body, faces, common.team_paint(gear))
-print(f'uniform: {len(faces)}/{len(body.data.polygons)} faces')
+# Team accent on the helmet and vest only (rest pose, meters); the rest of the uniform gets a faint tint.
+acc = cfg['uniform'].get('accent', {'helmetAbove': 1.55, 'vest': [-0.28, 0.28, 1.0, 1.5]})
+vx0, vx1, vz0, vz1 = acc['vest']
+
+
+def is_accent(i):
+    c = body.matrix_world @ body.data.polygons[i].center
+    # Rest pose faces -y (Blender), so `vestBack` keeps backpacks behind the torso out of the accent.
+    return c.z >= acc['helmetAbove'] or (vx0 <= c.x <= vx1 and vz0 <= c.z <= vz1 and c.y <= acc.get('vestBack', 0.1))
+
+
+accent = {i for i in faces if is_accent(i)}
+common.assign_material(body, faces - accent, common.team_paint(gear))
+common.assign_material(body, accent, common.team_paint(gear, 'TeamAccent'))
+print(f'uniform: {len(faces)}/{len(body.data.polygons)} faces, accent {len(accent)}')
 
 # Clips by their Meshy names.
 actions = {a.name: a for a in bpy.data.actions}
@@ -177,7 +190,7 @@ common.downscale_images(cfg.get('textureSize', 512))
 if cfg['_preview']:
     name = os.path.splitext(os.path.basename(cfg['output']))[0]
     for m in bpy.data.materials:
-        m.diffuse_color = {'TeamPaint': (0.8, 0.15, 0.1, 1), 'Weapon_metal': (0.1, 0.1, 0.1, 1)}.get(m.name, (0.75, 0.7, 0.6, 1))
+        m.diffuse_color = {'TeamAccent': (0.8, 0.15, 0.1, 1), 'TeamPaint': (0.55, 0.5, 0.35, 1), 'Weapon_metal': (0.1, 0.1, 0.1, 1)}.get(m.name, (0.75, 0.7, 0.6, 1))
     for clip, frame in cfg.get('previewFrames', {}).items():
         use(bpy.data.actions[clip], frame)
         common.render_preview(cfg['_preview'], f'{name}_{clip}', [body, rifle], views=('persp', 'side'), color='MATERIAL')

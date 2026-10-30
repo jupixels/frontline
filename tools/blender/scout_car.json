@@ -58,5 +58,9 @@
     ]
   },
   "recoil": 0.12,
-  "deathLift": 0.4
+  "deathLift": 0.4,
+  "accent": {
+    "minHeight": 0.5,
+    "normalZ": 0.6
+  }
 }
