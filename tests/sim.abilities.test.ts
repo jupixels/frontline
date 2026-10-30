@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import structures from '../data/structures.json';
+import weapons from '../data/weapons.json';
 import type { SimEvent } from '../src/shared/events';
 import { SIM_HZ } from '../src/shared/types';
 import type { AnyPlayerCommand, ProposedEvent } from '../src/sim/contracts';
@@ -9,6 +11,8 @@ interface Log {
   events: SimEvent[];
   proposed: ProposedEvent[];
 }
+
+const HQ_INCOME = structures.hq.income;
 
 function run(sim: Simulation, ticks: number, cmds: AnyPlayerCommand[] = []): Log {
   const log: Log = { events: [], proposed: [] };
@@ -101,7 +105,7 @@ describe('abilities', () => {
     const before = p.supply;
     log = run(sim, 10 * SIM_HZ, [{ player: 0, cmd: { type: 'useAbility', units: [arty.id], ability: 'barrage', at: { x: 0, z: 250 } } }]);
     // 100 for the barrage, +20 HQ income over 10 s.
-    expect(p.supply).toBeCloseTo(before - 100 + 20, 6);
+    expect(p.supply).toBeCloseTo(before - 100 + HQ_INCOME * 10, 6);
     const shells = log.proposed.filter((e) => e.type === 'incoming' && e.by === arty.id) as Extract<ProposedEvent, { type: 'incoming' }>[];
     expect(shells).toHaveLength(6);
     for (const s of shells) expect(Math.hypot(s.at.x, s.at.z - 250)).toBeLessThanOrEqual(25);
@@ -128,7 +132,7 @@ describe('abilities', () => {
     const first = log.events.find((e) => e.type === 'hit' && e.id === tank.id) as Extract<SimEvent, { type: 'hit' }>;
     expect(log.proposed.some((e) => e.type === 'revealed' && e.id === at.id)).toBe(true);
     // at_rocket 120 AP vs heavy 1.0, front armor 0.6, ambush x1.5.
-    expect(first.damage).toBeCloseTo(120 * 0.6 * 1.5, 6);
+    expect(first.damage).toBeCloseTo(weapons.at_rocket.damage * 0.6 * 1.5, 6);
     // Once revealed the tank returns fire.
     expect(log.events.some((e) => e.type === 'fired' && e.id === tank.id)).toBe(true);
   });
@@ -242,7 +246,7 @@ describe('shared command (co-op hook)', () => {
       { player: 1, cmd: { type: 'produce', factory: hq0.id, unit: 'engineer', count: 1 } },
     ]);
     expect(Math.hypot(u.pos.x - -120, u.pos.z - 120)).toBeGreaterThan(10);
-    expect(w.players.get(0)!.supply).toBeCloseTo(s0 - 100 + 10, 6);
+    expect(w.players.get(0)!.supply).toBeCloseTo(s0 - 100 + HQ_INCOME * 5, 6);
     expect(w.players.get(1)!.supply).toBeGreaterThan(s1);
   });
 });

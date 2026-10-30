@@ -195,6 +195,12 @@ export class UnitView {
   }
 
   private materialFor(src: THREE.Material, prepared: PreparedModel, burnt: boolean, band?: THREE.Vector2): THREE.Material {
+    // Bright orange/red roofs on the base buildings are toned down to a weathered military paint.
+    if (this.cls === 'structure' && !burnt && /orange|red/i.test(src.name) && (src as THREE.MeshStandardMaterial).color) {
+      const m = (src as THREE.MeshStandardMaterial).clone();
+      m.color.lerp(new THREE.Color(0x5d5a4e), 0.72);
+      return m;
+    }
     // Buildings keep their paint (roofs too: a whole team-blue roof is far too loud); only explicit
     // trim materials take the team color. Ownership also shows on the foundation's edge.
     const role =

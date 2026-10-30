@@ -98,6 +98,8 @@ export class SkirmishAi {
   private thinks = 0;
   /** Supply held back for the next building in the plan. */
   private pendingBuild = 0;
+  /** The unit production is saving up for, and since when. */
+  private saveFor: { unit: string; since: number } | null = null;
   /** Outmatched at home: gathering at the HQ until strong enough to break out. */
   private turtling = false;
   /** Water spot near our base, if the map has sea within reach (naval yard / transport pickup). */
@@ -294,7 +296,19 @@ export class SkirmishAi {
       if (CORE.has(next)) this.pendingBuild = cost;
       return;
     }
-    const at = this.placeFor(next);
+    let at = this.placeFor(next);
+    if (!at && next === 'naval_yard') {
+      // The shore is outside our build radius: put a watchtower toward it first (a stepping stone).
+      const shore = this.shorePoint()!;
+      const from = [...this.k.own].filter((e) => e.kind === 'structure').sort((a, c) => dist(a.pos, shore) - dist(c.pos, shore))[0];
+      if (from && eco.supply >= STRUCTURE_DEFS.watchtower.cost) {
+        const d = dist(from.pos, shore) || 1;
+        const step = Math.min(120, d - 30);
+        const p = { x: from.pos.x + ((shore.x - from.pos.x) / d) * step, z: from.pos.z + ((shore.z - from.pos.z) / d) * step };
+        at = this.findSpot('watchtower', p, 0, 40);
+        if (at) next = 'watchtower';
+      }
+    }
     if (!at) return;
     const eng = idle[0];
     this.send({ type: 'build', builder: eng.id, structure: next, at, rotation: 0 });
@@ -322,9 +336,7 @@ export class SkirmishAi {
         const s = this.findSpot(type, p, 0, 60);
         if (s) return s;
       }
-      // Too far from our buildings: put a power plant toward the shore to extend the build radius.
-      const step = { x: b.x + (shore.x - b.x) * 0.5, z: b.z + (shore.z - b.z) * 0.5 };
-      return this.sim.buildable(this.player).includes('power_plant') ? null : this.findSpot('watchtower', step, 0, 60);
+      return null;
     }
     // Production faces the front: bias the search toward the enemy.
     const e = this.enemyBase();
@@ -358,61 +370,75 @@ export class SkirmishAi {
     let supply = eco.supply;
     // Keep money for the next building in the plan so the base (and tech) keeps growing.
     const reserve = now > 60 ? this.pendingBuild * 0.6 : 0;
-    let saving = 0;
     const mix = this.desiredMix(eco.tier);
     const counts = new Map<string, number>();
     let total = 0;
+    let infantryCp = 0;
     for (const e of this.k.own) {
-      if (e.kind !== 'unit' || !mix[e.type]) continue;
+      if (e.kind !== 'unit') continue;
+      const d = UNIT_DEFS[e.type];
+      if (d?.armor === 'infantry' && !d.builder) infantryCp += d.cp / (d.squad ?? 1);
+      if (!mix[e.type]) continue;
       const v = valueOf(e.type);
       counts.set(e.type, (counts.get(e.type) ?? 0) + v);
       total += v;
     }
     let cp = eco.cp;
-    // Factories take turns going first so one cheap barracks doesn't eat every think's budget.
-    const factories = this.k.own.filter((f) => f.kind === 'structure' && f.type !== 'hq' && this.complete(f) && this.sim.producible(f.id).length);
-    const shift = factories.length ? this.thinks % factories.length : 0;
-    const order = [...factories.slice(shift), ...factories.slice(0, shift)];
-    for (const f of order) {
-      const options = this.sim.producible(f.id).filter((u) => mix[u] && u !== 'engineer');
-      if (!options.length || this.sim.queue(f.id).length >= this.p.queue) continue;
+    // Near the command-point cap, what matters is value per CP: prefer heavier units, and once Tier 2
+    // is up don't let cheap infantry fill more than about half the cap.
+    const capped = cp > eco.cpCap * 0.7;
+    const infantryFull = eco.tier >= 2 && infantryCp >= eco.cpCap * 0.45;
+    const wantTransport = this.p.transports && this.needsTransport();
+    const cands: { f: EntityState; unit: string; score: number }[] = [];
+    for (const f of this.k.own) {
+      if (f.kind !== 'structure' || f.type === 'hq' || !this.complete(f)) continue;
+      if (this.sim.queue(f.id).length >= this.p.queue) continue;
+      const options = this.sim.producible(f.id).filter((u) => mix[u] && u !== 'engineer' && !(infantryFull && UNIT_DEFS[u].armor === 'infantry'));
+      if (!options.length) continue;
       // Transports when a point needs one.
-      const wantTransport = this.p.transports && this.needsTransport();
-      let pick: string | null = null;
-      if (wantTransport && options.includes('heli_transport') && !this.k.own.some((e) => e.type === 'heli_transport')) pick = 'heli_transport';
-      else if (wantTransport && options.includes('transport_ship') && !this.k.own.some((e) => e.type === 'transport_ship') && !options.includes('heli_transport')) pick = 'transport_ship';
-      if (!pick) {
-        let bestScore = -Infinity;
-        let wsum = 0;
-        for (const u of options) wsum += mix[u];
-        // Near the command-point cap, what matters is value per CP: prefer heavier units.
-        const capped = cp > eco.cpCap * 0.7;
-        for (const u of options) {
-          const want = mix[u] / wsum;
-          const share = total > 0 ? (counts.get(u) ?? 0) / total : 0;
-          const d = UNIT_DEFS[u];
-          const perCp = capped ? Math.min(2, d.cost / Math.max(1, d.cp) / 60) : 1;
-          const score = (want - share) * (want > share ? perCp : 1) + this.rand.next() * 0.08;
-          if (score > bestScore) {
-            bestScore = score;
-            pick = u;
-          }
-        }
-      }
-      if (!pick) continue;
-      const def = UNIT_DEFS[pick];
-      // Keep a little CP free for engineers.
-      if (cp + def.cp > eco.cpCap - 2) continue;
-      if (supply - reserve - saving < def.cost) {
-        // Save up for it rather than letting cheaper factories spend everything.
-        saving += def.cost * 0.7;
+      if (wantTransport && options.includes('heli_transport') && !this.k.own.some((e) => e.type === 'heli_transport')) {
+        cands.push({ f, unit: 'heli_transport', score: 1 });
         continue;
       }
+      if (wantTransport && options.includes('transport_ship') && !this.k.own.some((e) => e.type === 'transport_ship' || e.type === 'heli_transport')) {
+        cands.push({ f, unit: 'transport_ship', score: 0.9 });
+        continue;
+      }
+      let wsum = 0;
+      for (const u of options) wsum += mix[u];
+      let pick: string | null = null;
+      let bestScore = -Infinity;
+      for (const u of options) {
+        const want = mix[u] / wsum;
+        const share = total > 0 ? (counts.get(u) ?? 0) / total : 0;
+        const d = UNIT_DEFS[u];
+        const perCp = capped ? Math.min(2, d.cost / Math.max(1, d.cp) / 60) : 1;
+        const score = (want - share) * (want > share ? perCp : 1) + this.rand.next() * 0.08;
+        if (score > bestScore) {
+          bestScore = score;
+          pick = u;
+        }
+      }
+      if (pick) cands.push({ f, unit: pick, score: bestScore });
+    }
+    // Buy in priority order. If the top pick can't be afforded yet, save for it (for up to a minute).
+    cands.sort((x, y) => y.score - x.score);
+    for (let i = 0; i < cands.length; i++) {
+      const { f, unit } = cands[i];
+      const def = UNIT_DEFS[unit];
+      // Keep a little CP free for engineers.
+      if (cp + def.cp > eco.cpCap - 2) continue;
+      if (supply - reserve < def.cost) {
+        if (this.saveFor?.unit !== unit) this.saveFor = { unit, since: now };
+        if (now - this.saveFor.since < 60) break;
+        continue;
+      }
+      if (this.saveFor?.unit === unit) this.saveFor = null;
       supply -= def.cost;
       cp += def.cp;
-      counts.set(pick, (counts.get(pick) ?? 0) + valueOf(pick) * (def.squad ?? 1));
+      counts.set(unit, (counts.get(unit) ?? 0) + valueOf(unit) * (def.squad ?? 1));
       total += def.cost;
-      this.send({ type: 'produce', factory: f.id, unit: pick, count: 1 });
+      this.send({ type: 'produce', factory: f.id, unit, count: 1 });
     }
   }
 
@@ -475,6 +501,20 @@ export class SkirmishAi {
     const pool = army.filter((e) => !this.assigned.has(e.id) && !this.raiders.has(e.id) && e.id !== this.scoutId);
     if (this.turtling) return;
     const objectives = this.objectives();
+    // Re-target: a force chasing a point that dropped out of the top choices switches to the best one
+    // nobody is handling (a threatened home point outranks a raid on the enemy's backyard).
+    const top = objectives.slice(0, this.p.forces + 1).map((o) => o.id);
+    for (const f of this.forces) {
+      if (f.state === 'board' || f.state === 'ferry' || top.includes(f.point)) continue;
+      if (f.state === 'hold' && this.k.enemyStrength(this.sim.get(f.point)?.pos ?? this.base(), 160) > 0) continue;
+      const next = objectives.find((o) => top.includes(o.id) && !this.forces.some((x) => x.point === o.id));
+      if (!next) continue;
+      f.point = next.id;
+      f.state = 'gather';
+      f.since = now;
+      f.ordersAt = -999;
+      f.lined = false;
+    }
     // Start new forces on the best unhandled objectives.
     for (const obj of objectives) {
       if (this.forces.length >= this.p.forces || !pool.length) break;
@@ -524,7 +564,10 @@ export class SkirmishAi {
       const threat = this.k.enemyStrength(pt.pos, 140) + this.k.recentEnemyStrength(pt.pos, 140) * 0.5;
       const ground = this.sim.reachable('ground', b, pt.pos);
       if (!ground && !(this.p.transports && this.k.own.some((e) => e.type === 'heli_transport' || e.type === 'transport_ship'))) continue;
-      let s = 1000 / (dist(b, pt.pos) + 250);
+      const e = this.enemyBase();
+      // Closer to us than to them is easier to take and hold.
+      const depth = dist(b, pt.pos) / Math.max(1, dist(b, pt.pos) + dist(e, pt.pos));
+      let s = (1000 / (dist(b, pt.pos) + 250)) * (1.4 - depth);
       if (friendly) s *= threat > 0 ? 1.6 : 0.15;
       else if (pt.owner >= 0) s *= 1.4; // deny the enemy's bleed
       s /= 1 + threat / Math.max(200, ours);

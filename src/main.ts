@@ -29,6 +29,10 @@ const app = new UiApp({
     const net = adapter?.match?.session ?? new LocalSession(info.localPlayer);
     try {
       match = new Match({ setup, mode, net, localPlayer: info.localPlayer, app, canvas: freshCanvas() });
+      const q = new URLSearchParams(location.search);
+      match.speed = Math.max(1, Math.min(16, Number(q.get('speed')) || 1));
+      const auto = q.get('autoplay');
+      if (auto === 'easy' || auto === 'normal' || auto === 'hard') match.setAutoplay(auto);
       match.start();
     } catch (err) {
       console.error(err);

@@ -405,6 +405,7 @@ export class InputController {
     }
     const units = this.units();
     if (ground.length >= 2 && units.length) this.issue({ type: 'holdLine', units, points: ground, line: m.reinforce });
+    this.setMode({ kind: 'none' });
   }
 
   /** Line key released: drop the line mode (finishing any stroke in progress). */

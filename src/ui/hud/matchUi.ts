@@ -103,6 +103,7 @@ export class MatchUi {
   /** The frontline key is held; released without drawing it recenters (old binding). */
   private lineKeyDown = false;
   private readonly lastBlock = new Map<string, number>();
+  private readonly lastProduced = new Map<string, number>();
   private lineDrawn = false;
   private readonly desync: DesyncOverlay;
   private readonly menu: GameMenu;
@@ -473,7 +474,13 @@ export class MatchUi {
         case 'produced': {
           const f = this.ctx.sim.get(ev.factory);
           const u = this.ctx.sim.get(ev.unit);
-          if (f?.owner === me && u) this.alert({ kind: 'ready', text: `${a.displayName(u.type)} ready`, pos: u.pos });
+          // A squad arrives as several soldiers: one alert per squad.
+          const key = `${ev.factory}:${u?.type}`;
+          const now = performance.now();
+          if (f?.owner === me && u && now - (this.lastProduced.get(key) ?? -1e9) > 1500) {
+            this.lastProduced.set(key, now);
+            this.alert({ kind: 'ready', text: `${a.displayName(u.type)} ready`, pos: u.pos });
+          }
           break;
         }
         case 'died': {

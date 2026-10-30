@@ -486,7 +486,7 @@
     "domain": "ground",
     "armor": "light",
     "hp": 300,
-    "speed": 11,
+    "speed": 14,
     "turnRate": 2.2,
     "radius": 2.4,
     "sight": 50,

@@ -150,11 +150,26 @@ export class TacticalLayer {
     }
     const last = l.points[l.points.length - 1];
     pts.push(new THREE.Vector3(last.x, this.heightAt(last.x, last.z) + 0.6, last.z));
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const line = new THREE.Line(geo, new THREE.LineDashedMaterial({ color, dashSize: 4, gapSize: 2.5, depthTest: false, transparent: true, opacity: 0.95, toneMapped: false }));
-    line.computeLineDistances();
-    line.renderOrder = 5;
-    g.add(line);
+    // A flat ribbon (GL lines are 1 px), dashed by skipping every third quad.
+    const half = 0.9;
+    const verts: number[] = [];
+    for (let i = 1; i < pts.length; i++) {
+      if (i % 3 === 0) continue;
+      const a = pts[i - 1];
+      const b = pts[i];
+      const dx = b.x - a.x;
+      const dz = b.z - a.z;
+      const len = Math.hypot(dx, dz) || 1;
+      const nx = (-dz / len) * half;
+      const nz = (dx / len) * half;
+      verts.push(a.x + nx, a.y, a.z + nz, a.x - nx, a.y, a.z - nz, b.x + nx, b.y, b.z + nz);
+      verts.push(b.x + nx, b.y, b.z + nz, a.x - nx, a.y, a.z - nz, b.x - nx, b.y, b.z - nz);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    const ribbon = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, depthTest: false, transparent: true, opacity: 0.85, toneMapped: false, side: THREE.DoubleSide }));
+    ribbon.renderOrder = 5;
+    g.add(ribbon);
     // Facing arrows every ~40 m.
     const fx = Math.sin(l.facing);
     const fz = Math.cos(l.facing);
@@ -162,7 +177,7 @@ export class TacticalLayer {
     const step = Math.max(1, Math.round(40 / 4));
     for (let i = Math.floor(step / 2); i < pts.length; i += step) {
       const p = pts[i];
-      const shape = new THREE.Shape([new THREE.Vector2(-2.2, 0), new THREE.Vector2(2.2, 0), new THREE.Vector2(0, 4)]);
+      const shape = new THREE.Shape([new THREE.Vector2(-3, 0), new THREE.Vector2(3, 0), new THREE.Vector2(0, 5.5)]);
       const tri = new THREE.Mesh(new THREE.ShapeGeometry(shape).rotateX(Math.PI / 2), arrowMat);
       tri.position.set(p.x + fx * 2, p.y, p.z + fz * 2);
       tri.rotation.y = l.facing;
