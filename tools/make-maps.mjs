@@ -380,7 +380,7 @@ function compass(x, z) {
     name: 'Inland Sea',
     size: 1800,
     modes: ['4v4', '3v3', '2v2', '1v1', 'ffa8', 'ffa4'],
-    atmosphere: 'dusk',
+    atmosphere: 'overcast',
     // Order: 1v1 opposite, FFA4 every other base, then the rest. Sides: east half against west half,
     // teammates filling outward from the middle of their coast.
     spawns: [rotP(home, 0), rotP(home, 2), rotP(home, 1), rotP(home, 3), rotP(twin, 0), rotP(twin, 2), rotP(twin, 1), rotP(twin, 3)].map(xz),

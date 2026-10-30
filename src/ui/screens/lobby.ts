@@ -376,7 +376,14 @@ export class LobbyScreen implements Screen {
       ? (() => {
           const sel = h(
             'select',
-            { class: 'select', onchange: () => this.opts.lobby.setMap(sel.value) },
+            {
+              class: 'select',
+              onchange: () => {
+                this.opts.lobby.setMap(sel.value);
+                // A refused change (map too small for everyone seated) leaves the old map selected.
+                sel.value = this.opts.lobby.getState().mapId;
+              },
+            },
             this.opts.maps.map((m) => h('option', { value: m.id }, `${m.name}  ·  ${m.modes?.map(modeLabel).join(' / ') ?? `${m.maxPlayers}P`}`)),
           );
           sel.value = map.id;

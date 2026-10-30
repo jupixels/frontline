@@ -88,6 +88,35 @@ describe('lobby', () => {
     expect(host.lobby.slots[1].state).toBe('open');
   });
 
+  it('sizes the room to the map: closes extra slots, moves players down, refuses when too many are seated', async () => {
+    const world = new TestWorld();
+    const host = await world.host('H', { settings: { maxPlayers: 2 } });
+    expect(host.lobby.slots.length).toBe(2);
+    // An 8-player map opens all eight.
+    expect(host.lobby.setSettings({ mapId: 'inland_sea', maxPlayers: 8 })).toBe(true);
+    const a = await world.join('A', host.lobby.code);
+    await world.run(100);
+    expect(a.lobby.slots.length).toBe(8);
+    expect(a.lobby.slots.filter((s) => s.state === 'open')).toHaveLength(6);
+    a.lobby.moveToSlot(6);
+    host.lobby.addAi('hard', 7);
+    await world.run(100);
+    expect(host.lobby.slots[6].name).toBe('A');
+    // Down to a 4-player map: A and the AI move into free slots below 4.
+    expect(host.lobby.setSettings({ mapId: 'desert_oilfields', maxPlayers: 4 })).toBe(true);
+    await world.run(100);
+    expect(a.lobby.slots.length).toBe(4);
+    expect(a.lobby.localSlot!.index).toBeLessThan(4);
+    expect(a.lobby.slots.filter((s) => s.state === 'ai')).toHaveLength(1);
+    expect(host.lobby.snapshot.slots.slice(4).every((s) => s.state === 'closed')).toBe(true);
+    // A 2-player map can't seat three: refused, nothing changes.
+    expect(host.lobby.setSettings({ mapId: 'valley_pass', maxPlayers: 2 })).toBe(false);
+    expect(host.lobby.settings).toMatchObject({ mapId: 'desert_oilfields', maxPlayers: 4 });
+    // Back up to 8: the closed slots open again.
+    expect(host.lobby.setSettings({ mapId: 'inland_sea', maxPlayers: 8 })).toBe(true);
+    expect(host.lobby.slots.filter((s) => s.state === 'open')).toHaveLength(5);
+  });
+
   it('migrates the host when the host leaves the lobby', async () => {
     const world = new TestWorld();
     const host = await world.host('H');
