@@ -1,12 +1,11 @@
 import type { UnitDef } from '../shared/data';
-import type { EntityState, PlayerState, SimView } from '../shared/entities';
+import type { EntityState, PlayerState, SimView, SimViewExt } from '../shared/entities';
 import type { MatchSetup, PlayerId, PlayerSlot, TeamId, Vec2 } from '../shared/types';
 
 /**
- * Everything the HUD reads that `SimView` doesn't have yet (structures, production queues,
- * power, command points, capture progress). Each accessor tries the field the sim workstream is
- * likely to add and falls back to a placeholder, marked TODO(sim). When the shared contract
- * grows these fields, only this file changes.
+ * Everything the HUD reads beyond `SimView` (structures, production queues, power, command
+ * points, capture progress, fog). Uses `SimViewExt` when the sim implements it (the real
+ * Simulation does) and falls back to placeholders otherwise (tests, stand-alone UI work).
  */
 
 export interface StructureInfo {
@@ -96,6 +95,8 @@ function cpCost(def: UnitDef | undefined): number {
 
 export class SimAdapter {
   private readonly slots = new Map<PlayerId, PlayerSlot>();
+  /** The sim's extended read API, when present. */
+  private readonly ext: SimViewExt | null;
 
   constructor(
     private readonly sim: SimView,
@@ -104,6 +105,7 @@ export class SimAdapter {
     readonly structures: Record<string, StructureInfo> = FALLBACK_STRUCTURES,
   ) {
     for (const p of setup.players) this.slots.set(p.id, p);
+    this.ext = typeof (sim as Partial<SimViewExt>).economy === 'function' ? (sim as SimView & SimViewExt) : null;
   }
 
   slot(id: PlayerId): PlayerSlot | undefined {
@@ -132,12 +134,22 @@ export class SimAdapter {
     return e.kind === 'structure';
   }
 
-  /** Fog of war. TODO(sim): use the sim's visibility grid once fog exists. */
-  isVisible(_e: EntityState, _viewer: PlayerId): boolean {
-    return true;
+  /** Fog of war: whether `viewer` can currently see `e`. */
+  isVisible(e: EntityState, viewer: PlayerId): boolean {
+    return this.ext ? this.ext.fog.canSee(viewer, e.id) : true;
   }
 
   economy(player: PlayerId): EconomyView {
+    const x = this.ext?.economy(player);
+    if (x) {
+      return {
+        supply: x.supply,
+        power: { produced: x.powerProduced, used: x.powerUsed },
+        netPower: x.power,
+        commandPoints: { used: x.cp, cap: x.cpCap },
+        tickets: x.tickets,
+      };
+    }
     const p = this.sim.player(player) as (PlayerState & Loose) | undefined;
     let used = 0;
     for (const e of this.sim.entities()) if (e.owner === player && e.kind === 'unit') used += cpCost(this.units[e.type]);
@@ -180,12 +192,13 @@ export class SimAdapter {
     for (const e of this.sim.entities()) {
       if (e.kind !== 'point') continue;
       const l = e as EntityState & Loose;
+      const c = this.ext?.capture(e.id);
       out.push({
         id: e.id,
         pos: e.pos,
         owner: e.owner,
-        progress: num(l.captureProgress),
-        capturer: num(l.capturer),
+        progress: c ? c.progress : num(l.captureProgress),
+        capturer: c ? c.capturer : num(l.capturer),
         name: typeof l.name === 'string' ? l.name : undefined,
       });
     }
@@ -195,7 +208,8 @@ export class SimAdapter {
   buildOptions(e: EntityState): StructureInfo[] {
     const l = e as EntityState & Loose;
     const fromSim = Array.isArray(l.builds) ? (l.builds as unknown[]).filter((s): s is string => typeof s === 'string') : null;
-    const ids = fromSim ?? FALLBACK_BUILDERS[e.type] ?? [];
+    const isBuilder = (this.units[e.type] as (UnitDef & { builder?: boolean }) | undefined)?.builder;
+    const ids = fromSim ?? (this.ext && isBuilder ? this.ext.buildable(e.owner) : null) ?? FALLBACK_BUILDERS[e.type] ?? [];
     return ids.map((id) => this.structures[id]).filter((s): s is StructureInfo => !!s);
   }
 
@@ -213,6 +227,7 @@ export class SimAdapter {
 
   /** TODO(sim): production queue on structures, e.g. `queue: { unit: string; progress: number }[]`. */
   queue(e: EntityState): QueueItem[] {
+    if (this.ext) return this.ext.queue(e.id).map((q) => ({ unit: q.unit, progress: q.progress }));
     const raw = (e as EntityState & Loose).queue ?? (e as EntityState & Loose).production;
     if (!Array.isArray(raw)) return [];
     const out: QueueItem[] = [];
@@ -224,12 +239,17 @@ export class SimAdapter {
 
   /** TODO(sim): `rally` on structures. */
   rally(e: EntityState): Vec2 | null {
+    if (this.ext) return this.ext.rally(e.id);
     const r = (e as EntityState & Loose).rally as Vec2 | undefined;
     return r && typeof r.x === 'number' && typeof r.z === 'number' ? r : null;
   }
 
   /** Construction progress 0..1 for structures being built, else undefined. TODO(sim). */
   buildProgress(e: EntityState): number | undefined {
+    if (this.ext && e.kind === 'structure') {
+      const p = this.ext.buildProgress(e.id);
+      return p < 1 ? p : undefined;
+    }
     return num((e as EntityState & Loose).buildProgress);
   }
 

@@ -1,39 +1,51 @@
-import units from '../data/units.json';
-import sandbox from '../data/maps/sandbox.json';
+import { MAPS } from './game/content';
 import { Match } from './game/match';
+import { NetLobbyAdapter, netLobbyConnector } from './game/netLobby';
 import { LocalSession } from './net/session';
-import type { MapDef, UnitDef } from './shared/data';
-import type { MatchSetup } from './shared/types';
+import { UiApp } from './ui';
 
-// Phase 0 entry: straight into a sandbox skirmish. The UI workstream adds menu → lobby → match.
-const setup: MatchSetup = {
-  seed: 1,
-  mapId: 'sandbox',
-  victory: 'frontline',
-  players: [
-    { id: 0, team: 0, name: 'You', color: '#4f8fe6', kind: 'human' },
-    { id: 1, team: 1, name: 'Enemy', color: '#d9503f', kind: 'ai', aiDifficulty: 'normal' },
-  ],
-};
+// Menu → lobby (P2P room or skirmish) → match → results. `?fakeLobby` uses scripted peers for UI work.
+const fakeLobby = new URLSearchParams(location.search).has('fakeLobby');
 
-const loading = document.createElement('div');
-loading.className = 'loading';
-loading.textContent = 'FRONTLINE';
-document.body.appendChild(loading);
+let match: Match | null = null;
 
-const match = new Match(
-  setup,
-  { units: units as Record<string, UnitDef>, map: sandbox as MapDef },
-  new LocalSession(0),
-  document.getElementById('game') as HTMLCanvasElement,
-  document.getElementById('ui')!,
-);
-match.start();
+/** A fresh canvas per match: the old WebGL context is dropped when a match ends. */
+function freshCanvas(): HTMLCanvasElement {
+  const old = document.getElementById('game') as HTMLCanvasElement;
+  const canvas = document.createElement('canvas');
+  canvas.id = 'game';
+  old.replaceWith(canvas);
+  return canvas;
+}
 
-setTimeout(() => {
-  loading.style.opacity = '0';
-  setTimeout(() => loading.remove(), 700);
-}, 400);
+const app = new UiApp({
+  root: document.getElementById('ui')!,
+  maps: MAPS,
+  lobby: fakeLobby ? undefined : netLobbyConnector,
+  onStartMatch: (setup, mode, info) => {
+    match?.stop();
+    const adapter = info.lobby instanceof NetLobbyAdapter ? info.lobby : null;
+    const net = adapter?.match?.session ?? new LocalSession(info.localPlayer);
+    try {
+      match = new Match({ setup, mode, net, localPlayer: info.localPlayer, app, canvas: freshCanvas() });
+      match.start();
+    } catch (err) {
+      console.error(err);
+      app.toast(`Couldn't start the match: ${(err as Error).message}`, 'error');
+      app.leaveMatch();
+    }
+  },
+  onLeaveMatch: () => {
+    match?.stop();
+    match = null;
+  },
+  onSettingsChange: (s) => {
+    // TODO(render/audio): apply s.graphics and s.volume once those modules expose setters.
+    document.documentElement.dataset.quality = s.graphics;
+  },
+});
+app.start();
 
 // Handy for debugging in the console.
-Object.assign(window, { match });
+Object.defineProperty(window, 'match', { get: () => match });
+Object.assign(window, { app });

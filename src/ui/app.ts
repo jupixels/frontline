@@ -253,8 +253,16 @@ export class UiApp {
     const map = this.opts.maps.find((m) => m.id === setup.mapId);
     this.loading = new LoadingScreen(setup, map, localPlayer);
     this.show(this.loading, false);
-    // Let the loading screen paint before the match setup blocks the main thread.
-    requestAnimationFrame(() => setTimeout(() => this.opts.onStartMatch(setup, this.lobbyMode, { lobby, localPlayer }), 30));
+    // Let the loading screen paint before the match setup blocks the main thread. Background tabs
+    // get no rAF, so a timer also fires: a peer that alt-tabbed must still start, or everyone stalls.
+    let started = false;
+    const go = () => {
+      if (started) return;
+      started = true;
+      this.opts.onStartMatch(setup, this.lobbyMode, { lobby, localPlayer });
+    };
+    requestAnimationFrame(() => setTimeout(go, 30));
+    setTimeout(go, 250);
   }
 
   /** 0..1 while the match loads. No-op once the HUD is up. */
