@@ -15,6 +15,12 @@ const RETARGET_TICKS = 10;
 const CHASE_REPATH_TICKS = 20;
 const TURRET_CONE = 0.08;
 const HULL_CONE = 0.2;
+/** Infantry shoulder their rifles across a wide arc, also on the move (bodies turn, legs keep walking). */
+const INFANTRY_CONE = 1.3;
+/** Accuracy while shooting on the move (infantry walking, turrets on moving vehicles). */
+const MOVING_ACCURACY = 0.75;
+/** Idle units hit by an enemy they can see turn on it if it attacked within this long. */
+const RETALIATE_TICKS = SIM_HZ * 4;
 /** Throttle for underAttack alerts per player. */
 const ALERT_TICKS = SIM_HZ * 10;
 /** Indirect shells hang in the air at least this long, so the target marker gives warning. */
@@ -146,6 +152,11 @@ export function targetingSystem(world: World): void {
       const t = world.entities.get(e.target);
       const stillOk = validTarget(world, e, t) && dist2(e.pos, t.pos) <= acqRange * acqRange && canSeeTarget(world, e, t);
       if (!stillOk || (world.tick + e.id) % RETARGET_TICKS === 0) e.target = acquire(world, e, acqRange);
+      // Idle units return fire at a visible attacker even from beyond their usual reach (within the leash).
+      if (!e.target && engages && !cur && world.tick - e.hurtAt < RETALIATE_TICKS) {
+        const a = world.entities.get(e.lastAttacker);
+        if (validTarget(world, e, a) && canSeeTarget(world, e, a)) e.target = a.id;
+      }
     }
 
     if (!isUnit) continue;
@@ -221,8 +232,10 @@ export function weaponsSystem(world: World): void {
       } else if (def.mount === 'turret') {
         if (e.turretHeading !== undefined && Math.abs(wrapAngle(bearing - e.turretHeading)) > TURRET_CONE) continue;
       } else {
-        if (Math.abs(wrapAngle(bearing - e.heading)) > HULL_CONE) continue;
-        if (e.moving && e.domain !== 'air') continue;
+        // Infantry fire across a wide arc, walking or not; vehicles must face the target and stop.
+        const infantry = e.armor === 'infantry';
+        if (Math.abs(wrapAngle(bearing - e.heading)) > (infantry ? INFANTRY_CONE : HULL_CONE)) continue;
+        if (e.moving && e.domain !== 'air' && !infantry) continue;
       }
       if (world.content.damage[def.damageType][t.armor] <= 0) continue;
       fire(world, e, w.id, def, t, d);
@@ -274,7 +287,8 @@ function fire(world: World, e: Entity, weapon: string, def: WeaponDef, t: Entity
     world.proposed.push({ type: 'revealed', id: e.id });
   }
   // Readiness: low readiness costs accuracy; veterans shoot better, pinned infantry much worse.
-  const accuracy = Math.min(0.98, def.accuracy * (0.6 + 0.4 * e.readiness) * rankAccuracy(e) * (e.pinned ? 0.5 : 1));
+  const moving = e.moving && e.domain === 'ground' ? MOVING_ACCURACY : 1;
+  const accuracy = Math.min(0.98, def.accuracy * (0.6 + 0.4 * e.readiness) * rankAccuracy(e) * (e.pinned ? 0.5 : 1) * moving);
   if (def.delivery === 'hitscan') {
     world.emit({ type: 'fired', id: e.id, weapon, target: t.id, at });
     if (world.rng.next() < accuracy) applyDamage(world, t, def.damage * mult, def, e.pos, e.id);
@@ -380,6 +394,7 @@ export function applyDamage(world: World, t: Entity, base: number, def: WeaponDe
   const dealt = Math.min(dmg, t.hp);
   t.hp -= dmg;
   t.hurtAt = world.tick;
+  if (by !== undefined) t.lastAttacker = by;
   world.emit({ type: 'hit', id: t.id, by, damage: dmg, at: { x: t.pos.x, z: t.pos.z } });
   suppress(world, t, def, 1);
   if (by !== undefined) gainXp(world, by, t, dealt);

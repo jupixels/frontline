@@ -189,6 +189,8 @@ export interface Entity extends EntityState {
   rank: number;
   /** Last tick this entity took damage (rank 3 self-heal waits for quiet). */
   hurtAt: Tick;
+  /** Who last hurt this entity, and when (idle units turn on attackers they can see). */
+  lastAttacker: EntityId;
   /** Frontline membership and assigned slot. */
   line: number;
   lineSlot: Vec2 | null;
@@ -429,6 +431,7 @@ export class World {
       xp: 0,
       rank: 0,
       hurtAt: -100000,
+      lastAttacker: 0,
       line: 0,
       lineSlot: null,
       homeOwner: owner,
