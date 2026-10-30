@@ -14,11 +14,14 @@ export interface VisibilitySource {
   readonly resolution: number;
   /** Recompute visibility from the current sim state. */
   update(sim: SimView): void;
-  /** 1 = visible now, 0 = not. Row-major, row 0 at minimum z. */
+  /** 0..255 visibility now (soft edges allowed). Row-major, row 0 at minimum z. */
   readonly visible: Uint8Array;
-  /** 1 = seen at some point. */
+  /** 0..255, the most this cell has ever been visible. */
   readonly explored: Uint8Array;
 }
+
+/** Width of the soft edge at the rim of a unit's sight circle, in meters. */
+const EDGE = 8;
 
 /** Placeholder: circles of `def.sight` around the local player's (and allies') units. */
 export class LocalVisionSource implements VisibilitySource {
@@ -52,6 +55,7 @@ export class LocalVisionSource implements VisibilitySource {
       const cz = (e.pos.z + half) / cell;
       const r = sight / cell;
       const r2 = r * r;
+      const edge = EDGE / cell;
       const z0 = Math.max(0, Math.floor(cz - r));
       const z1 = Math.min(n - 1, Math.ceil(cz + r));
       for (let z = z0; z <= z1; z++) {
@@ -62,8 +66,15 @@ export class LocalVisionSource implements VisibilitySource {
         const x0 = Math.max(0, Math.floor(cx - w));
         const x1 = Math.min(n - 1, Math.ceil(cx + w));
         const row = z * n;
-        this.visible.fill(1, row + x0, row + x1 + 1);
-        this.explored.fill(1, row + x0, row + x1 + 1);
+        for (let x = x0; x <= x1; x++) {
+          const dx = x + 0.5 - cx;
+          const k = Math.min(1, (r - Math.sqrt(dx * dx + dz * dz)) / edge);
+          if (k <= 0) continue;
+          const v = (k * 255) | 0;
+          const i = row + x;
+          if (v > this.visible[i]) this.visible[i] = v;
+          if (v > this.explored[i]) this.explored[i] = v;
+        }
       }
     }
   }
@@ -112,8 +123,8 @@ export class FogOfWar {
     const k = Math.min(1, dt * 4);
     let changed = false;
     for (let i = 0, j = 0; i < vis.length; i++, j += 2) {
-      const tv = vis[i];
-      const te = exp[i];
+      const tv = vis[i] / 255;
+      const te = exp[i] / 255;
       const v = cur[j] + (tv - cur[j]) * k;
       const e = cur[j + 1] + (te - cur[j + 1]) * k;
       cur[j] = v;
@@ -136,6 +147,6 @@ export class FogOfWar {
     const i = Math.floor(((x + this.mapSize / 2) / this.mapSize) * n);
     const j = Math.floor(((z + this.mapSize / 2) / this.mapSize) * n);
     if (i < 0 || j < 0 || i >= n || j >= n) return false;
-    return this.source.visible[j * n + i] === 1;
+    return this.source.visible[j * n + i] > 127;
   }
 }

@@ -59,13 +59,22 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
   wp /= wp.w;
   vec2 fuv = (wp.xz - uFogBounds.xy) / uFogBounds.zw;
   // Outside the playable map: treat as explored scenery.
-  vec2 f = (fuv.x < 0.0 || fuv.x > 1.0 || fuv.y < 0.0 || fuv.y > 1.0) ? vec2(0.0, 1.0) : texture2D(tFog, fuv).rg;
+  vec2 f;
+  if (fuv.x < 0.0 || fuv.x > 1.0 || fuv.y < 0.0 || fuv.y > 1.0) {
+    f = vec2(0.0, 1.0);
+  } else {
+    // Small blur hides the grid; the texture is low-res on purpose.
+    vec2 t = 1.0 / vec2(textureSize(tFog, 0));
+    f = texture2D(tFog, fuv).rg * 0.4
+      + (texture2D(tFog, fuv + vec2(t.x, 0.0)).rg + texture2D(tFog, fuv - vec2(t.x, 0.0)).rg
+      + texture2D(tFog, fuv + vec2(0.0, t.y)).rg + texture2D(tFog, fuv - vec2(0.0, t.y)).rg) * 0.15;
+  }
   vec3 c = inputColor.rgb;
   float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
-  vec3 explored = mix(vec3(lum) * vec3(0.82, 0.88, 1.0), c, 0.35) * 0.48;
-  vec3 hidden = c * 0.05;
-  vec3 res = mix(hidden, explored, smoothstep(0.0, 1.0, f.g));
-  res = mix(res, c, smoothstep(0.0, 1.0, f.r));
+  vec3 explored = mix(vec3(lum) * vec3(0.8, 0.87, 1.0), c, 0.35) * 0.45;
+  vec3 hidden = vec3(lum) * vec3(0.75, 0.85, 1.0) * 0.1;
+  vec3 res = mix(hidden, explored, smoothstep(0.05, 0.95, f.g));
+  res = mix(res, c, smoothstep(0.05, 0.95, f.r));
   outputColor = vec4(res, inputColor.a);
 }
 `;

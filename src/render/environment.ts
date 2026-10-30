@@ -28,7 +28,7 @@ export const GOLDEN_HOUR: Atmosphere = {
   turbidity: 7,
   rayleigh: 1.6,
   fogColor: 0xc3c4bd,
-  fogDensity: 0.0016,
+  fogDensity: 0.0011,
   hemiSky: 0xcfdcf0,
   hemiGround: 0x5a5236,
   envIntensity: 1,

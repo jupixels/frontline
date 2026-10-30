@@ -51,7 +51,7 @@ const RECIPES: Record<TerrainLayer, LayerRecipe> = {
       const pebble = smoothstep(0.62, 0.8, valueNoise(u * 48, v * 48, 21, 48));
       return fbm(u * 6, v * 6, 22, 5, 6) * 0.7 + pebble * 0.3;
     },
-    color: (u, v, h) => mix3(hex('#4f3b27'), hex('#7d6346'), h * 0.8 + fbm(u * 3, v * 3, 23, 2, 3) * 0.2),
+    color: (u, v, h) => mix3(hex('#4d4130'), hex('#76664c'), h * 0.8 + fbm(u * 3, v * 3, 23, 2, 3) * 0.2),
     rough: (_u, _v, h) => 0.9 + h * 0.08,
     normalStrength: 2,
   },

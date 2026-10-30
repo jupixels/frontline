@@ -222,7 +222,7 @@ export class Terrain {
       const rock = Math.max(smoothstep(0.9, 0.74, ny), smoothstep(22, 45, h) * 0.85);
       const sand = smoothstep(2.4, 1.0, h) * (1 - rock);
       const patches = fbm(x / 75, z / 75, seed + 21, 3);
-      const dirt = smoothstep(0.52, 0.68, patches) * 0.85 * (1 - rock) * (1 - sand);
+      const dirt = smoothstep(0.5, 0.75, patches) * 0.8 * (1 - rock) * (1 - sand);
       const wet = fbm(x / 45, z / 45, seed + 33, 3);
       const mud = smoothstep(0.6, 0.72, wet) * smoothstep(5.5, 2.5, h) * 0.9 * (1 - rock) * (1 - sand);
       let r = dirt;
@@ -281,7 +281,7 @@ varying vec3 vTNormal;
 // to break up tiling; a very low-frequency sample adds macro color variation.
 const TERRAIN_FRAG_ALBEDO = /* glsl */ `
 vec2 tUv = vTWorld.xz / uTile;
-vec2 tUv2 = mat2(0.8, -0.6, 0.6, 0.8) * vTWorld.xz / (uTile * 3.3);
+vec2 tUv2 = mat2(0.8, -0.6, 0.6, 0.8) * vTWorld.xz / (uTile * 4.7);
 // Explicit gradients: the layer loop below branches per pixel, where implicit derivatives are undefined.
 vec2 gx1 = dFdx(tUv), gy1 = dFdy(tUv), gx2 = dFdx(tUv2), gy2 = dFdy(tUv2);
 vec4 sw = texture2D(tSplat, (vTWorld.xz - uTerrainBounds.xy) / uTerrainBounds.zw);
@@ -302,11 +302,11 @@ float tRough = 0.0;
 vec2 tN = vec2(0.0);
 float tCav = 0.0;
 for (int i = 0; i < 5; i++) {
-  float k = w[i] > 0.001 ? max(hb[i] - hmax + 0.22, 0.0) : 0.0;
+  float k = w[i] > 0.001 ? max(hb[i] - hmax + 0.35, 0.0) : 0.0;
   if (k <= 0.0) continue;
   vec4 a = textureGrad(tAlbedo, vec3(tUv, float(i)), gx1, gy1);
   vec4 a2 = textureGrad(tAlbedo, vec3(tUv2, float(i)), gx2, gy2);
-  a = mix(a, a2, 0.4);
+  a = mix(a, a2, 0.5);
   tAlb += a.rgb * k;
   tRough += a.a * k;
   tN += (dt[i].rg * 2.0 - 1.0) * k;
@@ -314,8 +314,9 @@ for (int i = 0; i < 5; i++) {
   wsum += k;
 }
 tAlb /= wsum; tRough /= wsum; tN /= wsum; tCav /= wsum;
-float macro = texture(tDetail, vec3(vTWorld.xz / 210.0, 0.0)).b;
-tAlb *= 0.8 + macro * 0.4;
+// Two very low-frequency samples of the grass height channel as macro variation (kills visible tiling).
+float macro = texture(tDetail, vec3(vTWorld.xz / 173.0, 0.0)).b * 0.6 + texture(tDetail, vec3(vTWorld.zx / 61.0, 3.0)).b * 0.4;
+tAlb *= 0.72 + macro * 0.56;
 tAlb *= mix(1.0, tCav, 0.6);
 
 vec2 dUv = (vTWorld.xz - uDecalBounds.xy) / uDecalBounds.zw;
