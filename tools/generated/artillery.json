@@ -1,0 +1,45 @@
+{
+  "id": "artillery",
+  "date": "2026-10-30",
+  "batch": "1",
+  "replaces": "the previous models/artillery.glb",
+  "style": "tools/generated/STYLE.md, vehicle prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<vehicle prefix> Self-propelled howitzer: long tracked hull with seven road wheels, a very large boxy turret at the rear, and a very long 155 mm howitzer barrel with a double muzzle brake pointing forward over the front.",
+    "taskId": "01a18af1-3ca1-7479-a6c6-72bc50fa05fd",
+    "file": "raw/artillery/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model (STYLE.md: 1 candidate when the reference is clear)",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 12000,
+      "texture": true,
+      "taskId": "01a18af2-2b9c-7105-8d12-c02e81a0ba52",
+      "file": "raw/artillery/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/artillery.json",
+    "output": "artillery.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: artillery.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  },
+  "movingParts": [
+    "P_turret pivot [0,1.85,-2.6]",
+    "P_barrel pivot [0,2.43,-0.8]"
+  ]
+}

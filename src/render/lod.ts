@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { UnitDef } from '../shared/data';
-import { createCamoMaterial, materialRole } from './materials';
+import { createCamoMaterial, createTintMaterial, materialRole } from './materials';
 import { bakeModel, loadModel, type BakeOptions } from './models';
 import type { UnitClass, UnitView } from './units';
 
@@ -62,6 +62,9 @@ export class LodInstancer {
         let tint: LodPart['tint'] = null;
         if (role === 'camo') {
           material = instancedCamo(soldier ? 0.9 : 2.2);
+          tint = 'team';
+        } else if (role === 'tint') {
+          material = createTintMaterial(src, new THREE.Color(1, 1, 1), true);
           tint = 'team';
         } else if (role === 'accent') {
           const accent = (src as THREE.MeshStandardMaterial).clone();

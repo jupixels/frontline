@@ -1,0 +1,46 @@
+{
+  "id": "aa_tank",
+  "date": "2026-10-30",
+  "batch": "1",
+  "replaces": "kitbash of the old Freeciv MBT hull + primitive turret",
+  "style": "tools/generated/STYLE.md, vehicle prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<vehicle prefix> Self-propelled anti-aircraft gun: tracked hull, boxy turret with a long twin 35 mm autocannon mounted on each side of the turret, a large rotating search radar dish on a mast at the turret rear and a round tracking radar on the turret front.",
+    "taskId": "01a18af1-46cb-71de-b031-9d383d73fcbd",
+    "file": "raw/aa_tank/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model (STYLE.md: 1 candidate when the reference is clear)",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 12000,
+      "texture": true,
+      "taskId": "01a18af2-31a2-70f8-8356-288cdfa40c12",
+      "file": "raw/aa_tank/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/aa_tank.json",
+    "output": "aa_tank.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: aa_tank.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  },
+  "movingParts": [
+    "P_turret pivot [0,2,-0.3]",
+    "turret_radar (spins in Idle) pivot [0,3.75,-1.85]",
+    "P_barrel pivot [0,2.76,1.5]"
+  ]
+}

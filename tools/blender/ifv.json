@@ -1,0 +1,62 @@
+{
+  "input": "raw/ifv/smart.glb",
+  "output": "ifv.glb",
+  "rotateY": 90,
+  "length": 7.5,
+  "triangles": 12000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 35,
+    "hueMax": 90,
+    "smooth": 2,
+    "detailBelow": 0.6
+  },
+  "parts": [
+    {
+      "name": "P_turret",
+      "box": [
+        -1.6,
+        1.6,
+        2.55,
+        4.0,
+        -2.1,
+        3.1
+      ],
+      "pivot": [
+        0,
+        2.55,
+        -0.6
+      ]
+    },
+    {
+      "name": "P_barrel",
+      "from": "P_turret",
+      "parent": "P_turret",
+      "box": [
+        -0.45,
+        0.15,
+        2.8,
+        3.2,
+        0.3,
+        3.1
+      ],
+      "pivot": [
+        -0.26,
+        3.0,
+        0.5
+      ]
+    }
+  ],
+  "cap": {
+    "radius": 0.9,
+    "center": [
+      0,
+      2.5,
+      -0.6
+    ]
+  },
+  "recoil": 0.15,
+  "deathLift": 0.4
+}

@@ -6,12 +6,13 @@ Steps, driven by the JSON config (see tools/blender/tank_mbt.json):
   1. import `input` (relative to ~/Downloads/frontline-generated or FRONTLINE_GENERATED_SRC), join meshes
   2. `rotateY` so it faces +Z, scale to `length` (longest horizontal side, m), center on x/z, sit on y=0
   3. decimate to `triangles`
-  4. split the paint (texture color matching `paint`) into an untextured `Paint` material the renderer
-     replaces with team camo; the rest keeps the Meshy texture as `Detail`
+  4. split the paint (texture color matching `paint`) into a `TeamPaint` material (same texture) that the
+     renderer tints toward the team color; the rest keeps the Meshy texture as `Detail`
   5. cut moving parts out by box (`parts`, game coords) into named nodes with their pivot at `pivot`;
      `cap` fills the hole a turret leaves in the hull deck
   6. clips: `Fire` (barrel recoil), `TurretScan` (keeps P_turret a separate animated node in the renderer),
-     `Death` (turret lifts off)
+     `Death` (turret lifts off), `Idle` (parts with `spin`, e.g. radar dishes, which need a name the renderer
+     keeps animated, like `turret_radar`)
   7. export `output` (relative to the generated folder)
 """
 
@@ -64,7 +65,7 @@ paint_faces = common.smooth_selection(body, common.classify_faces(body, cfg['pai
 # Running gear (road wheels, tracks) stays textured: faces centered below `detailBelow` meters.
 low = cfg['paint'].get('detailBelow', 0)
 paint_faces = {i for i in paint_faces if body.data.polygons[i].center.z >= low}
-paint = common.flat_material('Paint', cfg['paint']['color'])
+paint = common.team_paint(detail)
 common.assign_material(body, paint_faces, paint)
 print(f'paint: {len(paint_faces)}/{len(body.data.polygons)} faces')
 
@@ -187,6 +188,20 @@ if turret:
     clip('TurretScan', [(turret, 'rotation_euler', sorted(scan, key=lambda k: k[0]))])
     loc = turret.location.copy()
     clip('Death', [(turret, 'location', [(0, loc), (0.25, loc + Vector((0, 0.2, cfg.get('deathLift', 0.5)))), (0.6, loc + Vector((0, 0.3, 0.12)))])])
+# `spin` parts (radar dishes) turn about their vertical axis in a looping Idle clip.
+spinners = [(nodes[p['name']], p['spin']) for p in cfg.get('parts', []) if p.get('spin')]
+if spinners:
+    keys = []
+    for obj, rate in spinners:
+        e0 = obj.rotation_euler.copy()
+        period = 2 * math.pi / abs(rate)
+        frames = []
+        for k in range(9):
+            e = e0.copy()
+            e.z += math.copysign(2 * math.pi, rate) * k / 8
+            frames.append((period * k / 8, e))
+        keys.append((obj, 'rotation_euler', frames))
+    clip('Idle', keys)
 
 common.downscale_images(cfg.get('textureSize', 1024))
 
@@ -197,7 +212,7 @@ if cfg['_preview']:
             o.color = {'hull': (0.5, 0.5, 0.45, 1), 'P_turret': (0.9, 0.5, 0.2, 1), 'P_barrel': (0.2, 0.6, 0.9, 1)}.get(o.name, (0.6, 0.6, 0.6, 1))
     common.render_preview(cfg['_preview'], name, common.mesh_objects())
     for m in bpy.data.materials:
-        m.diffuse_color = (0.8, 0.15, 0.1, 1) if m.name == 'Paint' else (0.25, 0.25, 0.25, 1)
+        m.diffuse_color = (0.8, 0.15, 0.1, 1) if m.name == 'TeamPaint' else (0.25, 0.25, 0.25, 1)
     common.render_preview(cfg['_preview'], name + '_mat', common.mesh_objects(), views=('persp', 'top'), color='MATERIAL')
 
 common.export_glb(common.src(cfg['output']))

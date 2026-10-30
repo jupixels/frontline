@@ -1,0 +1,45 @@
+{
+  "id": "ifv",
+  "date": "2026-10-30",
+  "batch": "1",
+  "replaces": "the previous models/ifv.glb",
+  "style": "tools/generated/STYLE.md, vehicle prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<vehicle prefix> Tracked infantry fighting vehicle: tall boxy hull with a sloped front and a rear troop ramp, six road wheels per side, small two-man turret with a slender 30 mm autocannon and a twin anti-tank missile launcher box on the turret side.",
+    "taskId": "01a18af1-32ae-754c-91ab-230331ddaf7a",
+    "file": "raw/ifv/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model (STYLE.md: 1 candidate when the reference is clear)",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 12000,
+      "texture": true,
+      "taskId": "01a18af2-255d-7206-826f-82258969b066",
+      "file": "raw/ifv/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/ifv.json",
+    "output": "ifv.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: ifv.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  },
+  "movingParts": [
+    "P_turret pivot [0,2.55,-0.6]",
+    "P_barrel pivot [-0.26,3,0.5]"
+  ]
+}

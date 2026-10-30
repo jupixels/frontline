@@ -6,124 +6,82 @@
       "path": "models/aa_tank.glb",
       "kind": "unit",
       "size": [
-        3.43,
-        4.35,
+        3.81,
+        4.99,
         7.6
       ],
-      "sizeKB": 107,
+      "sizeKB": 252,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "TurretTurn",
+        "Death",
         "TurretScan",
-        "Hit",
-        "Death"
+        "Fire",
+        "Idle"
       ],
       "nodes": [
-        "P_turret",
-        "wheels_0",
-        "wheels_1",
-        "wheels_2",
-        "wheels_3",
-        "wheels_4",
-        "wheels_5",
-        "wheels_6",
-        "wheels_7",
-        "wheels_8",
-        "wheels_9",
-        "wheels_10",
-        "wheels_11",
-        "wheels_12",
-        "wheels_13",
-        "wheels_14",
-        "wheels_15",
-        "wheels_16",
-        "wheels_17",
-        "wheels_18",
-        "wheels_19",
-        "wheels_20",
-        "wheels_21",
-        "wheels_22",
-        "wheels_23",
-        "wheels_24",
-        "wheels_25",
-        "wheels_26",
-        "wheels_27",
-        "wheels_28",
-        "wheels_29",
-        "wheels_30",
-        "wheels_31",
-        "wheels_32",
-        "wheels_33",
-        "wheels_34",
-        "wheels_35",
-        "aa_turret",
-        "aa_gunpod_l",
-        "aa_gunpod_r",
-        "aa_barrel_l",
-        "aa_barrel_r",
-        "aa_track_radar",
-        "aa_radar_mast",
-        "aa_search_radar"
+        "P_barrel",
+        "turret_radar",
+        "P_turret"
       ],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "artillery",
       "path": "models/artillery.glb",
       "kind": "unit",
       "size": [
-        3.58,
-        2.12,
+        3.16,
+        3.4,
         9
       ],
-      "sizeKB": 13,
+      "sizeKB": 281,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Hit",
-        "Death"
+        "Death",
+        "TurretScan",
+        "Fire"
       ],
-      "nodes": [],
-      "license": "CC0",
+      "nodes": [
+        "P_barrel",
+        "P_turret"
+      ],
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "CptDrunkBear (OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "at_soldier",
       "path": "models/at_soldier.glb",
       "kind": "unit",
       "size": [
-        2.16,
-        1.86,
-        0.38
+        0.82,
+        1.64,
+        0.88
       ],
-      "sizeKB": 493,
+      "sizeKB": 182,
       "clips": [
-        "Bazooka_Aim01",
-        "Bazooka_Aim01_Shoot01",
-        "Bazooka_Reload01",
-        "Damage01",
         "Death01",
         "Death02",
-        "Idle01",
-        "MilitaryIdle01",
+        "Fire",
+        "Idle",
         "Run01_Forward",
         "Walk01_Forward"
       ],
       "nodes": [],
-      "license": "royalty-free, no resale",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "Kevin Iglesias (Human Soldier Animations FREE)"
+        "Frontline (models made with Meshy AI, Pro plan)"
       ],
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       }
     },
     {
@@ -657,6 +615,33 @@
       "draft": 8
     },
     {
+      "id": "engineer",
+      "path": "models/engineer.glb",
+      "kind": "unit",
+      "size": [
+        1.14,
+        1.5,
+        0.34
+      ],
+      "sizeKB": 181,
+      "clips": [
+        "Death01",
+        "Death02",
+        "Fire",
+        "Idle",
+        "Run01_Forward",
+        "Walk01_Forward"
+      ],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
+    },
+    {
       "id": "bush_detailed",
       "path": "models/env/bush_detailed.glb",
       "kind": "env",
@@ -985,54 +970,52 @@
       "path": "models/ifv.glb",
       "kind": "unit",
       "size": [
-        3.22,
-        3.81,
+        3.65,
+        3.82,
         7.5
       ],
-      "sizeKB": 85,
+      "sizeKB": 263,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Hit",
-        "Death"
+        "Death",
+        "TurretScan",
+        "Fire"
       ],
       "nodes": [
-        "wheel disk",
-        "wheels_auto_0",
-        "wheels_auto_1",
-        "wheels_auto_2",
-        "wheels_auto_3",
-        "wheels_auto_4",
-        "wheels_auto_5"
+        "P_barrel",
+        "P_turret"
       ],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "jeep",
       "path": "models/jeep.glb",
       "kind": "unit",
       "size": [
-        2.06,
-        2.35,
+        2.3,
+        2.78,
         4.6
       ],
-      "sizeKB": 35,
+      "sizeKB": 220,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Hit",
-        "Death"
+        "Death",
+        "TurretScan"
       ],
-      "nodes": [],
-      "license": "CC-BY-4.0",
+      "nodes": [
+        "P_turret"
+      ],
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "Zsky (zsky2000.itch.io)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "jet_fighter",
@@ -1090,7 +1073,7 @@
         1.5,
         0.47
       ],
-      "sizeKB": 189,
+      "sizeKB": 199,
       "clips": [
         "Death01",
         "Death02",
@@ -1107,7 +1090,7 @@
         "Frontline (models made with Meshy AI, Pro plan)"
       ],
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       }
     },
     {
@@ -1115,76 +1098,77 @@
       "path": "models/rocket_truck.glb",
       "kind": "unit",
       "size": [
-        3.85,
-        4.9,
+        3.71,
+        5.47,
         10
       ],
-      "sizeKB": 20,
+      "sizeKB": 193,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Hit",
-        "Death"
+        "Fire"
       ],
-      "nodes": [],
-      "license": "CC0",
+      "nodes": [
+        "P_barrel"
+      ],
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "CptDrunkBear (OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "scout_car",
       "path": "models/scout_car.glb",
       "kind": "unit",
       "size": [
-        2.45,
-        2.82,
+        2.7,
+        3.75,
         5.6
       ],
-      "sizeKB": 30,
+      "sizeKB": 219,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Hit",
-        "Death"
+        "Death",
+        "TurretScan",
+        "Fire"
       ],
-      "nodes": [],
-      "license": "CC-BY-4.0",
+      "nodes": [
+        "P_barrel",
+        "P_turret"
+      ],
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "Zsky (zsky2000.itch.io)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "sniper",
       "path": "models/sniper.glb",
       "kind": "unit",
       "size": [
-        2.45,
-        1.86,
-        0.38
+        1.1,
+        1.55,
+        0.72
       ],
-      "sizeKB": 493,
+      "sizeKB": 186,
       "clips": [
-        "Damage01",
         "Death01",
         "Death02",
-        "Idle01",
-        "MilitaryIdle01",
-        "Rifle_Aim01",
-        "Rifle_Aim01_Shoot01",
-        "Rifle_Reload01",
+        "Fire",
+        "Idle",
         "Run01_Forward",
         "Walk01_Forward"
       ],
       "nodes": [],
-      "license": "royalty-free, no resale",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "Kevin Iglesias (Human Soldier Animations FREE)"
+        "Frontline (models made with Meshy AI, Pro plan)"
       ],
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       }
     },
     {
@@ -1212,38 +1196,35 @@
       "draft": 13
     },
     {
+      "id": "supply_truck",
+      "path": "models/supply_truck.glb",
+      "kind": "unit",
+      "size": [
+        2.86,
+        3.35,
+        7
+      ],
+      "sizeKB": 212,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
+    },
+    {
       "id": "tank_light",
       "path": "models/tank_light.glb",
       "kind": "unit",
       "size": [
-        3.03,
-        3.54,
+        3.06,
+        2.83,
         6.8
       ],
-      "sizeKB": 44,
-      "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Hit",
-        "Death"
-      ],
-      "nodes": [],
-      "license": "CC-BY-4.0",
-      "credits": [
-        "Zsky (zsky2000.itch.io)"
-      ]
-    },
-    {
-      "id": "tank_mbt",
-      "path": "models/tank_mbt.glb",
-      "kind": "unit",
-      "size": [
-        3.8,
-        3.19,
-        9.5
-      ],
-      "sizeKB": 260,
+      "sizeKB": 274,
       "clips": [
         "Death",
         "TurretScan",
@@ -1258,7 +1239,34 @@
         "Frontline (models made with Meshy AI, Pro plan)"
       ],
       "materials": {
-        "team": "Paint"
+        "team": "TeamPaint"
+      }
+    },
+    {
+      "id": "tank_mbt",
+      "path": "models/tank_mbt.glb",
+      "kind": "unit",
+      "size": [
+        3.8,
+        3.19,
+        9.5
+      ],
+      "sizeKB": 290,
+      "clips": [
+        "Death",
+        "TurretScan",
+        "Fire"
+      ],
+      "nodes": [
+        "P_barrel",
+        "P_turret"
+      ],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
       }
     },
     {

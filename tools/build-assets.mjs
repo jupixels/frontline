@@ -285,7 +285,8 @@ async function buildModel(m) {
   const anim = pruneAnimationChannels(doc, m.animPrune);
 
   await doc.transform(
-    dedup(),
+    // Generated models carry a TeamPaint copy of their textured material; keep it apart from the original.
+    dedup({ keepUniqueNames: !!m.generated }),
     weld(),
     resample({ tolerance: m.animTolerance ?? 1e-4 }),
     prune(),

@@ -5,8 +5,8 @@
 Steps, driven by the JSON config (see tools/blender/rifleman.json):
   1. import `input` (Meshy's merged animation GLB: skinned mesh + armature + one action per clip)
   2. decimate to `triangles` (skin weights survive the collapse)
-  3. split the uniform (texture color matching `uniform`) into an untextured `Uniform` material the renderer
-     replaces with team camo; skin, boots, gloves and goggles keep the Meshy texture as `Gear`
+  3. split the uniform (everything but `uniform.gear` colors) into a `TeamPaint` material (same texture) the
+     renderer tints toward the team color; skin, boots, gloves and goggles keep the Meshy texture as `Gear`
   4. build the rifle from boxes and hang it on the right hand bone, lined up from the right hand to the left
      hand in the `aim` pose, so it sits in both hands
   5. clips: rename per `clips`; `holdArms` bakes the aim pose into the arm bones of the listed clips (Meshy's
@@ -61,7 +61,7 @@ common.matte(gear, 0.9)
 # `gear` lists what is NOT uniform (skin, tan boots, black gloves and goggles); everything else is uniform.
 gear_faces = common.smooth_selection(body, common.classify_faces(body, cfg['uniform']['gear']), cfg['uniform'].get('smooth', 1))
 faces = set(range(len(body.data.polygons))) - gear_faces
-common.assign_material(body, faces, common.flat_material('Uniform', cfg['uniform']['color'], 0.9))
+common.assign_material(body, faces, common.team_paint(gear))
 print(f'uniform: {len(faces)}/{len(body.data.polygons)} faces')
 
 # Clips by their Meshy names.
@@ -87,14 +87,19 @@ aim = cfg['aim']
 use(actions[aim['clip']], aim['frame'])
 r = cfg['rifle']
 bm = bmesh.new()
-for size, at in r['boxes']:
-    m = Matrix.Translation(Vector((at[0], -at[2], at[1]))) @ Matrix.Diagonal((size[0], size[2], size[1], 1))
-    bmesh.ops.create_cube(bm, size=1.0, matrix=m)
-me = bpy.data.meshes.new('Rifle')
+for size, at, *shape in r['boxes']:
+    # Weapon space: x right, y up, z forward (toward the support hand); `cyl` makes a tube along z.
+    if shape and shape[0] == 'cyl':
+        m = Matrix.Translation(Vector((at[0], -at[2], at[1]))) @ Matrix.Rotation(math.radians(90), 4, 'X')
+        bmesh.ops.create_cone(bm, cap_ends=True, segments=12, radius1=size[0] / 2, radius2=size[0] / 2, depth=size[2], matrix=m)
+    else:
+        m = Matrix.Translation(Vector((at[0], -at[2], at[1]))) @ Matrix.Diagonal((size[0], size[2], size[1], 1))
+        bmesh.ops.create_cube(bm, size=1.0, matrix=m)
+me = bpy.data.meshes.new(r.get('name', 'Rifle'))
 bm.to_mesh(me)
 bm.free()
 me.materials.append(common.flat_material('Weapon_metal', r['color'], 0.6, 0.3))
-rifle = bpy.data.objects.new('Rifle', me)
+rifle = bpy.data.objects.new(r.get('name', 'Rifle'), me)
 scene.collection.objects.link(rifle)
 # Rifle space: grip at the origin, barrel toward -y (Blender's "forward" for a game +z model).
 wrist = bone_world('RightHand')
@@ -172,7 +177,7 @@ common.downscale_images(cfg.get('textureSize', 512))
 if cfg['_preview']:
     name = os.path.splitext(os.path.basename(cfg['output']))[0]
     for m in bpy.data.materials:
-        m.diffuse_color = {'Uniform': (0.8, 0.15, 0.1, 1), 'Weapon_metal': (0.1, 0.1, 0.1, 1)}.get(m.name, (0.75, 0.7, 0.6, 1))
+        m.diffuse_color = {'TeamPaint': (0.8, 0.15, 0.1, 1), 'Weapon_metal': (0.1, 0.1, 0.1, 1)}.get(m.name, (0.75, 0.7, 0.6, 1))
     for clip, frame in cfg.get('previewFrames', {}).items():
         use(bpy.data.actions[clip], frame)
         common.render_preview(cfg['_preview'], f'{name}_{clip}', [body, rifle], views=('persp', 'side'), color='MATERIAL')

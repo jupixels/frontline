@@ -71,7 +71,7 @@
   },
   "engineer": {
     "name": "Engineer",
-    "model": "models/rifleman.glb",
+    "model": "models/engineer.glb",
     "domain": "ground",
     "armor": "infantry",
     "hp": 90,
@@ -94,6 +94,7 @@
   "jeep": {
     "name": "Recon Jeep",
     "model": "models/jeep.glb",
+    "turretNode": "P_turret",
     "domain": "ground",
     "armor": "light",
     "hp": 220,
@@ -115,6 +116,7 @@
   "scout_car": {
     "name": "Scout Car",
     "model": "models/scout_car.glb",
+    "turretNode": "P_turret",
     "domain": "ground",
     "armor": "light",
     "hp": 380,
@@ -138,6 +140,7 @@
   "ifv": {
     "name": "Infantry Fighting Vehicle",
     "model": "models/ifv.glb",
+    "turretNode": "P_turret",
     "domain": "ground",
     "armor": "light",
     "hp": 650,
@@ -171,6 +174,7 @@
   "tank_light": {
     "name": "Light Tank",
     "model": "models/tank_light.glb",
+    "turretNode": "P_turret",
     "domain": "ground",
     "armor": "heavy",
     "hp": 800,
@@ -227,6 +231,7 @@
   "aa_tank": {
     "name": "Mobile AA",
     "model": "models/aa_tank.glb",
+    "turretNode": "P_turret",
     "domain": "ground",
     "armor": "light",
     "hp": 600,
@@ -271,6 +276,7 @@
   "artillery": {
     "name": "Self-Propelled Howitzer",
     "model": "models/artillery.glb",
+    "turretNode": "P_turret",
     "domain": "ground",
     "armor": "heavy",
     "hp": 500,
@@ -482,7 +488,7 @@
   },
   "supply_truck": {
     "name": "Supply Truck",
-    "model": "models/jeep.glb",
+    "model": "models/supply_truck.glb",
     "domain": "ground",
     "armor": "light",
     "hp": 300,

@@ -120,155 +120,103 @@
       "center": false,
       "textureSize": 512,
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       },
       "animTolerance": 0.0005
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/soldiers/Sniper.glb",
+      "generated": "supply_truck.glb",
+      "out": "models/supply_truck.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "length": 7,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
+    },
+    {
+      "generated": "engineer.glb",
+      "out": "models/engineer.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "scale": 1,
+      "center": false,
+      "textureSize": 512,
+      "materials": {
+        "team": "TeamPaint"
+      },
+      "animTolerance": 0.0005
+    },
+    {
+      "generated": "sniper.glb",
       "out": "models/sniper.glb",
       "kind": "unit",
-      "credit": "kevin-iglesias",
+      "credit": "meshy",
       "scale": 1,
       "center": false,
-      "clips": [
-        "MilitaryIdle01",
-        "Idle01",
-        "Rifle_Aim01",
-        "Rifle_Aim01_Shoot01",
-        "Rifle_Reload01",
-        "Run01_Forward",
-        "Walk01_Forward",
-        "Damage01",
-        "Death01",
-        "Death02"
-      ],
-      "meshMaterials": {
-        "HumanM_BodyMesh": {
-          "name": "Uniform",
-          "color": "#5b6347"
-        },
-        "Human_SoldierHelmet": {
-          "name": "Helmet",
-          "color": "#4a5238"
-        },
-        "Human_Rifle": {
-          "name": "Weapon",
-          "color": "#2e2e2c",
-          "metallic": 0.4,
-          "roughness": 0.5
-        }
-      },
+      "textureSize": 512,
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       },
-      "animTolerance": 0.0005,
-      "animPrune": {
-        "dropBones": "jaw"
-      },
-      "holdPose": {
-        "clip": "WeaponHold_Rifle01",
-        "into": [
-          "Idle01",
-          "MilitaryIdle01",
-          "Walk01_Forward",
-          "Run01_Forward"
-        ],
-        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
-      },
-      "reparent": {
-        "Human_Rifle": "B-handProp.R"
-      }
+      "animTolerance": 0.0005
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/soldiers/AntiTank_Bazooka.glb",
+      "generated": "at_soldier.glb",
       "out": "models/at_soldier.glb",
       "kind": "unit",
-      "credit": "kevin-iglesias",
+      "credit": "meshy",
       "scale": 1,
       "center": false,
-      "clips": [
-        "MilitaryIdle01",
-        "Idle01",
-        "Bazooka_Aim01",
-        "Bazooka_Aim01_Shoot01",
-        "Bazooka_Reload01",
-        "Run01_Forward",
-        "Walk01_Forward",
-        "Damage01",
-        "Death01",
-        "Death02"
-      ],
-      "meshMaterials": {
-        "HumanM_BodyMesh": {
-          "name": "Uniform",
-          "color": "#5b6347"
-        },
-        "Human_SoldierHelmet": {
-          "name": "Helmet",
-          "color": "#4a5238"
-        },
-        "Human_Bazooka": {
-          "name": "Weapon",
-          "color": "#2e2e2c",
-          "metallic": 0.4,
-          "roughness": 0.5
-        }
-      },
+      "textureSize": 512,
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       },
-      "animTolerance": 0.0005,
-      "animPrune": {
-        "dropBones": "jaw"
-      },
-      "holdPose": {
-        "clip": "WeaponHold_Bazooka01",
-        "into": [
-          "Idle01",
-          "MilitaryIdle01",
-          "Walk01_Forward",
-          "Run01_Forward"
-        ],
-        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
-      },
-      "reparent": {
-        "Human_Bazooka": "B-handProp.R"
+      "animTolerance": 0.0005
+    },
+    {
+      "generated": "jeep.glb",
+      "out": "models/jeep.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "length": 4.6,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
       }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Jeep_zsky_CC-BY.glb",
-      "out": "models/jeep.glb",
-      "kind": "unit",
-      "credit": "zsky",
-      "length": 4.6
-    },
-    {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/ScoutCar_zsky_CC-BY.glb",
+      "generated": "scout_car.glb",
       "out": "models/scout_car.glb",
       "kind": "unit",
-      "credit": "zsky",
-      "length": 5.6
+      "credit": "meshy",
+      "length": 5.6,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/IFV_MechInfantry.glb",
+      "generated": "ifv.glb",
       "out": "models/ifv.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 7.5
+      "credit": "meshy",
+      "length": 7.5,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Tank_Light_zsky_CC-BY.glb",
+      "generated": "tank_light.glb",
       "out": "models/tank_light.glb",
       "kind": "unit",
-      "credit": "zsky",
-      "length": 6.8
+      "credit": "meshy",
+      "length": 6.8,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "generated": "tank_mbt.glb",
@@ -278,175 +226,41 @@
       "length": 9.5,
       "textureSize": 1024,
       "materials": {
-        "team": "Paint"
+        "team": "TeamPaint"
       }
     },
     {
+      "generated": "aa_tank.glb",
       "out": "models/aa_tank.glb",
       "kind": "unit",
-      "kitbash": [
-        {
-          "zip": "Modern-RTS-Animations.zip",
-          "path": "Modern-RTS-Animations/vehicles/ground/Tank_MBT.glb",
-          "credit": "freeciv-yd",
-          "length": 7.6,
-          "stripMeshesUnder": "P_turret",
-          "name": "hull"
-        },
-        {
-          "box": [
-            2.3,
-            1.15,
-            2.7
-          ],
-          "color": "#5c6631",
-          "name": "aa_turret",
-          "center": false,
-          "at": [
-            0.02,
-            2,
-            -0.16
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            0.4,
-            0.55,
-            1.5
-          ],
-          "color": "#5c6631",
-          "name": "aa_gunpod_l",
-          "center": false,
-          "at": [
-            -1.33,
-            2.45,
-            0.19
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            0.4,
-            0.55,
-            1.5
-          ],
-          "color": "#5c6631",
-          "name": "aa_gunpod_r",
-          "center": false,
-          "at": [
-            1.37,
-            2.45,
-            0.19
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            0.13,
-            0.13,
-            2.4
-          ],
-          "color": "#2b2d28",
-          "name": "aa_barrel_l",
-          "center": false,
-          "at": [
-            -1.33,
-            2.65,
-            2.04
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            0.13,
-            0.13,
-            2.4
-          ],
-          "color": "#2b2d28",
-          "name": "aa_barrel_r",
-          "center": false,
-          "at": [
-            1.37,
-            2.65,
-            2.04
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "cylinder": [
-            0.38,
-            0.38,
-            0.45
-          ],
-          "color": "#3e4436",
-          "name": "aa_track_radar",
-          "center": false,
-          "at": [
-            0.02,
-            3.15,
-            0.84
-          ],
-          "parent": "P_turret",
-          "segments": 12
-        },
-        {
-          "box": [
-            0.18,
-            0.7,
-            0.18
-          ],
-          "color": "#2b2d28",
-          "name": "aa_radar_mast",
-          "center": false,
-          "at": [
-            0.02,
-            3.15,
-            -1.21
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            1.9,
-            0.5,
-            0.14
-          ],
-          "color": "#3e4436",
-          "name": "aa_search_radar",
-          "center": false,
-          "at": [
-            0.02,
-            3.85,
-            -1.21
-          ],
-          "parent": "P_turret"
-        }
-      ]
+      "credit": "meshy",
+      "length": 7.6,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Rocket_Artillery_Truck_toon.glb",
+      "generated": "rocket_truck.glb",
       "out": "models/rocket_truck.glb",
       "kind": "unit",
-      "credit": "cptdrunkbear",
+      "credit": "meshy",
       "length": 10,
-      "colors": {
-        "*": "#9aa07e"
-      },
-      "rotateY": 90
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Artillery_Gun_toon.glb",
+      "generated": "artillery.glb",
       "out": "models/artillery.glb",
       "kind": "unit",
-      "credit": "cptdrunkbear",
+      "credit": "meshy",
       "length": 9,
-      "colors": {
-        "*": "#9aa07e"
-      },
-      "rotateY": 90
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "zip": "Modern-RTS-Animations.zip",

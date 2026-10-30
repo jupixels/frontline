@@ -1,0 +1,17 @@
+{
+  "input": "raw/supply_truck/smart.glb",
+  "output": "supply_truck.glb",
+  "rotateY": 90,
+  "length": 7,
+  "triangles": 8000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 35,
+    "hueMax": 90,
+    "smooth": 2,
+    "detailBelow": 0.6
+  },
+  "parts": []
+}

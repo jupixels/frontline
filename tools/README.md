@@ -108,11 +108,11 @@ blender -b --factory-startup -P tools/blender/infantry.py -- tools/blender/rifle
 npm run assets -- --only tank_mbt
 ```
 
-  - `vehicle.py`: orientation and size, team-paint split by texture color (`Paint`, untextured, gets team camo;
-    the rest stays textured as `Detail`), moving parts cut out by box with pivots (`P_turret`, `P_barrel`), and
-    `Fire`/`TurretScan`/`Death` clips. `TurretScan` is never played; it keeps `P_turret` animated so
+  - `vehicle.py`: orientation and size, team-paint split by texture color (`TeamPaint`, same texture, which the
+    renderer tints toward the team color; the rest stays `Detail`), moving parts cut out by box with pivots
+    (`P_turret`, `P_barrel`, spinning `turret_radar`), and `Fire`/`TurretScan`/`Death`/`Idle` clips. `TurretScan` is never played; it keeps `P_turret` animated so
     `render/models.ts` doesn't merge the turret into the hull.
-  - `infantry.py`: uniform split (`Uniform` vs `Gear`), a box-built rifle on the right hand bone lined up with the
+  - `infantry.py`: uniform split (`TeamPaint` vs `Gear`), a weapon built from boxes and tubes on the right hand bone lined up with the
     left hand in the aim pose, the aim pose baked into the idle's arms, a built `Fire` kick, and clip renames to
     the names `render/units.ts` looks up.
   - `--preview <dir>` writes workbench renders for checking cuts (debug colors, not what the game shows).
@@ -123,12 +123,12 @@ npm run assets -- --only tank_mbt
 
 | Source | Used for | License |
 |---|---|---|
-| Modern-RTS-Animations.zip, Zsky vehicles (`*_zsky_CC-BY`) | jeep, scout_car, tank_light, heli_attack, patrol_boat | **CC-BY 4.0**, Zsky (zsky2000.itch.io) |
+| Modern-RTS-Animations.zip, Zsky vehicles (`*_zsky_CC-BY`) | heli_attack, patrol_boat | **CC-BY 4.0**, Zsky (zsky2000.itch.io) |
 | Modern-RTS-Models.zip, Zsky military base | hq, barracks, helipad, radar, supply_depot, hospital, watchtower, props, parts of the kitbashes | **CC-BY 4.0**, Zsky |
-| Modern-RTS-Animations.zip, Freeciv units by yd | ifv, aa_tank (old MBT hull + primitive twin-cannon turret), heli_transport, jet_fighter, bomber, cruise_missile, destroyer, cruiser, submarine, transport_ship | CC0 |
-| Modern-RTS-Animations.zip, toon vehicles | rocket_truck, artillery (recolored). The pack README lists them as CC0; they look like CptDrunkBear's N64-style set, so they're credited to CptDrunkBear | CC0 |
-| Generated with Meshy AI (Pro plan; the output is owned by the project) | tank_mbt, rifleman (batch 0) | owned, no attribution needed (credited as "made with Meshy AI") |
-| Modern-RTS-Animations.zip, Kevin Iglesias soldiers | sniper, at_soldier | Royalty-free, commercial use OK, no resale of the assets themselves |
+| Modern-RTS-Animations.zip, Freeciv units by yd | heli_transport, jet_fighter, bomber, cruise_missile, destroyer, cruiser, submarine, transport_ship | CC0 |
+| Modern-RTS-Animations.zip, toon vehicles | (no longer used). The pack README lists them as CC0; they look like CptDrunkBear's N64-style set, so they're credited to CptDrunkBear | CC0 |
+| Generated with Meshy AI (Pro plan; the output is owned by the project) | tank_mbt, rifleman, engineer, sniper, at_soldier, supply_truck, tank_light, ifv, artillery, aa_tank, rocket_truck, scout_car, jeep | owned, no attribution needed (credited as "made with Meshy AI") |
+| Modern-RTS-Animations.zip, Kevin Iglesias soldiers | (no longer used) | Royalty-free, commercial use OK, no resale of the assets themselves |
 | [Kenney Nature Kit](https://kenney.nl/assets/nature-kit) | `models/env/*` | CC0 |
 | [Kenney City Kit (Industrial)](https://kenney.nl/assets/city-kit-industrial) | parts of war_factory, airfield, power_plant, naval_yard | CC0 |
 | ambientCG [Grass004](https://ambientcg.com/view?id=Grass004), [Ground103](https://ambientcg.com/view?id=Ground103), [Rock030](https://ambientcg.com/view?id=Rock030), [Ground080](https://ambientcg.com/view?id=Ground080), [Ground048](https://ambientcg.com/view?id=Ground048) | grass, dirt, rock, sand, mud | CC0 |

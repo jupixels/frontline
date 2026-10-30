@@ -1,0 +1,72 @@
+{
+  "id": "engineer",
+  "date": "2026-10-30",
+  "batch": "2 (core)",
+  "replaces": "nothing (used rifleman.glb)",
+  "style": "tools/generated/STYLE.md, infantry prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "poseMode": "t-pose",
+    "prompt": "<infantry prefix> Combat engineer: olive combat helmet with ear protectors, a large boxy olive tool backpack with a folding shovel and a coil of wire strapped to it, a tool belt with pliers and pouches, knee pads.",
+    "taskId": "01a18af1-01d4-761c-8ee9-1c2c6a965de4",
+    "file": "raw/engineer/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model (STYLE.md: 1 candidate when the reference is clear)",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 4000,
+      "texture": true,
+      "poseMode": "t-pose",
+      "taskId": "01a18af2-05ab-7056-9dc9-1b8ba2a8481c",
+      "file": "raw/engineer/smart.glb",
+      "credits": 15
+    },
+    "rig": {
+      "tool": "meshy_rig",
+      "heightMeters": 1.8,
+      "taskId": "01a18af3-8851-718e-82d3-71536ffe7d4f",
+      "credits": 5
+    },
+    "animate": {
+      "tool": "meshy_animate",
+      "actionIds": {
+        "0": "Idle",
+        "183": "Shot_and_Fall_Backward",
+        "184": "Shot_and_Fall_Forward",
+        "654": "Rifle_Charge_inplace",
+        "690": "Walk_Forward_While_Shooting_inplace"
+      },
+      "taskId": "01a18af9-c586-76fe-ab25-5fb6e4093467",
+      "file": "raw/engineer/smart_animations.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/infantry.py",
+    "config": "tools/blender/engineer.json",
+    "output": "engineer.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: engineer.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "rig": 5,
+    "animate": 15,
+    "total": 38
+  },
+  "weapon": "Carbine (built in Blender from boxes/tubes, on the RightHand bone)",
+  "clips": {
+    "Idle": "Idle + aim-pose arms",
+    "Walk01_Forward": "Walk_Forward_While_Shooting_inplace",
+    "Run01_Forward": "Rifle_Charge_inplace",
+    "Fire": "built upper-body kick",
+    "Death01": "Shot_and_Fall_Backward",
+    "Death02": "Shot_and_Fall_Forward"
+  }
+}

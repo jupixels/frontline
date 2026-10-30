@@ -1,0 +1,35 @@
+{
+  "input": "raw/jeep/smart.glb",
+  "output": "jeep.glb",
+  "rotateY": 90,
+  "length": 4.6,
+  "triangles": 8000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 35,
+    "hueMax": 90,
+    "smooth": 2,
+    "detailBelow": 0.6
+  },
+  "parts": [
+    {
+      "name": "P_turret",
+      "box": [
+        -0.3,
+        0.3,
+        2.36,
+        3.0,
+        -0.95,
+        0.8
+      ],
+      "pivot": [
+        0,
+        2.36,
+        -0.24
+      ]
+    }
+  ],
+  "deathLift": 0.2
+}

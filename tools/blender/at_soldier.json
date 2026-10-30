@@ -1,0 +1,122 @@
+{
+  "input": "raw/at_soldier/smart_animations.glb",
+  "output": "at_soldier.glb",
+  "triangles": 4000,
+  "textureSize": 512,
+  "uniform": {
+    "color": "#5b6347",
+    "gear": [
+      {
+        "hueMin": 0,
+        "hueMax": 40,
+        "sMin": 0.15,
+        "vMin": 0.35
+      },
+      {
+        "vMax": 0.16
+      }
+    ],
+    "smooth": 1
+  },
+  "aim": {
+    "clip": "Walk_Forward_While_Shooting_inplace",
+    "frame": 10
+  },
+  "rifle": {
+    "name": "Launcher_tube",
+    "color": "#3a3d30",
+    "boxes": [
+      [
+        [
+          0.13,
+          0.13,
+          1.2
+        ],
+        [
+          0,
+          0.13,
+          0.12
+        ],
+        "cyl"
+      ],
+      [
+        [
+          0.17,
+          0.17,
+          0.3
+        ],
+        [
+          0,
+          0.13,
+          0.78
+        ],
+        "cyl"
+      ],
+      [
+        [
+          0.05,
+          0.08,
+          0.12
+        ],
+        [
+          0,
+          0.22,
+          0.25
+        ]
+      ],
+      [
+        [
+          0.03,
+          0.09,
+          0.04
+        ],
+        [
+          0,
+          -0.05,
+          0.0
+        ]
+      ],
+      [
+        [
+          0.03,
+          0.09,
+          0.04
+        ],
+        [
+          0,
+          0.0,
+          0.3
+        ]
+      ]
+    ]
+  },
+  "holdArms": [
+    "Idle"
+  ],
+  "fireKick": {
+    "Spine02": [
+      1,
+      0,
+      0,
+      -5
+    ],
+    "RightArm": [
+      1,
+      0,
+      0,
+      -4
+    ]
+  },
+  "clips": {
+    "Idle": "Idle",
+    "Walk_Forward_While_Shooting_inplace": "Walk01_Forward",
+    "Rifle_Charge_inplace": "Run01_Forward",
+    "Shot_and_Fall_Backward": "Death01",
+    "Shot_and_Fall_Forward": "Death02"
+  },
+  "previewFrames": {
+    "Idle": 20,
+    "Walk01_Forward": 10,
+    "Run01_Forward": 4
+  }
+}

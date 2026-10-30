@@ -11,9 +11,9 @@ Plan and budgets: `docs/MODEL_GEN_PLAN.md`. Per-model records: `tools/generated/
   text, numbers or brand markings.
 - Matte, slightly desaturated PBR. Light dust and mud on the lower parts. No cartoon proportions and no
   glossy plastic.
-- **Paint is one flat olive-drab tone with no camouflage pattern.** The renderer replaces the paint with
-  team-tinted procedural camo (`src/render/materials.ts`), so a printed pattern would be wasted and makes the
-  paint harder to separate. Everything that isn't paint (rubber, steel, glass, skin, boots, optics) should
+- **Paint is one flat olive-drab tone with no camouflage pattern.** The renderer tints the paint toward the
+  team color while keeping its light and dark detail (`TeamPaint`, see Materials), so a printed pattern would
+  muddy the team color and make the paint harder to separate. Everything that isn't paint (rubber, steel, glass, skin, boots, optics) should
   clearly differ in color from the olive.
 - Readable from the RTS camera (40° FOV, 25–320 m): silhouette first. Slightly exaggerate the features that
   identify the unit, such as gun length, missile pods and radar dishes.
@@ -50,15 +50,19 @@ After the prefix, add one or two sentences on the specific model's identifying f
 
 ## 3D generation
 
-- Candidates: `meshy_image_to_3d`, `ai_model: meshy-6-lite`, `should_texture: false` (5 credits each), two per
-  model. Judge them in `tools/viewer.html` (`?files=...&rts=110`) from the RTS camera, not from Meshy thumbnails.
+- Candidates (only when the reference image is in doubt): `meshy_image_to_3d`, `ai_model: meshy-6-lite`,
+  `should_texture: false` (5 credits each), one or two per model. When the reference is clearly right, skip them
+  and go straight to the final model. Judge them in `tools/viewer.html` (`?files=...&rts=110`) from the RTS camera, not from Meshy thumbnails.
   Use them for shape only: lite geometry is too rough to ship.
 - Final: `meshy_image_to_3d` from the chosen reference with `model_type: smart-topology`,
   `ai_model: meshy-t2.5`, `target_polycount` = the budget, textured (15 credits). It comes out clean and under
   budget, so neither Meshy remesh nor Blender decimation is needed. (Batch 0 first tried lite + retexture +
   Blender decimation; it looked lumpy and was thrown away.)
 - Soldiers: `pose_mode: t-pose`, then `meshy_rig` (5 credits, includes walk and run) and `meshy_animate`
-  (3 credits per clip). A rig belongs to one mesh, so rig only the final model.
+  (3 credits per clip). A rig belongs to one mesh, so rig only the final model. The renderer plays idle, move,
+  fire and death only, so request 5 clips: 0 Idle, 690 Walk_Forward_While_Shooting_inplace, 654
+  Rifle_Charge_inplace, 183 Shot_and_Fall_Backward, 184 Shot_and_Fall_Forward (15 credits).
+- Typical cost: a vehicle or structure is 18 credits (reference 3 + final 15); a soldier is 38 (+ rig 5 + clips 15).
 
 ## Budgets (triangles after Blender, before pipeline compression)
 
@@ -76,13 +80,19 @@ After the prefix, add one or two sentences on the specific model's identifying f
 
 `src/render/units.ts` and `materials.ts` pick each material's role by name and texture:
 
-- `Paint` (vehicles) or `Uniform` (soldiers): **untextured** and covering the most triangles, so it's the
-  primary material. Gets team-tinted camo.
-- Everything else keeps the Meshy texture and is named `Detail` (vehicles) or `Gear` (soldiers). The renderer
-  keeps textured non-primary materials as they are.
-- Small parts made in Blender (the rifle) use a `Metal`/`Weapon_metal` name so they're kept as-is.
+- `TeamPaint`: a copy of the Meshy material (same texture) on the paint (vehicles) or uniform, helmet and vest
+  (soldiers). The renderer keeps the texture's brightness (weathering, dirt, panel lines) and pulls its hue
+  toward the team color (`createTintMaterial` in `src/render/materials.ts`, also used by the far-LOD instancer).
+  Older models without a `TeamPaint` material keep the procedural camo.
+- Everything else keeps the Meshy texture and is named `Detail` (vehicles) or `Gear` (soldiers); the renderer
+  leaves it as it is.
+- Small parts made in Blender (weapons, the turret-ring cap) use `Weapon_metal`/`Metal_ring` and are kept as-is.
+- Moving parts: `P_turret` (and `turretNode: "P_turret"` in `data/units.json`), `P_barrel` (recoil in `Fire`),
+  and spinning parts named so the renderer keeps them animated (`turret_radar`).
 
 ## Changes
 
 - 2026-10-29: first version (batch 0 pilot).
 - 2026-10-29: final models use meshy-t2.5 smart topology instead of lite + Blender decimation.
+- 2026-10-30: team color via a texture-preserving `TeamPaint` tint instead of procedural camo; 1 candidate (or
+  none) when the reference is clear; 5 clips per soldier.

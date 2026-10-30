@@ -175,6 +175,13 @@ def flat_material(name, hex_color, roughness=0.8, metallic=0.0):
     return mat
 
 
+def team_paint(textured):
+    """The renderer tints materials named TeamPaint toward the team color, keeping the texture's detail."""
+    mat = textured.copy()
+    mat.name = 'TeamPaint'
+    return mat
+
+
 def matte(material, roughness=0.85):
     """Meshy textures come without roughness maps; make sure the default isn't glossy."""
     bsdf = next((n for n in material.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
