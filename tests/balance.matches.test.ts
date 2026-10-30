@@ -38,7 +38,9 @@ describe('match pacing', () => {
     for (let t = 0; t < (rules.suddenDeathSeconds + 1200) * SIM_HZ && sim.winner === null; t += 1) sim.step([]);
     expect(sim.winner).not.toBeNull();
     expect(sim.gameTick / SIM_HZ).toBeLessThan(rules.suddenDeathSeconds + 1200);
-  }, 120000);
+    // ~130k sim steps (110 game minutes) with no shortcut, so the rules are tested as written. A cold
+    // run on a busy machine takes 125-130 s, over the old 120 s limit; 5 min leaves headroom.
+  }, 300000);
 
   it('Hard beats Easy on Valley Pass (difficulties play differently)', () => {
     const map = MAPS.valley;

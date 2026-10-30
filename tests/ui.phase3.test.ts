@@ -126,3 +126,20 @@ describe('team palettes', () => {
     expect(s.players[1].color).not.toBe(s.players[0].color);
   });
 });
+
+describe('credits', () => {
+  it('builds model credits from the shipped catalog', async () => {
+    const { modelCredits } = await import('../src/ui/screens/credits');
+    const rows = modelCredits([
+      { id: 'a', license: 'owned (Meshy Pro output)', credits: ['Frontline (Meshy)'] },
+      { id: 'b', license: 'CC0 + CC-BY-4.0', credits: ['Kenney', 'Zsky'] },
+      { id: 'c', license: 'CC0', credits: ['Kenney'] },
+    ]);
+    expect(rows[0]).toEqual({ credit: 'Kenney', licenses: ['CC0'], count: 2 });
+    expect(rows.find((r) => r.credit === 'Zsky')?.licenses).toEqual(['CC0 + CC-BY-4.0']);
+    expect(rows.find((r) => r.credit === 'Frontline (Meshy)')?.licenses).toEqual(['owned (Meshy Pro output)']);
+    // Every model in this build carries a license and a credit line.
+    const cat = JSON.parse(readFileSync('public/assets/models/catalog.json', 'utf8')) as { models: { id: string; license?: string; credits?: string[] }[] };
+    for (const m of cat.models) expect(m.license && m.credits?.length, m.id).toBeTruthy();
+  });
+});
