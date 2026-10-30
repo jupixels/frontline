@@ -141,7 +141,11 @@ export type DamageTable = Record<DamageType, Record<ArmorClass, number>>;
 
 export interface RulesDef {
   startingSupply: number;
-  startingTickets: number;
+  startingMorale: number;
+  /** Below this fraction of starting Morale a side is shaken: suppression wears off slower. */
+  moraleLowFraction?: number;
+  /** Suppression recovery multiplier while shaken. */
+  moraleLowRecovery?: number;
   baseCp: number;
   cpPerPoint: number;
   cpMax: number;
@@ -152,13 +156,13 @@ export interface RulesDef {
   supplyNodeMult: number;
   captureSeconds: number;
   pointRadius: number;
-  /** Tickets per second per point the team is behind the leader. */
+  /** Morale per second per point the team is behind the leader. */
   bleedPerPointDiff: number;
   lateBleedSeconds: number;
   lateBleedMult: number;
-  unitLossTicketsPerCp: number;
+  unitLossMoralePerCp: number;
   suddenDeathSeconds: number;
-  /** Tickets per second every team loses in sudden death. */
+  /** Morale per second every team loses in sudden death. */
   suddenDeathBleed: number;
   suddenDeathHqDamageMult: number;
   tier3UnlockSeconds: number;
@@ -186,14 +190,14 @@ export interface RulesDef {
   pausesPerPlayer?: number;
   /** Seconds a pause lasts before the game resumes by itself. */
   pauseMaxSeconds?: number;
-  /** Ticket-bleed multiplier while a team holds every point (pushes a dominant side to finish). */
+  /** Morale-drain multiplier while a team holds every point (pushes a dominant side to finish). */
   sweepBleedMult?: number;
   /** Extra sudden-death bleed per second for every second sudden death has lasted. */
   suddenDeathRamp?: number;
-  /** Comeback: +1 command point per this many tickets a team is behind the leader, up to cpComebackMax. */
+  /** Comeback: +1 command point per this many points of Morale a team is behind the leader, up to cpComebackMax. */
   cpComebackPer?: number;
   cpComebackMax?: number;
-  /** Comeback: extra HQ supply per second for every 100 tickets behind the leader, up to the max. */
+  /** Comeback: extra HQ supply per second for every 100 Morale behind the leader, up to the max. */
   incomeComebackPer100?: number;
   incomeComebackMax?: number;
 }

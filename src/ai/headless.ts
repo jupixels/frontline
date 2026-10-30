@@ -13,7 +13,7 @@ export interface HeadlessResult {
   winner: TeamId | null;
   /** Game seconds played. */
   seconds: number;
-  tickets: Record<number, number>;
+  morale: Record<number, number>;
   /** Units produced and lost per player. */
   produced: Record<number, number>;
   lost: Record<number, number>;
@@ -80,7 +80,7 @@ export function runHeadless(setup: MatchSetup, content: SimContent, opts: Headle
     }
     if (opts.everySecond && sim.tick % SIM_HZ === 0) opts.everySecond(sim, sim.tick / SIM_HZ);
   }
-  const tickets: Record<number, number> = {};
-  for (const t of sim.world.teams.values()) tickets[t.id] = Math.round(t.tickets);
-  return { winner: sim.winner, seconds: sim.gameTick / SIM_HZ, tickets, produced, lost, types, sim };
+  const morale: Record<number, number> = {};
+  for (const t of sim.world.teams.values()) morale[t.id] = Math.round(t.morale);
+  return { winner: sim.winner, seconds: sim.gameTick / SIM_HZ, morale, produced, lost, types, sim };
 }

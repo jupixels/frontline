@@ -21,7 +21,7 @@ it.skipIf(!process.env.SIMRUN)('headless match', () => {
   const r = runHeadless(setup, { units: units as Record<string, UnitDef>, map }, { maxSeconds: Number(process.env.SECS ?? 1800), everySecond: (sim, s) => {
     if (s % 120 === 0) {
       const w = sim.world;
-      const line = [...w.players.values()].map((p) => `P${p.id} sup=${Math.round(p.supply)} cp=${p.cp.toFixed(0)}/${p.cpCap} tier=${p.tier} pts=${p.pointsHeld} t=${Math.round(p.tickets)}`).join(' | ');
+      const line = [...w.players.values()].map((p) => `P${p.id} sup=${Math.round(p.supply)} cp=${p.cp.toFixed(0)}/${p.cpCap} tier=${p.tier} pts=${p.pointsHeld} t=${Math.round(p.morale)}`).join(' | ');
       console.log(`${Math.floor(s / 60)}m ${line}`);
       if (process.env.VERBOSE) for (const p of w.players.values()) {
         const st: Record<string, number> = {};
@@ -30,6 +30,6 @@ it.skipIf(!process.env.SIMRUN)('headless match', () => {
       }
     }
   } });
-  console.log(`winner=${r.winner} secs=${Math.round(r.seconds)} tickets=${JSON.stringify(r.tickets)} produced=${JSON.stringify(r.produced)} lost=${JSON.stringify(r.lost)} wall=${Math.round(performance.now() - t0)}ms`);
+  console.log(`winner=${r.winner} secs=${Math.round(r.seconds)} morale=${JSON.stringify(r.morale)} produced=${JSON.stringify(r.produced)} lost=${JSON.stringify(r.lost)} wall=${Math.round(performance.now() - t0)}ms`);
   console.log(JSON.stringify(r.types));
 }, 600000);

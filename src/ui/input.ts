@@ -59,7 +59,7 @@ export interface InputOptions {
  *
  * Left click/drag selects own units (Shift adds/toggles, Ctrl+click or double-click selects all
  * visible units of that type). Right click moves or attacks; right-drag gives the move a facing.
- * A = attack-move on the next left click, S = stop, H = hold, Ctrl+1..9 set a control group,
+ * Attack-move (Q by default) arms a click, Stop (X), Hold (H); WASD/arrows pan; Ctrl+1..9 set a control group,
  * 1..9 recall it. Targeted orders (attack-move, rally, structure placement) are modes; Esc or
  * right click cancels them.
  */

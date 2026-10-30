@@ -110,8 +110,8 @@ export class Simulation implements SimView, SimViewExt {
     const w = this.world;
     h.num(w.tick).num(w.steps).num(w.paused ? 1 : 0).num(w.pauseVotes.length);
     for (const n of w.rng.state()) h.num(n);
-    for (const t of w.teams.values()) h.num(t.id).num(t.tickets).num(t.defeated ? 1 : 0);
-    for (const p of w.players.values()) h.num(p.id).num(p.supply).num(p.power).num(p.tickets).num(p.defeated ? 1 : 0).num(p.cp).num(p.tier).num(p.superCharge).num(p.pausesLeft);
+    for (const t of w.teams.values()) h.num(t.id).num(t.morale).num(t.defeated ? 1 : 0).num(t.moraleLow ? 1 : 0);
+    for (const p of w.players.values()) h.num(p.id).num(p.supply).num(p.power).num(p.morale).num(p.defeated ? 1 : 0).num(p.cp).num(p.tier).num(p.superCharge).num(p.pausesLeft);
     for (const e of w.entities.values()) {
       h.num(e.id).str(e.type).num(e.owner).num(e.pos.x).num(e.pos.z).num(e.heading).num(e.hp);
       h.num(e.target).num(e.buildProgress).num(e.captureProgress).num(e.capturer);
@@ -158,7 +158,7 @@ export class Simulation implements SimView, SimViewExt {
       cpCap: p.cpCap,
       tier: p.tier,
       pointsHeld: p.pointsHeld,
-      tickets: p.tickets,
+      morale: p.morale,
     };
   }
 

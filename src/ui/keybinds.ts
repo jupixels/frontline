@@ -13,6 +13,10 @@ export type ActionId =
   | 'advanceLine'
   | 'disbandLine'
   | 'rotateStructure'
+  | 'panUp'
+  | 'panDown'
+  | 'panLeft'
+  | 'panRight'
   | 'centerSelection'
   | 'selectArmy'
   | 'jumpAlert'
@@ -34,25 +38,29 @@ export interface ActionInfo {
 }
 
 export const ACTIONS: readonly ActionInfo[] = [
-  { id: 'attackMove', label: 'Attack-move', group: 'Orders', key: 'KeyA' },
-  { id: 'stop', label: 'Stop', group: 'Orders', key: 'KeyS' },
+  { id: 'attackMove', label: 'Attack-move', group: 'Orders', key: 'KeyQ' },
+  { id: 'stop', label: 'Stop', group: 'Orders', key: 'KeyX' },
   { id: 'hold', label: 'Hold position', group: 'Orders', key: 'KeyH' },
   { id: 'patrol', label: 'Patrol', group: 'Orders', key: 'KeyP' },
   { id: 'build', label: 'Build menu', group: 'Orders', key: 'KeyB' },
   { id: 'enter', label: 'Board / garrison', group: 'Orders', key: 'KeyG' },
-  { id: 'unload', label: 'Unload', group: 'Orders', key: 'KeyD' },
+  { id: 'unload', label: 'Unload', group: 'Orders', key: 'KeyU' },
   { id: 'drawLine', label: 'Draw frontline (hold + drag)', group: 'Orders', key: 'KeyF' },
   { id: 'advanceLine', label: 'Advance frontline', group: 'Orders', key: 'KeyV' },
-  { id: 'disbandLine', label: 'Disband frontline', group: 'Orders', key: 'KeyX' },
+  { id: 'disbandLine', label: 'Disband frontline', group: 'Orders', key: 'KeyN' },
   { id: 'rotateStructure', label: 'Rotate structure', group: 'Orders', key: 'KeyR' },
-  { id: 'slot1', label: 'Slot 1', group: 'Command card', key: 'KeyQ' },
-  { id: 'slot2', label: 'Slot 2', group: 'Command card', key: 'KeyW' },
-  { id: 'slot3', label: 'Slot 3', group: 'Command card', key: 'KeyE' },
-  { id: 'slot4', label: 'Slot 4', group: 'Command card', key: 'KeyR' },
-  { id: 'slot5', label: 'Slot 5', group: 'Command card', key: 'KeyT' },
-  { id: 'slot6', label: 'Slot 6', group: 'Command card', key: 'KeyY' },
-  { id: 'slot7', label: 'Slot 7', group: 'Command card', key: 'KeyU' },
-  { id: 'slot8', label: 'Slot 8', group: 'Command card', key: 'KeyI' },
+  { id: 'slot1', label: 'Slot 1', group: 'Command card', key: 'KeyE' },
+  { id: 'slot2', label: 'Slot 2', group: 'Command card', key: 'KeyR' },
+  { id: 'slot3', label: 'Slot 3', group: 'Command card', key: 'KeyT' },
+  { id: 'slot4', label: 'Slot 4', group: 'Command card', key: 'KeyY' },
+  { id: 'slot5', label: 'Slot 5', group: 'Command card', key: 'KeyJ' },
+  { id: 'slot6', label: 'Slot 6', group: 'Command card', key: 'KeyK' },
+  { id: 'slot7', label: 'Slot 7', group: 'Command card', key: 'KeyL' },
+  { id: 'slot8', label: 'Slot 8', group: 'Command card', key: 'KeyO' },
+  { id: 'panUp', label: 'Pan camera up', group: 'Camera & selection', key: 'KeyW' },
+  { id: 'panDown', label: 'Pan camera down', group: 'Camera & selection', key: 'KeyS' },
+  { id: 'panLeft', label: 'Pan camera left', group: 'Camera & selection', key: 'KeyA' },
+  { id: 'panRight', label: 'Pan camera right', group: 'Camera & selection', key: 'KeyD' },
   { id: 'centerSelection', label: 'Center on selection', group: 'Camera & selection', key: 'KeyC' },
   { id: 'selectArmy', label: 'Select all army', group: 'Camera & selection', key: 'F2' },
   { id: 'jumpAlert', label: 'Jump to last alert', group: 'Camera & selection', key: 'Space' },
@@ -69,10 +77,13 @@ export function defaultKeybinds(): Keybinds {
   return out;
 }
 
+/** Bump when the default layout changes in a way saved binds can't merge with (settings reset them). */
+export const KEYBINDS_VERSION = 2;
+
 /**
- * Actions that are live at the same time, so they must not share a key. Command card slots only
- * show up in sub-menus (build list, factory card) where unit orders are hidden, and
- * rotateStructure only works in placement mode, so those may overlap with orders.
+ * Actions that are live at the same time, so they must not share a key. Unit cards show orders and
+ * ability slots together, so those conflict; rotateStructure only works in placement mode. Camera
+ * panning (WASD) is global, so nothing else may use those keys.
  */
 function contextOf(id: ActionId): 'orders' | 'slots' | 'place' | 'global' {
   if (id.startsWith('slot')) return 'slots';
@@ -81,11 +92,12 @@ function contextOf(id: ActionId): 'orders' | 'slots' | 'place' | 'global' {
   return 'global';
 }
 
-function conflicts(a: ActionId, b: ActionId): boolean {
+export function conflicts(a: ActionId, b: ActionId): boolean {
   if (a === b) return false;
   const ca = contextOf(a);
   const cb = contextOf(b);
   if (ca === 'global' || cb === 'global') return true;
+  if ((ca === 'orders' && cb === 'slots') || (ca === 'slots' && cb === 'orders')) return true;
   return ca === cb;
 }
 

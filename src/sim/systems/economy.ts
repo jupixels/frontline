@@ -215,12 +215,12 @@ export function economySystem(world: World): void {
       } else income.set(p.id, (income.get(p.id) ?? 0) + def.income);
     }
   }
-  // Comeback: teams behind on tickets may field a bigger army (they still have to take points to stop the bleed).
+  // Comeback: teams behind on morale may field a bigger army (they still have to take points to stop the bleed).
   let leader = -Infinity;
-  for (const t of world.teams.values()) if (!t.defeated && t.tickets > leader) leader = t.tickets;
+  for (const t of world.teams.values()) if (!t.defeated && t.morale > leader) leader = t.morale;
   for (const p of world.players.values()) {
     p.power = p.powerProduced - p.powerUsed;
-    const behind = Math.max(0, leader - (world.teams.get(p.team)?.tickets ?? leader));
+    const behind = Math.max(0, leader - (world.teams.get(p.team)?.morale ?? leader));
     const comeback = rules.cpComebackPer ? Math.min(rules.cpComebackMax ?? 0, Math.floor(behind / rules.cpComebackPer)) : 0;
     p.cpCap = Math.min(rules.cpMax, rules.baseCp + rules.cpPerPoint * p.pointsHeld) + comeback;
     let tier = 1;

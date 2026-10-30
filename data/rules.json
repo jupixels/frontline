@@ -1,6 +1,6 @@
 {
   "startingSupply": 800,
-  "startingTickets": 1000,
+  "startingMorale": 1000,
   "baseCp": 60,
   "cpPerPoint": 8,
   "cpMax": 200,
@@ -12,7 +12,7 @@
   "bleedPerPointDiff": 0.18,
   "lateBleedSeconds": 3000,
   "lateBleedMult": 1.5,
-  "unitLossTicketsPerCp": 0.5,
+  "unitLossMoralePerCp": 0.5,
   "suddenDeathSeconds": 5400,
   "suddenDeathBleed": 1,
   "suddenDeathHqDamageMult": 3,
@@ -41,5 +41,7 @@
   "incomeComebackPer100": 0.3,
   "incomeComebackMax": 1.5,
   "suddenDeathRamp": 0.005,
-  "sweepBleedMult": 1.5
+  "sweepBleedMult": 1.5,
+  "moraleLowFraction": 0.25,
+  "moraleLowRecovery": 0.6
 }

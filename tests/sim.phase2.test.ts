@@ -198,6 +198,27 @@ describe('phase 2 mechanics', () => {
     expect(sim.superweapon(0)?.ready).toBe(false);
   });
 
+  it('low Morale is announced and makes pinned troops recover more slowly', () => {
+    const recovery = (lowMorale: boolean) => {
+      const sim = flat();
+      const w = sim.world;
+      if (lowMorale) w.teams.get(0)!.morale = 100;
+      const ev = run(sim, 2);
+      if (lowMorale) expect(ev).toContainEqual({ type: 'morale', team: 0, low: true });
+      const u = w.spawnUnit('rifleman', 0, { x: 0, z: 0 }, 0);
+      u.suppression = 1;
+      u.pinned = true;
+      u.suppressedAt = w.tick;
+      let t = 0;
+      while (u.pinned && t < 60 * SIM_HZ) {
+        sim.step([]);
+        t++;
+      }
+      return t;
+    };
+    expect(recovery(true)).toBeGreaterThan(recovery(false) * 1.3);
+  });
+
   it('pause vote: half the humans pause, game time stops, anyone resumes', () => {
     const sim = flat();
     const j = sim.world.spawnUnit('jeep', 0, { x: 0, z: 0 }, 0);

@@ -1,4 +1,4 @@
-import { ACTIONS, defaultKeybinds, rebind, type ActionId, type Keybinds } from './keybinds';
+import { ACTIONS, conflicts, defaultKeybinds, KEYBINDS_VERSION, rebind, type ActionId, type Keybinds } from './keybinds';
 
 export type QualityPreset = 'low' | 'medium' | 'high' | 'ultra';
 
@@ -20,6 +20,8 @@ export interface Settings {
   /** 0.85..1.25, scales the HUD. */
   uiScale: number;
   keybinds: Keybinds;
+  /** Layout version the keybinds were saved with (KEYBINDS_VERSION). */
+  keybindsVersion: number;
 }
 
 export const QUALITY_PRESETS: { id: QualityPreset; label: string; detail: string }[] = [
@@ -40,6 +42,7 @@ export function defaultSettings(): Settings {
     showFps: false,
     uiScale: 1,
     keybinds: defaultKeybinds(),
+    keybindsVersion: KEYBINDS_VERSION,
   };
 }
 
@@ -62,10 +65,17 @@ export function sanitizeSettings(raw: unknown): Settings {
   const r = raw as Partial<Settings>;
   const vol = (r.volume ?? {}) as Partial<VolumeSettings>;
   const keys = defaultKeybinds();
-  if (r.keybinds && typeof r.keybinds === 'object') {
+  // Binds saved with an older layout start over from the new defaults (WASD became camera panning).
+  if (r.keybinds && typeof r.keybinds === 'object' && r.keybindsVersion === KEYBINDS_VERSION) {
     for (const a of ACTIONS) {
       const v = (r.keybinds as Record<string, unknown>)[a.id];
       if (typeof v === 'string' && v) keys[a.id] = v;
+    }
+    // A customised bind that collides with another live action goes back to its default.
+    const d = defaultKeybinds();
+    for (const a of ACTIONS) {
+      if (keys[a.id] === d[a.id]) continue;
+      if (ACTIONS.some((o) => o.id !== a.id && keys[o.id] === keys[a.id] && conflicts(a.id, o.id))) keys[a.id] = d[a.id];
     }
   }
   return {
@@ -81,6 +91,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     showFps: typeof r.showFps === 'boolean' ? r.showFps : d.showFps,
     uiScale: clamp(r.uiScale, 0.85, 1.25, d.uiScale),
     keybinds: keys,
+    keybindsVersion: KEYBINDS_VERSION,
   };
 }
 

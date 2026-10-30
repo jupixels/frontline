@@ -273,7 +273,7 @@ function fire(world: World, e: Entity, weapon: string, def: WeaponDef, t: Entity
     e.ambush = false;
     world.proposed.push({ type: 'revealed', id: e.id });
   }
-  // Morale: low readiness costs accuracy; veterans shoot better, pinned infantry much worse.
+  // Readiness: low readiness costs accuracy; veterans shoot better, pinned infantry much worse.
   const accuracy = Math.min(0.98, def.accuracy * (0.6 + 0.4 * e.readiness) * rankAccuracy(e) * (e.pinned ? 0.5 : 1));
   if (def.delivery === 'hitscan') {
     world.emit({ type: 'fired', id: e.id, weapon, target: t.id, at });
@@ -395,7 +395,7 @@ export function applyDamage(world: World, t: Entity, base: number, def: WeaponDe
   }
 }
 
-/** Removes dead entities: died + removed events, ticket cost for lost units. */
+/** Removes dead entities: died + removed events, morale cost for lost units. */
 export function deathSystem(world: World): void {
   // Containers first: their cargo bails out (buildings, IFVs) or goes down with them (helis, ships).
   for (const e of world.entities.values()) if (e.dead && e.cargo.length) ejectAll(world, e, true);
@@ -407,7 +407,7 @@ export function deathSystem(world: World): void {
 
     if (e.kind === 'unit' && !world.players.get(e.owner)?.defeated) {
       const team = world.teams.get(e.team);
-      if (team) team.tickets -= e.cp * world.content.rules.unitLossTicketsPerCp;
+      if (team) team.morale -= e.cp * world.content.rules.unitLossMoralePerCp;
     }
     world.remove(e.id);
   }

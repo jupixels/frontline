@@ -228,7 +228,7 @@ export interface Player extends PlayerState {
   supply: number;
   /** Net power (produced - used). Shared PlayerState.power. */
   power: number;
-  tickets: number;
+  morale: number;
   defeated: boolean;
   team: TeamId;
   powerProduced: number;
@@ -250,7 +250,9 @@ export interface Player extends PlayerState {
 
 export interface Team {
   id: TeamId;
-  tickets: number;
+  /** Morale below rules.moraleLowFraction: pinned troops recover more slowly. */
+  moraleLow: boolean;
+  morale: number;
   defeated: boolean;
 }
 
@@ -308,7 +310,7 @@ export class World {
         team: slot.team,
         supply: r.startingSupply,
         power: 0,
-        tickets: r.startingTickets,
+        morale: r.startingMorale,
         defeated: false,
         powerProduced: 0,
         powerUsed: 0,
@@ -323,7 +325,7 @@ export class World {
         superReadyAnnounced: false,
         pausesLeft: r.pausesPerPlayer ?? 3,
       });
-      if (!this.teams.has(slot.team)) this.teams.set(slot.team, { id: slot.team, tickets: r.startingTickets, defeated: false });
+      if (!this.teams.has(slot.team)) this.teams.set(slot.team, { id: slot.team, morale: r.startingMorale, defeated: false, moraleLow: false });
     }
     for (const slot of setup.players as SimPlayerSlot[]) {
       const others = (slot.commandsFor ?? []).filter((o) => o !== slot.id && setup.players.some((p) => p.id === o));

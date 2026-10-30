@@ -67,7 +67,7 @@ export interface PlayerState {
   readonly id: PlayerId;
   readonly supply: number;
   readonly power: number;
-  readonly tickets: number;
+  readonly morale: number;
   readonly defeated: boolean;
 }
 
@@ -111,8 +111,8 @@ export interface EconomyView {
   readonly cpCap: number;
   readonly tier: number;
   readonly pointsHeld: number;
-  /** Team tickets (members of a team share one pool). */
-  readonly tickets: number;
+  /** Team morale (members of a team share one pool). */
+  readonly morale: number;
 }
 
 /** Richer reads for HUD build menus, queues, capture bars, fog and AI. Implemented by Simulation. */

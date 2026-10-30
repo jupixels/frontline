@@ -19,7 +19,7 @@ export interface MatchResult {
   winnerTeam: TeamId | null;
   durationSec: number;
   stats: PlayerStats[];
-  /** Short line, e.g. "Enemy HQ destroyed", "Tickets depleted", "Surrendered". */
+  /** Short line, e.g. "Enemy HQ destroyed", "Morale broken", "Surrendered". */
   reason?: string;
 }
 

@@ -80,7 +80,7 @@ function stepPoint(world: World, pt: Entity, team: TeamId, perPlayer: number[], 
   }
 }
 
-/** Ticket bleed, sudden death, defeat and victory. */
+/** Morale drain, sudden death, defeat and victory. */
 export function victorySystem(world: World): void {
   if (world.over) return;
   const rules = world.content.rules;
@@ -108,7 +108,17 @@ export function victorySystem(world: World): void {
     for (const t of world.teams.values()) {
       if (t.defeated) continue;
       const bleed = rules.bleedPerPointDiff * (lead - (held.get(t.id) ?? 0)) * late * sweep + sd;
-      t.tickets -= bleed / SIM_HZ;
+      t.morale -= bleed / SIM_HZ;
+    }
+  }
+  // Shaken sides: announced when crossing the threshold (both ways), so it's readable.
+  const lowAt = rules.startingMorale * (rules.moraleLowFraction ?? 0.25);
+  for (const t of world.teams.values()) {
+    if (t.defeated || !frontline) continue;
+    const low = t.morale < lowAt;
+    if (low !== t.moraleLow) {
+      t.moraleLow = low;
+      world.emit({ type: 'morale', team: t.id, low });
     }
   }
 
@@ -126,14 +136,14 @@ export function victorySystem(world: World): void {
   for (const p of world.players.values()) {
     const team = world.teams.get(p.team)!;
     if (p.defeated) {
-      p.tickets = team.tickets;
+      p.morale = team.morale;
       continue;
     }
     let lost = !hasAnything.has(p.id);
-    if (frontline) lost ||= team.tickets <= 0 || (p.hadHq && !hasHq.has(p.id));
+    if (frontline) lost ||= team.morale <= 0 || (p.hadHq && !hasHq.has(p.id));
     else lost ||= !hasProduction.has(p.id);
     if (lost) defeat(world, p.id);
-    p.tickets = Math.max(0, team.tickets);
+    p.morale = Math.max(0, team.morale);
   }
 
   const alive = new Set<TeamId>();

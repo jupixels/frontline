@@ -69,13 +69,13 @@ export interface EconomyView {
   /** Single power number from PlayerState (net) when the breakdown is missing. */
   netPower: number;
   commandPoints: { used: number; cap: number };
-  tickets: number;
+  morale: number;
 }
 
-export interface TeamTickets {
+export interface TeamMorale {
   team: TeamId;
-  tickets: number;
-  /** Starting tickets, for the bar. */
+  morale: number;
+  /** Starting morale, for the bar. */
   max: number;
   color: string;
   players: PlayerSlot[];
@@ -95,8 +95,8 @@ export interface CapturePoint {
 type Loose = Record<string, unknown>;
 const num = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
 
-/** Starting tickets per side (GAME_PLAN §4). TODO(sim): read from the match rules. */
-export const START_TICKETS = 1000;
+/** Starting morale per side (GAME_PLAN §4). TODO(sim): read from the match rules. */
+export const START_MORALE = 1000;
 /** TODO(sim): command point cap comes from held points. */
 const FALLBACK_CP_CAP = 100;
 /** TODO(sim): per-unit CP cost should live in data/units.json. */
@@ -161,7 +161,7 @@ export class SimAdapter {
         power: { produced: x.powerProduced, used: x.powerUsed },
         netPower: x.power,
         commandPoints: { used: x.cp, cap: x.cpCap },
-        tickets: x.tickets,
+        morale: x.morale,
       };
     }
     const p = this.sim.player(player) as (PlayerState & Loose) | undefined;
@@ -175,26 +175,26 @@ export class SimAdapter {
       power: produced !== undefined && consumed !== undefined ? { produced, used: consumed } : null,
       netPower: p?.power ?? 0,
       commandPoints: { used: num(p?.commandPoints) ?? used, cap: num(p?.commandPointCap) ?? FALLBACK_CP_CAP },
-      tickets: p?.tickets ?? 0,
+      morale: p?.morale ?? 0,
     };
   }
 
   /**
-   * Tickets per team. PlayerState carries tickets per player; when the sim keeps one pool per
+   * Morale per team. PlayerState carries morale per player; when the sim keeps one pool per
    * team every member mirrors it, so the max is the team's value either way.
    */
-  teamTickets(): TeamTickets[] {
-    const teams = new Map<TeamId, TeamTickets>();
+  teamMorale(): TeamMorale[] {
+    const teams = new Map<TeamId, TeamMorale>();
     for (const slot of this.setup.players) {
       const ps = this.sim.player(slot.id);
       let t = teams.get(slot.team);
       if (!t) {
-        t = { team: slot.team, tickets: 0, max: START_TICKETS, color: slot.color, players: [], defeated: true };
+        t = { team: slot.team, morale: 0, max: START_MORALE, color: slot.color, players: [], defeated: true };
         teams.set(slot.team, t);
       }
       t.players.push(slot);
-      t.tickets = Math.max(t.tickets, ps?.tickets ?? 0);
-      t.max = Math.max(t.max, ps?.tickets ?? 0);
+      t.morale = Math.max(t.morale, ps?.morale ?? 0);
+      t.max = Math.max(t.max, ps?.morale ?? 0);
       t.defeated = t.defeated && (ps?.defeated ?? false);
     }
     return [...teams.values()].sort((a, b) => a.team - b.team);

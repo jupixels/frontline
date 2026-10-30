@@ -49,6 +49,8 @@ export type SimEvent =
   | { type: 'superweaponReady'; player: PlayerId }
   /** Frontline created, changed (advance / reinforce) or removed. */
   | { type: 'line'; line: number; owner: PlayerId; change: 'formed' | 'advanced' | 'reinforced' | 'disbanded' }
+  /** A team's Morale fell below the breaking threshold (`low`) or recovered above it. */
+  | { type: 'morale'; team: TeamId; low: boolean }
   | { type: 'pauseVote'; player: PlayerId; paused: boolean; votes: number; needed: number }
   | { type: 'paused'; paused: boolean; by: PlayerId };
 

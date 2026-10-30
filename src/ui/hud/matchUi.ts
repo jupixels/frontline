@@ -507,6 +507,12 @@ export class MatchUi {
           this.minimap.mark(ev.at, ev.radius, arriveMs);
           break;
         }
+        case 'morale': {
+          const mine = ev.team === a.teamOf(me);
+          if (ev.low) this.alert({ kind: mine ? 'lost' : 'capture', text: mine ? 'Our Morale is breaking: pinned troops recover slowly. Retake points!' : 'Enemy Morale is breaking' });
+          else this.alert({ kind: 'info', text: mine ? 'Our Morale is holding again' : 'Enemy Morale has steadied' });
+          break;
+        }
         case 'superweaponReady':
           if (ev.player === me) this.alert({ kind: 'ready', text: 'Cruise missile ready (Strategic Command)' });
           break;
@@ -561,13 +567,13 @@ export class MatchUi {
     if (team === null || this.ctx.setup.victory !== 'frontline') return this.ctx.setup.victory === 'annihilation' ? 'Enemy production destroyed' : undefined;
     // Explain it from our side: why we lost, or how the last enemy fell.
     const myTeam = this.adapter.teamOf(this.ctx.localPlayer);
-    const tickets = this.adapter.teamTickets();
+    const morale = this.adapter.teamMorale();
     if (team !== myTeam) {
-      const mine = tickets.find((t) => t.team === myTeam);
-      return mine && mine.tickets <= 0 ? 'Tickets depleted' : 'Our HQ was destroyed';
+      const mine = morale.find((t) => t.team === myTeam);
+      return mine && mine.morale <= 0 ? 'Morale broken' : 'Our HQ was destroyed';
     }
-    const losers = tickets.filter((t) => t.team !== team);
-    return losers.every((t) => t.tickets <= 0) ? 'Tickets depleted' : 'Enemy HQ destroyed';
+    const losers = morale.filter((t) => t.team !== team);
+    return losers.every((t) => t.morale <= 0) ? 'Morale broken' : 'Enemy HQ destroyed';
   }
 
   /** End the match from outside (e.g. everyone else left). */

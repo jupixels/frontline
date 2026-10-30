@@ -74,7 +74,9 @@ export function veterancySystem(world: World): void {
   for (const e of world.entities.values()) {
     if (e.kind !== 'unit' || e.dead) continue;
     if (e.suppression > 0 && world.tick - e.suppressedAt > SUPPRESS_HOLD_TICKS) {
-      e.suppression = Math.max(0, e.suppression - decay);
+      // A shaken side (low Morale) takes longer to shake off suppression.
+      const shaken = world.teams.get(e.team)?.moraleLow ? (world.content.rules.moraleLowRecovery ?? 0.6) : 1;
+      e.suppression = Math.max(0, e.suppression - decay * shaken);
       if (e.pinned && e.suppression < SUPPRESS_RECOVER) {
         e.pinned = false;
         world.emit({ type: 'suppressed', id: e.id, pinned: false });

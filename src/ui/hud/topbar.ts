@@ -3,19 +3,19 @@ import { fmtClock, fmtInt, h, setChildren } from '../dom';
 import { ICONS } from '../glyphs';
 import type { SimAdapter } from '../simAdapter';
 
-/** Resource readouts (left), tickets per team + clock (center), net/fps + menu (right). */
+/** Resource readouts (left), morale per team + clock (center), net/fps + menu (right). */
 export class TopBar {
   readonly el: HTMLElement;
   private readonly supply: HTMLElement;
   private readonly supplyRate: HTMLElement;
   private readonly power: HTMLElement;
   private readonly cp: HTMLElement;
-  private readonly tickets: HTMLElement;
+  private readonly morale: HTMLElement;
   private readonly clock: HTMLElement;
   private readonly net: HTMLElement;
   private readonly powerRes: HTMLElement;
   private readonly cpRes: HTMLElement;
-  private ticketKey = '';
+  private moraleKey = '';
   private samples: { t: number; v: number }[] = [];
   private fps = 60;
 
@@ -30,7 +30,7 @@ export class TopBar {
     this.supplyRate = h('span', { class: 'res-rate' }, '');
     this.power = h('span', null, '0');
     this.cp = h('span', null, '0');
-    this.tickets = h('div', { class: 'tickets' });
+    this.morale = h('div', { class: 'morale' });
     this.clock = h('span', { class: 'mono clock-value' }, '00:00');
     this.net = h('span', { class: 'mono dim net' });
     this.powerRes = res(ICONS.power, 'Power', this.power, undefined, 'power');
@@ -40,7 +40,7 @@ export class TopBar {
       'div',
       { class: 'hud-topbar' },
       h('div', { class: 'hud-panel res-panel' }, res(ICONS.supply, 'Supply', this.supply, this.supplyRate, 'supply'), this.powerRes, this.cpRes),
-      h('div', { class: 'hud-panel center-panel' }, this.tickets, h('div', { class: 'clock' }, h('span', { class: 'clock-icon', html: ICONS.clock }), this.clock)),
+      h('div', { class: 'hud-panel center-panel' }, this.morale, h('div', { class: 'clock' }, h('span', { class: 'clock-icon', html: ICONS.clock }), this.clock)),
       h('div', { class: 'hud-panel right-panel' }, this.net, h('button', { class: 'icon-btn', type: 'button', title: 'Game menu (F10)', html: ICONS.menu, onclick: onMenu })),
     );
   }
@@ -73,25 +73,25 @@ export class TopBar {
     this.cp.textContent = `${fmtInt(eco.commandPoints.used)}/${fmtInt(eco.commandPoints.cap)}`;
     this.cpRes.classList.toggle('warn', eco.commandPoints.used >= eco.commandPoints.cap);
 
-    const teams = this.adapter.teamTickets();
+    const teams = this.adapter.teamMorale();
     const myTeam = this.adapter.teamOf(this.local);
-    const key = JSON.stringify(teams.map((x) => [x.team, Math.round(x.tickets), x.defeated]));
-    if (key !== this.ticketKey) {
-      this.ticketKey = key;
+    const key = JSON.stringify(teams.map((x) => [x.team, Math.round(x.morale), x.defeated]));
+    if (key !== this.moraleKey) {
+      this.moraleKey = key;
       setChildren(
-        this.tickets,
+        this.morale,
         teams.map((tm) => {
-          const frac = tm.max > 0 ? Math.max(0, Math.min(1, tm.tickets / tm.max)) : 0;
+          const frac = tm.max > 0 ? Math.max(0, Math.min(1, tm.morale / tm.max)) : 0;
           const chip = h(
             'div',
             {
-              class: `ticket${tm.team === myTeam ? ' mine' : ''}${tm.defeated ? ' defeated' : ''}${frac < 0.2 ? ' low' : ''}`,
-              title: tm.players.map((p) => p.name).join(', '),
+              class: `morale${tm.team === myTeam ? ' mine' : ''}${tm.defeated ? ' defeated' : ''}${frac < 0.2 ? ' low' : ''}`,
+              title: `Team ${tm.team + 1} Morale (${tm.players.map((p) => p.name).join(', ')}). At zero the side breaks.`,
               style: { '--team-color': tm.color },
             },
-            h('span', { class: 'ticket-label mono' }, `T${tm.team + 1}`),
-            h('span', { class: 'ticket-value mono' }, fmtInt(tm.tickets)),
-            h('span', { class: 'ticket-bar' }, h('span', { class: 'ticket-fill', style: { width: `${frac * 100}%` } })),
+            h('span', { class: 'morale-label mono' }, `T${tm.team + 1} MORALE`),
+            h('span', { class: 'morale-value mono' }, fmtInt(tm.morale)),
+            h('span', { class: 'morale-bar' }, h('span', { class: 'morale-fill', style: { width: `${frac * 100}%` } })),
           );
           return chip;
         }),

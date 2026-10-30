@@ -348,6 +348,10 @@ export class AudioManager {
         case 'line':
           if (ev.owner === this.localPlayer) playFlat('radio_morse', { gain: 0.5 });
           break;
+        case 'morale':
+          // Morale breaking is a big moment either way: a radio burst, plus the siren if it's us.
+          if (ev.low) this.alert('captured', ev.team === this.team ? ['siren', 'radio_static'] : ['radio_morse']);
+          break;
         case 'paused':
           playFlat(ev.paused ? 'ui_open' : 'ui_close');
           break;

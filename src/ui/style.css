@@ -409,16 +409,16 @@ button.swatch:disabled { cursor: default; }
 .res-rate { font-size: 11px; color: var(--accent); }
 .res.warn .res-value, .res.warn .res-icon svg { color: var(--danger); stroke: var(--danger); }
 .center-panel { gap: 6px; padding: 0 6px 0 8px; }
-.tickets { display: flex; gap: 6px; }
-.ticket { position: relative; display: grid; grid-template-columns: auto auto; align-items: center; gap: 0 8px; padding: 4px 10px 6px; min-width: 92px; border-left: 3px solid var(--team-color); background: rgba(255, 255, 255, 0.025); }
-.ticket.mine { background: rgba(157, 255, 122, 0.05); }
-.ticket-label { font-size: 10px; letter-spacing: 0.14em; color: var(--hud-dim); }
-.ticket-value { font-size: 16px; text-align: right; color: #eef3ea; }
-.ticket-bar { grid-column: 1 / -1; height: 3px; margin-top: 3px; background: rgba(255, 255, 255, 0.08); }
-.ticket-fill { display: block; height: 100%; background: var(--team-color); transition: width 0.5s; }
-.ticket.low .ticket-value { color: var(--danger); animation: pulse 1.2s infinite; }
-.ticket.defeated { opacity: 0.4; }
-.ticket.defeated .ticket-value { text-decoration: line-through; }
+.morale { display: flex; gap: 6px; }
+.morale { position: relative; display: grid; grid-template-columns: auto auto; align-items: center; gap: 0 8px; padding: 4px 10px 6px; min-width: 92px; border-left: 3px solid var(--team-color); background: rgba(255, 255, 255, 0.025); }
+.morale.mine { background: rgba(157, 255, 122, 0.05); }
+.morale-label { font-size: 10px; letter-spacing: 0.14em; color: var(--hud-dim); }
+.morale-value { font-size: 16px; text-align: right; color: #eef3ea; }
+.morale-bar { grid-column: 1 / -1; height: 3px; margin-top: 3px; background: rgba(255, 255, 255, 0.08); }
+.morale-fill { display: block; height: 100%; background: var(--team-color); transition: width 0.5s; }
+.morale.low .morale-value { color: var(--danger); animation: pulse 1.2s infinite; }
+.morale.defeated { opacity: 0.4; }
+.morale.defeated .morale-value { text-decoration: line-through; }
 .clock { display: flex; align-items: center; gap: 6px; padding: 0 10px 0 12px; border-left: 1px solid rgba(170, 190, 160, 0.1); height: 100%; }
 .clock-icon svg { width: 15px; height: 15px; fill: none; stroke: var(--hud-dim); stroke-width: 1.6; display: block; }
 .clock-value { font-size: 17px; letter-spacing: 0.06em; color: #eef3ea; }

@@ -60,6 +60,10 @@ export class Match {
     this.audio = new AudioManager(localPlayer, { team: localTeam, units: UNITS });
 
     const r = this.renderer;
+    r.cam.panKeys = () => {
+      const k = app.settings.get().keybinds;
+      return { up: k.panUp, down: k.panDown, left: k.panLeft, right: k.panRight };
+    };
     const spawn = map.spawns[Math.max(0, localPlayer) % map.spawns.length];
     r.cam.lookAt(spawn.x, spawn.z);
     this.refreshViews();

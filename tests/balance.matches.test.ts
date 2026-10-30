@@ -45,7 +45,7 @@ describe('match pacing', () => {
     const r = runHeadless(setup(map, ['easy', 'hard'], [0, 1], 4), { units: UNITS, map }, { maxSeconds: 1500 });
     const easy = r.sim.world.players.get(0)!;
     const hard = r.sim.world.players.get(1)!;
-    expect(r.winner === 1 || hard.tickets > easy.tickets).toBe(true);
+    expect(r.winner === 1 || hard.morale > easy.morale).toBe(true);
     // Easy fields a smaller army than Hard.
     expect(r.produced[1]).toBeGreaterThan(0);
   }, 180000);
@@ -56,21 +56,21 @@ describe.skipIf(!FULL)('full AI matches (FULL_BALANCE=1)', () => {
     for (const seed of [21, 22, 23]) {
       const map = MAPS.valley;
       const r = runHeadless(setup(map, ['normal', 'normal'], [0, 1], seed), { units: UNITS, map }, { maxSeconds: 6000 });
-      console.log(`stalemate seed ${seed}: winner ${r.winner} after ${Math.round(r.seconds / 60)} min, tickets ${JSON.stringify(r.tickets)}`);
+      console.log(`stalemate seed ${seed}: winner ${r.winner} after ${Math.round(r.seconds / 60)} min, morale ${JSON.stringify(r.morale)}`);
       expect(r.winner).not.toBeNull();
     }
   }, 1800000);
 
-  it('a side 30% down on tickets can still come back', () => {
+  it('a side 30% down on morale can still come back', () => {
     let comebacks = 0;
     const seeds = [31, 32, 33, 34, 35, 36];
     for (const seed of seeds) {
       const map = MAPS.valley;
-      // Player 0 starts 300 tickets behind.
+      // Player 0 starts 300 morale behind.
       const r = runHeadless(setup(map, ['normal', 'normal'], [0, 1], seed), { units: UNITS, map }, {
         maxSeconds: 6000,
         everySecond: (sim, s) => {
-          if (s === 1) sim.world.teams.get(0)!.tickets = rules.startingTickets * 0.7;
+          if (s === 1) sim.world.teams.get(0)!.morale = rules.startingMorale * 0.7;
         },
       });
       console.log(`comeback seed ${seed}: winner ${r.winner} after ${Math.round(r.seconds / 60)} min`);
@@ -86,7 +86,7 @@ describe.skipIf(!FULL)('full AI matches (FULL_BALANCE=1)', () => {
     expect(types.some((t) => ['patrol_boat', 'destroyer', 'submarine', 'cruiser'].includes(t))).toBe(true);
     expect(types.some((t) => t === 'transport_ship' || t === 'heli_transport')).toBe(true);
     const d = runHeadless(setup(MAPS.desert, ['easy', 'normal', 'hard', 'normal'], [0, 1, 2, 3], 42), { units: UNITS, map: MAPS.desert }, { maxSeconds: 2400 });
-    console.log('desert ffa', d.winner, JSON.stringify(d.tickets));
+    console.log('desert ffa', d.winner, JSON.stringify(d.morale));
     expect(Object.values(d.produced).every((n) => n > 10)).toBe(true);
   }, 1800000);
 });

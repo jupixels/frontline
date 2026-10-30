@@ -21,9 +21,9 @@ import type { Screen } from './screen';
 export const VICTORY_INFO: Record<VictoryMode, { label: string; detail: string }> = {
   frontline: {
     label: 'Frontline',
-    detail: 'Each side starts with 1000 tickets. Holding the majority of strategic points drains the enemy. Destroying the enemy HQ also wins.',
+    detail: 'Each side starts with 1000 Morale. Holding more strategic points than the enemy drains theirs, and every loss costs a little. A side whose Morale breaks loses. Destroying the enemy HQ also wins.',
   },
-  annihilation: { label: 'Annihilation', detail: 'Destroy every enemy production building. No tickets, no timer.' },
+  annihilation: { label: 'Annihilation', detail: 'Destroy every enemy production building. No Morale race, no timer.' },
 };
 
 const OCCUPANCY_OPTIONS: { value: string; label: string }[] = [
