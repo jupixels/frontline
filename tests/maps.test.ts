@@ -3,13 +3,15 @@ import units from '../data/units.json';
 import valley from '../data/maps/valley_pass.json';
 import coastal from '../data/maps/coastal_strait.json';
 import desert from '../data/maps/desert_oilfields.json';
+import inland from '../data/maps/inland_sea.json';
+import gulf from '../data/maps/iron_gulf.json';
 import type { MapDef, UnitDef } from '../src/shared/data';
 import { assignSpawns } from '../src/shared/maps';
 import { TerrainModel } from '../src/shared/terrain';
 import type { MatchSetup } from '../src/shared/types';
 import { Simulation } from '../src/sim/simulation';
 
-const MAPS = [valley, coastal, desert] as unknown as MapDef[];
+const MAPS = [valley, coastal, desert, inland, gulf] as unknown as MapDef[];
 
 function setup(map: MapDef, n: number, teams?: number[]): MatchSetup {
   return {
@@ -58,25 +60,57 @@ describe.each(MAPS.map((m) => [m.id, m] as const))('map %s', (_id, map) => {
     }
   });
 
-  it('is rotationally symmetric: each spawn has a twin with the same ground and point distances', () => {
+  it('is symmetric: each spawn has a twin with the same ground and point distances', () => {
     const t = new TerrainModel(map);
     const n = map.terrain?.symmetry ?? 1;
     expect(n).toBeGreaterThan(1);
-    const rot = (p: { x: number; z: number }) => (n === 2 ? { x: -p.x, z: -p.z } : { x: -p.z, z: p.x });
-    const profile = (s: { x: number; z: number }) => (map.points ?? []).map((p) => Math.round(Math.hypot(p.x - s.x, p.z - s.z))).sort((a, b) => a - b).join(',');
-    for (const s of map.spawns) {
-      const r = rot(s);
-      const twin = map.spawns.find((o) => Math.abs(o.x - r.x) < 1 && Math.abs(o.z - r.z) < 1);
-      expect(twin, `twin of ${s.x},${s.z}`).toBeTruthy();
-      expect(Math.abs(t.height(s.x, s.z) - t.height(twin!.x, twin!.z))).toBeLessThan(0.02);
-      expect(profile(twin!)).toBe(profile(s));
-      // Ground around the spawn matches too (sample a ring).
-      for (let a = 0; a < 6.28; a += 0.5) {
-        const p = { x: s.x + Math.cos(a) * 150, z: s.z + Math.sin(a) * 150 };
-        const q = rot(p);
-        expect(Math.abs(t.height(p.x, p.z) - t.height(q.x, q.z))).toBeLessThan(0.02);
+    type P = { x: number; z: number };
+    const rot = (p: P) => (n === 2 ? { x: -p.x, z: -p.z } : { x: -p.z, z: p.x });
+    // Eight-fold maps are also mirrored across x = z.
+    const twins: ((p: P) => P)[] = n === 8 ? [rot, (p) => ({ x: p.z, z: p.x })] : [rot];
+    const profile = (s: P) => (map.points ?? []).map((p) => Math.round(Math.hypot(p.x - s.x, p.z - s.z))).sort((a, b) => a - b).join(',');
+    for (const f of twins) {
+      for (const s of map.spawns) {
+        const r = f(s);
+        const twin = map.spawns.find((o) => Math.abs(o.x - r.x) < 1 && Math.abs(o.z - r.z) < 1);
+        expect(twin, `twin of ${s.x},${s.z}`).toBeTruthy();
+        expect(Math.abs(t.height(s.x, s.z) - t.height(twin!.x, twin!.z))).toBeLessThan(0.02);
+        expect(profile(twin!)).toBe(profile(s));
+        // Ground around the spawn matches too (sample a ring).
+        for (let a = 0; a < 6.28; a += 0.5) {
+          const p = { x: s.x + Math.cos(a) * 150, z: s.z + Math.sin(a) * 150 };
+          const q = f(p);
+          expect(Math.abs(t.height(p.x, p.z) - t.height(q.x, q.z))).toBeLessThan(0.02);
+        }
       }
     }
+  });
+
+  it('big naval maps give every base a naval yard spot, and fleets reach every base', () => {
+    if (!map.terrain?.water?.length || map.spawns.length < 6) return;
+    type P = { x: number; z: number };
+    const ring = (c: P, r: number, n: number) => Array.from({ length: n }, (_, a) => ({ x: c.x + Math.cos((a / n) * Math.PI * 2) * r, z: c.z + Math.sin((a / n) * Math.PI * 2) * r }));
+    const yards: P[] = [];
+    for (const p of sim.world.players.values()) {
+      const hq = [...sim.entities()].find((e) => e.type === 'hq' && e.owner === p.id)!;
+      let at: P | undefined;
+      for (let r = 30; r <= 140 && !at; r += 8) at = ring(hq.pos, r, 48).find((q) => sim.canPlace(p.id, 'naval_yard', q, 0));
+      expect(at, `naval yard for player ${p.id}`).toBeTruthy();
+      yards.push(at!);
+    }
+    // Ships launched at one yard reach the water by every other yard.
+    const water = (y: P) => {
+      for (let r = 10; r < 60; r += 4) {
+        const q = ring(y, r, 16).find((c) => sim.heightAt(c.x, c.z) < -2);
+        if (q) return q;
+      }
+      return undefined;
+    };
+    const w0 = water(yards[0]);
+    expect(w0).toBeTruthy();
+    for (const y of yards) expect(sim.reachable('naval', w0!, water(y)!)).toBe(true);
+    // Some point can only be taken from the sea (or the air).
+    expect((map.points ?? []).some((p) => !sim.reachable('ground', map.spawns[0], p))).toBe(true);
   });
 
   it('naval maps have water every naval yard can reach from both sides', () => {
@@ -97,5 +131,34 @@ describe('spawn assignment', () => {
     expect([duel.get(0), duel.get(1)]).toEqual([0, 1]);
     const ffa = assignSpawns(d, setup(d, 4).players);
     expect(new Set(ffa.values()).size).toBe(4);
+  });
+
+  it('Inland Sea: 4v4 is west against east, 8-player FFA uses every base, FFA4 every other one', () => {
+    const m = inland as unknown as MapDef;
+    const teams = [0, 1, 0, 1, 0, 1, 0, 1];
+    const fourV4 = assignSpawns(m, setup(m, 8, teams).players);
+    expect(new Set(fourV4.values()).size).toBe(8);
+    for (let id = 0; id < 8; id++) expect(Math.sign(m.spawns[fourV4.get(id)!].x)).toBe(teams[id] === 0 ? 1 : -1);
+    // A 2v2 starts teammates next to each other and opponents opposite.
+    const twoV2 = assignSpawns(m, setup(m, 4, [0, 1, 0, 1]).players);
+    const sp = (id: number) => m.spawns[twoV2.get(id)!];
+    expect(Math.hypot(sp(0).x - sp(2).x, sp(0).z - sp(2).z)).toBeLessThan(600);
+    expect(sp(1)).toEqual({ x: -sp(0).x, z: -sp(0).z });
+    const ffa8 = assignSpawns(m, setup(m, 8).players);
+    expect([...ffa8.values()].sort()).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    // FFA4: four bases a quarter turn apart.
+    const ffa4 = [...assignSpawns(m, setup(m, 4).players).values()].map((i) => m.spawns[i]);
+    for (const a of ffa4) for (const b of ffa4) if (a !== b) expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeGreaterThan(900);
+  });
+
+  it('Iron Gulf: 3v3 puts each team on one coast; 1v1 is middle against middle', () => {
+    const m = gulf as unknown as MapDef;
+    const teams = [0, 1, 0, 1, 0, 1];
+    const threeV3 = assignSpawns(m, setup(m, 6, teams).players);
+    expect(new Set(threeV3.values()).size).toBe(6);
+    for (let id = 0; id < 6; id++) expect(Math.sign(m.spawns[threeV3.get(id)!].z)).toBe(teams[id] === 0 ? -1 : 1);
+    const duel = assignSpawns(m, setup(m, 2).players);
+    expect([m.spawns[duel.get(0)!].x, m.spawns[duel.get(1)!].x]).toEqual([0, 0]);
+    expect(new Set(assignSpawns(m, setup(m, 6).players).values()).size).toBe(6);
   });
 });

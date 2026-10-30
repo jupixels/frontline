@@ -94,12 +94,15 @@ export interface TerrainDef {
   /** What surrounds the playable square: hills (default) or open sea. */
   edge?: 'hills' | 'sea';
   /**
-   * Rotational symmetry of the random relief: 2 (180 degrees, for two sides) or 4 (90 degrees, four
-   * corners). Features are placed symmetrically by the map; this makes the noise match, so every
-   * spawn gets identical ground.
+   * Symmetry of the random relief: 2 (180 degrees, for two sides), 4 (90 degrees, four corners) or 8
+   * (90 degrees plus the mirror across x = z, for eight spawns in mirrored pairs). Features are placed
+   * symmetrically by the map; this makes the noise match, so every spawn gets identical ground.
    */
-  symmetry?: 1 | 2 | 4;
+  symmetry?: 1 | 2 | 4 | 8;
 }
+
+/** Spread restored after averaging the eight samples of `symmetry: 8`. */
+const SYM8_GAIN = 2.5;
 
 // --- deterministic noise ---
 
@@ -299,13 +302,18 @@ export class TerrainModel {
     this.forests = t?.forests ?? [];
     this.bridges = t?.bridges ?? [];
     this.roads = t?.roads ?? [];
-    this.symN = t?.symmetry === 4 ? 4 : t?.symmetry === 2 ? 2 : 1;
-    this.symGain = this.symN === 4 ? 1.8 : this.symN === 2 ? 1.38 : 1;
+    this.symN = t?.symmetry === 8 ? 8 : t?.symmetry === 4 ? 4 : t?.symmetry === 2 ? 2 : 1;
+    this.symGain = this.symN === 8 ? SYM8_GAIN : this.symN === 4 ? 1.8 : this.symN === 2 ? 1.38 : 1;
   }
 
   /** Noise `f` (centered on 0.5) made rotationally symmetric, with its spread restored. */
   private sym(f: (x: number, z: number) => number, x: number, z: number): number {
     if (this.symN === 1) return f(x, z);
+    if (this.symN === 8) {
+      // Four rotations of the point and of its mirror image (x and z swapped).
+      const sum = f(x, z) + f(-z, x) + f(-x, -z) + f(z, -x) + f(z, x) + f(-x, z) + f(-z, -x) + f(x, -z);
+      return 0.5 + (sum / 8 - 0.5) * this.symGain;
+    }
     let sum = 0;
     let px = x;
     let pz = z;

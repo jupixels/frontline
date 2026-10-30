@@ -19,6 +19,8 @@ export interface HeadlessResult {
   lost: Record<number, number>;
   /** Every unit type that was produced, per player. */
   types: Record<number, Record<string, number>>;
+  /** Unit types lost, per player. */
+  lostTypes: Record<number, Record<string, number>>;
   sim: Simulation;
 }
 
@@ -45,13 +47,15 @@ export function runHeadless(setup: MatchSetup, content: SimContent, opts: Headle
   const produced: Record<number, number> = {};
   const lost: Record<number, number> = {};
   const types: Record<number, Record<string, number>> = {};
+  const lostTypes: Record<number, Record<string, number>> = {};
   for (const p of setup.players) {
     produced[p.id] = 0;
     lost[p.id] = 0;
     types[p.id] = {};
+    lostTypes[p.id] = {};
   }
-  const owners = new Map<number, { owner: PlayerId; unit: boolean }>();
-  for (const e of sim.entities()) owners.set(e.id, { owner: e.owner, unit: e.kind === 'unit' });
+  const owners = new Map<number, { owner: PlayerId; unit: boolean; type: string }>();
+  for (const e of sim.entities()) owners.set(e.id, { owner: e.owner, unit: e.kind === 'unit', type: e.type });
   while (sim.tick < maxTicks && sim.winner === null) {
     for (const ai of ais) ai.update();
     const now: PlayerCommand[] = [];
@@ -66,7 +70,7 @@ export function runHeadless(setup: MatchSetup, content: SimContent, opts: Headle
     for (const ev of events) {
       if (ev.type === 'spawned') {
         const e = sim.get(ev.id);
-        if (e) owners.set(e.id, { owner: e.owner, unit: e.kind === 'unit' && e.type !== 'supply_truck' });
+        if (e) owners.set(e.id, { owner: e.owner, unit: e.kind === 'unit' && e.type !== 'supply_truck', type: e.type });
       } else if (ev.type === 'produced') {
         const u = sim.get(ev.unit);
         if (u) {
@@ -75,12 +79,15 @@ export function runHeadless(setup: MatchSetup, content: SimContent, opts: Headle
         }
       } else if (ev.type === 'died') {
         const o = owners.get(ev.id);
-        if (o?.unit && o.owner >= 0) lost[o.owner] = (lost[o.owner] ?? 0) + 1;
+        if (o?.unit && o.owner >= 0) {
+          lost[o.owner] = (lost[o.owner] ?? 0) + 1;
+          lostTypes[o.owner][o.type] = (lostTypes[o.owner][o.type] ?? 0) + 1;
+        }
       }
     }
     if (opts.everySecond && sim.tick % SIM_HZ === 0) opts.everySecond(sim, sim.tick / SIM_HZ);
   }
   const morale: Record<number, number> = {};
   for (const t of sim.world.teams.values()) morale[t.id] = Math.round(t.morale);
-  return { winner: sim.winner, seconds: sim.gameTick / SIM_HZ, morale, produced, lost, types, sim };
+  return { winner: sim.winner, seconds: sim.gameTick / SIM_HZ, morale, produced, lost, types, lostTypes, sim };
 }

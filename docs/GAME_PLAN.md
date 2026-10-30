@@ -116,6 +116,8 @@ Infantry ← (snipers, MGs) · AT infantry → tanks · tanks → light vehicles
 1. **Valley Pass** (1v1, ~2×2 km): land only, river with 3 bridges, good for learning.
 2. **Coastal Strait** (2v2): islands + mainland, naval matters, amphibious landings.
 3. **Desert Oilfields** (1v1/2v2): open terrain, armor-focused, many supply nodes.
+4. **Iron Gulf** (3v3, ~1.7 km): two coasts across a gulf, every base with its own inlet. Land fights on the two isthmuses; fleets fight for the islands and the coves between bases.
+5. **Inland Sea** (4v4 / 8-player FFA, ~1.8 km): eight coastal bases ring a sea with a sea-only central isle, bridged isles and lighthouse headlands under naval guns; corner ridges for land fights. Eight-fold symmetric (`terrain.symmetry: 8`).
 
 Each map is a heightmap + splat map + JSON (points, spawns, props). An in-repo map editor is a stretch goal.
 

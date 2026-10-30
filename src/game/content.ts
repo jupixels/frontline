@@ -4,6 +4,8 @@ import sandbox from '../../data/maps/sandbox.json';
 import valley from '../../data/maps/valley_pass.json';
 import coastal from '../../data/maps/coastal_strait.json';
 import desert from '../../data/maps/desert_oilfields.json';
+import inland from '../../data/maps/inland_sea.json';
+import gulf from '../../data/maps/iron_gulf.json';
 import type { MapDef, UnitDef } from '../shared/data';
 import type { SimContent } from '../sim/world';
 import { mapInfoFromDef, type MapInfo, type StructureInfo } from '../ui';
@@ -23,6 +25,14 @@ const MAP_DEFS: { def: MapDef; description: string }[] = [
   {
     def: desert as unknown as MapDef,
     description: '1v1, 2v2 or 4-player FFA. Open dunes for armor, four mesas splitting the middle into lanes, oil wells everywhere.',
+  },
+  {
+    def: inland as unknown as MapDef,
+    description: '4v4 (west against east) or 8-player FFA. Eight coastal bases ring an inland sea, each with its own inlet. The Citadel Isle falls only to ships, landings and helicopters; bridged isles and lighthouse headlands sit under naval guns; the corner ridges are land fights.',
+  },
+  {
+    def: gulf as unknown as MapDef,
+    description: '3v3, coast against coast. Armies clash on the two isthmuses that close the gulf; fleets fight for Fortress Isle, the bridged side isles and the coves between the bases.',
   },
   { def: sandbox as MapDef, description: 'Proving ground. Four corner spawns, capture points in the middle.' },
 ];
