@@ -797,6 +797,78 @@
       "materials": {
         "team": "TeamAccent"
       }
+    },
+    {
+      "generated": "buildings/props/fuel_tank.glb",
+      "out": "models/buildings/props/fuel_tank.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
+    },
+    {
+      "generated": "buildings/props/wreck_truck.glb",
+      "out": "models/buildings/props/wreck_truck.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
+    },
+    {
+      "generated": "buildings/props/wreck_apc.glb",
+      "out": "models/buildings/props/wreck_apc.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
+    },
+    {
+      "generated": "buildings/props/sandbag_wall.glb",
+      "out": "models/buildings/props/sandbag_wall.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
+    },
+    {
+      "generated": "buildings/props/power_pole.glb",
+      "out": "models/buildings/props/power_pole.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
+    },
+    {
+      "generated": "buildings/props/ruined_wall.glb",
+      "out": "models/buildings/props/ruined_wall.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
+    },
+    {
+      "generated": "buildings/props/pier.glb",
+      "out": "models/buildings/props/pier.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
+    },
+    {
+      "generated": "buildings/props/jersey_barrier.glb",
+      "out": "models/buildings/props/jersey_barrier.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
+    },
+    {
+      "generated": "buildings/props/rubble_pile.glb",
+      "out": "models/buildings/props/rubble_pile.glb",
+      "kind": "prop",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 512
     }
   ],
   "textures": [
@@ -855,8 +927,18 @@
   ],
   "generatedSounds": {
     "out": "sounds/gen/",
-    "skip": ["pilot", "voice", "music"],
-    "loops": ["engine_low", "engine_large", "rotor", "ship_engine", "battle_distant"]
+    "skip": [
+      "pilot",
+      "voice",
+      "music"
+    ],
+    "loops": [
+      "engine_low",
+      "engine_large",
+      "rotor",
+      "ship_engine",
+      "battle_distant"
+    ]
   },
   "sounds": []
 }

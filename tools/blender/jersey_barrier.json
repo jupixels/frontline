@@ -1,0 +1,15 @@
+{
+  "input": "raw/jersey_barrier/smart.glb",
+  "output": "buildings/props/jersey_barrier.glb",
+  "rotateY": 0,
+  "length": 3.6,
+  "triangles": 2000,
+  "textureSize": 512,
+  "paint": {
+    "vMin": 2,
+    "sMax": 0,
+    "smooth": 0,
+    "detailBelow": 0
+  },
+  "parts": []
+}

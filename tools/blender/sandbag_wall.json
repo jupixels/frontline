@@ -1,0 +1,15 @@
+{
+  "input": "raw/sandbag_wall/smart.glb",
+  "output": "buildings/props/sandbag_wall.glb",
+  "rotateY": 0,
+  "length": 4,
+  "triangles": 2000,
+  "textureSize": 512,
+  "paint": {
+    "vMin": 2,
+    "sMax": 0,
+    "smooth": 0,
+    "detailBelow": 0
+  },
+  "parts": []
+}
