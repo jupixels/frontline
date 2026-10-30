@@ -24,6 +24,12 @@ function canHit(w: WeaponDef, layer: TargetLayer): boolean {
   return w.targets.includes(layer);
 }
 
+/** Damage multiplier of `w` against `t` (armor table, and submerged submarines shrug off all but torpedoes). */
+function mult(world: World, w: WeaponDef, t: Entity): number {
+  const m = world.content.damage[w.damageType][t.armor] ?? 1;
+  return t.unit?.submerged && w.damageType !== 'torpedo' ? m * 0.15 : m;
+}
+
 function dist2(a: Vec2, b: Vec2): number {
   const dx = a.x - b.x;
   const dz = a.z - b.z;
@@ -33,7 +39,10 @@ function dist2(a: Vec2, b: Vec2): number {
 /** Longest range among weapons that can hit `t` (0 if none), with the high-ground bonus. */
 function rangeVs(world: World, e: Entity, t: Entity): number {
   let r = 0;
-  for (const w of e.weapons) if (canHit(w.def, t.layer) && w.def.range > r) r = w.def.range;
+  // Close to the range of weapons that actually hurt it (a destroyer closes in to use depth charges).
+  let best = 0;
+  for (const w of e.weapons) if (canHit(w.def, t.layer)) best = Math.max(best, mult(world, w.def, t));
+  for (const w of e.weapons) if (canHit(w.def, t.layer) && mult(world, w.def, t) >= best * 0.5 && w.def.range > r) r = w.def.range;
   return r > 0 ? r * heightBonus(world, e, t) : 0;
 }
 
@@ -53,7 +62,7 @@ function bestMultiplier(world: World, e: Entity, t: Entity): number {
   let m = 0;
   for (const w of e.weapons) {
     if (!canHit(w.def, t.layer)) continue;
-    const v = world.content.damage[w.def.damageType][t.armor] ?? 1;
+    const v = mult(world, w.def, t);
     if (v > m) m = v;
   }
   return m;
@@ -256,6 +265,7 @@ function hasLosCached(world: World, e: Entity, t: Entity): boolean {
 
 function fire(world: World, e: Entity, weapon: string, def: WeaponDef, t: Entity, d: number): void {
   const at = { x: t.pos.x, z: t.pos.z };
+  e.firedAt = world.tick;
   let mult = 1;
   if (e.ambush) {
     // Springing an ambush: bonus first shot, then visible.
@@ -362,6 +372,8 @@ export function applyDamage(world: World, t: Entity, base: number, def: WeaponDe
   if (t.entrench === 'entrenched') mult *= t.entrenchDamage;
   if (t.type === 'hq' && world.suddenDeath) mult *= world.content.rules.suddenDeathHqDamageMult;
   mult *= coverMult(world, t, def);
+  // Submerged submarines are only really hurt by torpedoes and depth charges.
+  if (t.unit?.submerged && def.damageType !== 'torpedo') mult *= 0.15;
   if (t.pinned && (def.damageType === 'small_arms' || def.damageType === 'he')) mult *= PRONE_DAMAGE;
   const dmg = base * mult;
   if (dmg <= 0) return;

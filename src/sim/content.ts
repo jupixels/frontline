@@ -65,6 +65,8 @@ export interface SimUnitDef extends UnitDef {
   transport?: { seats: number; carries: ArmorClass[] };
   /** Seats this unit takes in a transport (default: infantry 1, light 4, heavy 6). */
   seats?: number;
+  /** Submarine: hidden from enemies beyond close range unless it fired recently. */
+  submerged?: boolean;
 }
 
 /** Active ability. Effect parameters are per ability id; unused ones are omitted. */
@@ -186,6 +188,12 @@ export interface RulesDef {
   pauseMaxSeconds?: number;
   /** Ticket-bleed multiplier while a team holds every point (pushes a dominant side to finish). */
   sweepBleedMult?: number;
+  /** Comeback: +1 command point per this many tickets a team is behind the leader, up to cpComebackMax. */
+  cpComebackPer?: number;
+  cpComebackMax?: number;
+  /** Comeback: extra HQ supply per second for every 100 tickets behind the leader, up to the max. */
+  incomeComebackPer100?: number;
+  incomeComebackMax?: number;
 }
 
 

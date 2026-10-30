@@ -127,7 +127,8 @@
     "cp": 3,
     "tier": 1,
     "weapons": [
-      "autocannon"
+      "autocannon",
+      "coax_mg"
     ],
     "abilities": [
       "smoke",
@@ -199,12 +200,12 @@
     "model": "models/tank_mbt.glb",
     "domain": "ground",
     "armor": "heavy",
-    "hp": 1400,
+    "hp": 1250,
     "speed": 7,
     "turnRate": 1.6,
     "radius": 3.2,
     "sight": 90,
-    "cost": 550,
+    "cost": 650,
     "buildSeconds": 32,
     "cp": 6,
     "tier": 2,
@@ -303,7 +304,7 @@
     "turnRate": 2,
     "radius": 4,
     "sight": 140,
-    "cost": 650,
+    "cost": 700,
     "buildSeconds": 30,
     "cp": 6,
     "tier": 2,
@@ -416,17 +417,18 @@
     "model": "models/cruiser.glb",
     "domain": "naval",
     "armor": "naval",
-    "hp": 3500,
+    "hp": 4200,
     "speed": 9,
     "turnRate": 0.8,
     "radius": 12,
-    "sight": 180,
+    "sight": 240,
     "cost": 1600,
     "buildSeconds": 60,
     "cp": 12,
     "tier": 3,
     "weapons": [
       "heavy_naval_gun",
+      "naval_gun",
       "sam"
     ],
     "abilities": [
@@ -449,7 +451,8 @@
     "tier": 2,
     "weapons": [
       "torpedo"
-    ]
+    ],
+    "submerged": true
   },
   "transport_ship": {
     "name": "Transport Ship",

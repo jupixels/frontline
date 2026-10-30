@@ -8,7 +8,7 @@ import { TICK_MS } from '../shared/types';
 import { Simulation } from '../sim/simulation';
 import type { MatchMode, MatchUi, UiApp } from '../ui';
 import { STRUCTURES, UNITS, mapDef, simContent } from './content';
-import { PlaceholderAi } from './placeholderAi';
+import { SkirmishAi } from '../ai';
 
 /** Hash exchange interval for desync detection. */
 const HASH_EVERY = 50;
@@ -35,7 +35,7 @@ export class Match {
   readonly ui: MatchUi;
   private readonly net: NetSession;
   private readonly audio: AudioManager;
-  private readonly ais: PlaceholderAi[] = [];
+  private readonly ais: SkirmishAi[] = [];
   private acc = 0;
   private last = performance.now();
   private running = true;
@@ -118,7 +118,7 @@ export class Match {
     return typeof n.controls === 'function' && n.events ? (this.net as LockstepSession) : null;
   }
 
-  /** Placeholder AIs for AI slots this peer controls (all of them in skirmish; the host's online). */
+  /** Skirmish AIs for AI slots this peer controls (all of them in skirmish; the controlling peer's online). */
   private setupAi(): void {
     const ls = this.lockstep();
     const controls = (p: PlayerId) => (ls ? ls.controls(p) : true);
@@ -126,7 +126,7 @@ export class Match {
     const sync = () => {
       this.ais.length = 0;
       for (const p of this.opts.setup.players) {
-        if (p.kind === 'ai' && controls(p.id)) this.ais.push(new PlaceholderAi(p.id, this.opts.setup, this.sim, issue));
+        if (p.kind === 'ai' && controls(p.id)) this.ais.push(new SkirmishAi(p.id, this.opts.setup, this.sim, mapDef(this.opts.setup.mapId), issue, this.opts.setup.seed));
       }
     };
     sync();
@@ -174,7 +174,7 @@ export class Match {
     this.last = now;
     if (!this.paused) {
       this.acc += dt * 1000;
-      for (const ai of this.ais) ai.update(dt);
+      for (const ai of this.ais) ai.update();
     } else this.acc = 0;
 
     const backlog = this.net.backlogTicks?.(this.sim.tick) ?? 0;

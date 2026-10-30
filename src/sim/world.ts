@@ -194,6 +194,8 @@ export interface Entity extends EntityState {
   lineSlot: Vec2 | null;
   /** Owner before a neutral building was garrisoned (reverts when empty). */
   homeOwner: PlayerId;
+  /** Last tick this unit fired (submarines surface on the sonar for a while). */
+  firedAt: Tick;
   /** Line-of-fire cache (combat). */
   losTarget: EntityId;
   losAt: Tick;
@@ -405,6 +407,7 @@ export class World {
       line: 0,
       lineSlot: null,
       homeOwner: owner,
+      firedAt: -100000,
       losTarget: 0,
       losAt: -100,
       losOk: false,
