@@ -80,9 +80,12 @@ After the prefix, add one or two sentences on the specific model's identifying f
 
 `src/render/units.ts` and `materials.ts` pick each material's role by name and texture:
 
-- `TeamPaint`: a copy of the Meshy material (same texture) on the paint (vehicles) or uniform, helmet and vest
-  (soldiers). The renderer keeps the texture's brightness (weathering, dirt, panel lines) and pulls its hue
-  toward the team color (`createTintMaterial` in `src/render/materials.ts`, also used by the far-LOD instancer).
+- `TeamPaint`: a copy of the Meshy material (same texture) on most of the paint (vehicles) or uniform
+  (soldiers). The renderer gives it only a faint team tint, so it stays olive/grey and weathered.
+- `TeamAccent`: same texture on the team-color areas: upward-facing paint high on the model (turret roofs,
+  upper decks, cab roofs, superstructure roofs, aircraft upper surfaces) and the helmet and vest. The renderer
+  keeps the texture's brightness (weathering, dirt, panel lines) and pulls its hue strongly toward the team
+  color (`createTintMaterial` in `src/render/materials.ts`, also used by the far-LOD instancer).
   Older models without a `TeamPaint` material keep the procedural camo.
 - Everything else keeps the Meshy texture and is named `Detail` (vehicles) or `Gear` (soldiers); the renderer
   leaves it as it is.
@@ -96,3 +99,6 @@ After the prefix, add one or two sentences on the specific model's identifying f
 - 2026-10-29: final models use meshy-t2.5 smart topology instead of lite + Blender decimation.
 - 2026-10-30: team color via a texture-preserving `TeamPaint` tint instead of procedural camo; 1 candidate (or
   none) when the reference is clear; 5 clips per soldier.
+- 2026-10-30: team color as an accent (`TeamAccent`) with a faint tint elsewhere. Aircraft use "plain olive drab"
+  (helicopters) or "plain grey-green" (jets) paint; ships "plain haze grey, dark red-brown below the waterline,
+  full hull out of the water"; the submarine matte dark grey.

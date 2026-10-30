@@ -263,88 +263,118 @@
       }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Helicopter_Gunship_zsky_CC-BY.glb",
+      "generated": "heli_attack.glb",
       "out": "models/heli_attack.glb",
       "kind": "unit",
-      "credit": "zsky",
-      "length": 17
+      "credit": "meshy",
+      "length": 17,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Helicopter_Transport.glb",
+      "generated": "heli_transport.glb",
       "out": "models/heli_transport.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 19
+      "credit": "meshy",
+      "length": 19,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Jet_StealthFighter.glb",
+      "generated": "jet_fighter.glb",
       "out": "models/jet_fighter.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 18
+      "credit": "meshy",
+      "length": 18,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Jet_StealthBomber.glb",
+      "generated": "bomber.glb",
       "out": "models/bomber.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 52
+      "credit": "meshy",
+      "length": 52,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Missile_Cruise.glb",
+      "generated": "cruise_missile.glb",
       "out": "models/cruise_missile.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 6
+      "credit": "meshy",
+      "length": 6,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Patrol_Boat_zsky_CC-BY.glb",
+      "generated": "patrol_boat.glb",
       "out": "models/patrol_boat.glb",
       "kind": "unit",
-      "credit": "zsky",
+      "credit": "meshy",
       "length": 20,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 1.2
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Destroyer.glb",
+      "generated": "destroyer.glb",
       "out": "models/destroyer.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
+      "credit": "meshy",
       "length": 155,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 8
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Cruiser_AEGIS.glb",
+      "generated": "cruiser.glb",
       "out": "models/cruiser.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
+      "credit": "meshy",
       "length": 173,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 9
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Submarine.glb",
+      "generated": "submarine.glb",
       "out": "models/submarine.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
+      "credit": "meshy",
       "length": 110,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 13
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Transport_Ship.glb",
+      "generated": "transport_ship.glb",
       "out": "models/transport_ship.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
+      "credit": "meshy",
       "length": 140,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 9
     },
     {

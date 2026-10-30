@@ -1,0 +1,21 @@
+{
+  "input": "raw/transport_ship/smart.glb",
+  "output": "transport_ship.glb",
+  "rotateY": 90,
+  "length": 140,
+  "triangles": 20000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 0,
+    "hueMax": 360,
+    "smooth": 2,
+    "detailBelow": 0
+  },
+  "accent": {
+    "minHeight": 0.38,
+    "normalZ": 0.75
+  },
+  "parts": []
+}

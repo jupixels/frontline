@@ -115,7 +115,11 @@ def separate(src, name, box):
         me.materials.append(m)
     obj = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(obj)
-    print(f'{name}: {len(me.polygons)} faces, {len(keep)} left in {src.name}')
+    if me.vertices:
+        lo = [min(v.co[k] for v in me.vertices) for k in range(3)]
+        hi = [max(v.co[k] for v in me.vertices) for k in range(3)]
+        mid = common.game(Vector([(a + b) / 2 for a, b in zip(lo, hi)]))
+        print(f'{name}: {len(me.polygons)} faces, {len(keep)} left in {src.name}, bounds center (game) {[round(v, 2) for v in mid]}')
     return obj
 
 
@@ -206,20 +210,34 @@ if turret:
     clip('TurretScan', [(turret, 'rotation_euler', sorted(scan, key=lambda k: k[0]))])
     loc = turret.location.copy()
     clip('Death', [(turret, 'location', [(0, loc), (0.25, loc + Vector((0, 0.2, cfg.get('deathLift', 0.5)))), (0.6, loc + Vector((0, 0.3, 0.12)))])])
-# `spin` parts (radar dishes) turn about their vertical axis in a looping Idle clip.
-spinners = [(nodes[p['name']], p['spin']) for p in cfg.get('parts', []) if p.get('spin')]
+# `spin` parts (radar dishes, rotors) turn in looping clips (`spinClips`, default Idle). `spinAxis` is the
+# game axis: y (vertical, default) or x (sideways, a tail rotor). All spinners share one period so the loop
+# is seamless: the slowest completes one turn, faster ones a whole number of turns.
+spinners = [(nodes[p['name']], p['spin'], p.get('spinAxis', 'y')) for p in cfg.get('parts', []) if p.get('spin')]
 if spinners:
-    keys = []
-    for obj, rate in spinners:
-        e0 = obj.rotation_euler.copy()
-        period = 2 * math.pi / abs(rate)
-        frames = []
-        for k in range(9):
-            e = e0.copy()
-            e.z += math.copysign(2 * math.pi, rate) * k / 8
-            frames.append((period * k / 8, e))
-        keys.append((obj, 'rotation_euler', frames))
-    clip('Idle', keys)
+    period = 2 * math.pi / min(abs(r) for _, r, _ in spinners)
+    for name in cfg.get('spinClips', ['Idle']):
+        keys = []
+        for obj, rate, axis in spinners:
+            turns = max(1, round(abs(rate) * period / (2 * math.pi)))
+            steps = 8 * turns
+            idx = {'y': 2, 'x': 0}[axis]
+            e0 = obj.rotation_euler.copy()
+            frames = []
+            for k in range(steps + 1):
+                e = e0.copy()
+                e[idx] += math.copysign(2 * math.pi * turns, rate) * k / steps
+                frames.append((period * k / steps, e))
+            keys.append((obj, 'rotation_euler', frames))
+        clip(name, keys)
+# `crash`: aircraft roll over and drop the nose while the renderer makes them fall.
+if cfg.get('crash'):
+    body.rotation_mode = 'XYZ'  # the glTF importer leaves imported objects in quaternion mode
+    e0 = body.rotation_euler.copy()
+    roll = e0.copy()
+    roll.y += 0.9
+    roll.x -= 0.35
+    clip('Crash', [(body, 'rotation_euler', [(0, e0), (1.6, roll)])])
 
 common.downscale_images(cfg.get('textureSize', 1024))
 

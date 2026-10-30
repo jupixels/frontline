@@ -383,6 +383,7 @@
   "patrol_boat": {
     "name": "Patrol Boat",
     "model": "models/patrol_boat.glb",
+    "turretNode": "P_turret",
     "domain": "naval",
     "armor": "naval",
     "hp": 500,
@@ -401,6 +402,7 @@
   "destroyer": {
     "name": "Destroyer",
     "model": "models/destroyer.glb",
+    "turretNode": "P_turret",
     "domain": "naval",
     "armor": "naval",
     "hp": 2200,
@@ -421,6 +423,7 @@
   "cruiser": {
     "name": "Cruiser",
     "model": "models/cruiser.glb",
+    "turretNode": "P_turret",
     "domain": "naval",
     "armor": "naval",
     "hp": 4200,

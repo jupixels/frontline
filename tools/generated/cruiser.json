@@ -1,0 +1,46 @@
+{
+  "id": "cruiser",
+  "date": "2026-10-30",
+  "batch": 4,
+  "replaces": "the previous models/cruiser.glb",
+  "style": "tools/generated/STYLE.md, naval variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Large guided-missile cruiser: long heavy hull, two gun turrets (one on the bow, one on the stern), large blocky superstructure with two masts and radar arrays, missile launcher boxes on deck.",
+    "taskId": "01a18b39-9ee3-7524-939b-3d82b8f2c4ec",
+    "file": "raw/cruiser/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 20000,
+    "texture": true,
+    "taskId": "01a18b3a-c5ad-73b4-a273-fbd9f1611087",
+    "file": "raw/cruiser/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/cruiser.json",
+    "output": "cruiser.glb"
+  },
+  "movingParts": [
+    "P_turret pivot [0,16,59.8]",
+    "P_turret2 pivot [0,16,-67.7]"
+  ],
+  "clips": [
+    "TurretScan (keeps P_turret animated)",
+    "Death (turret lifts)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: cruiser.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

@@ -90,23 +90,21 @@
       "kind": "unit",
       "size": [
         52,
-        3.23,
-        30.88
+        11.59,
+        49.97
       ],
-      "sizeKB": 58,
+      "sizeKB": 168,
       "clips": [
-        "Fly",
-        "BankLeft",
-        "BankRight",
-        "BarrelRoll",
-        "Fire",
         "Crash"
       ],
       "nodes": [],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "airfield",
@@ -544,75 +542,75 @@
       "path": "models/cruise_missile.glb",
       "kind": "unit",
       "size": [
-        3.26,
-        1.26,
+        3.05,
+        1.31,
         6
       ],
-      "sizeKB": 22,
+      "sizeKB": 80,
       "clips": [
-        "Fly",
-        "BankLeft",
-        "BankRight",
-        "BarrelRoll",
-        "Fire",
         "Crash"
       ],
       "nodes": [],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "cruiser",
       "path": "models/cruiser.glb",
       "kind": "unit",
       "size": [
-        27.92,
-        73.04,
+        20.84,
+        58.66,
         173
       ],
-      "sizeKB": 89,
+      "sizeKB": 414,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Sink"
+        "Death",
+        "TurretScan"
       ],
-      "nodes": [],
-      "license": "CC0",
+      "nodes": [
+        "P_turret",
+        "P_turret2"
+      ],
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
+        "Frontline (models made with Meshy AI, Pro plan)"
       ],
-      "draft": 9
+      "draft": 9,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "destroyer",
       "path": "models/destroyer.glb",
       "kind": "unit",
       "size": [
-        25.87,
-        68.26,
+        21.96,
+        52.54,
         155
       ],
-      "sizeKB": 40,
+      "sizeKB": 414,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "TurretTurn",
-        "TurretScan",
-        "Sink"
+        "Death",
+        "TurretScan"
       ],
       "nodes": [
-        "P_turret",
-        "P_turret2"
+        "P_turret"
       ],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
+        "Frontline (models made with Meshy AI, Pro plan)"
       ],
-      "draft": 8
+      "draft": 8,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "engineer",
@@ -918,52 +916,52 @@
       "path": "models/heli_attack.glb",
       "kind": "unit",
       "size": [
-        15.55,
-        4.29,
+        12.87,
+        5.36,
         17
       ],
-      "sizeKB": 25,
+      "sizeKB": 244,
       "clips": [
-        "Hover",
-        "Move",
-        "Fire",
-        "TakeOff",
-        "Land",
-        "Crash"
+        "Crash",
+        "Idle",
+        "Move"
       ],
-      "nodes": [],
-      "license": "CC-BY-4.0",
+      "nodes": [
+        "P_rotor"
+      ],
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "Zsky (zsky2000.itch.io)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "heli_transport",
       "path": "models/heli_transport.glb",
       "kind": "unit",
       "size": [
-        12.9,
-        7.6,
+        14.91,
+        4.56,
         19
       ],
-      "sizeKB": 173,
+      "sizeKB": 249,
       "clips": [
-        "Idle_Rotors",
-        "Hover",
-        "Move",
-        "Fire",
-        "TakeOff",
-        "Land",
-        "Crash"
+        "Crash",
+        "Idle",
+        "Move"
       ],
       "nodes": [
-        "P_rotor",
-        "P_tail_rotor"
+        "P_rotor"
       ],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "ifv",
@@ -1022,47 +1020,48 @@
       "path": "models/jet_fighter.glb",
       "kind": "unit",
       "size": [
-        14.1,
-        4.83,
+        11.97,
+        4.15,
         18
       ],
-      "sizeKB": 20,
+      "sizeKB": 207,
       "clips": [
-        "Fly",
-        "BankLeft",
-        "BankRight",
-        "BarrelRoll",
-        "Fire",
         "Crash"
       ],
       "nodes": [],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "patrol_boat",
       "path": "models/patrol_boat.glb",
       "kind": "unit",
       "size": [
-        7.56,
-        4.75,
+        4.52,
+        7.66,
         20
       ],
-      "sizeKB": 25,
+      "sizeKB": 278,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Sink"
+        "Death",
+        "TurretScan"
       ],
-      "nodes": [],
-      "license": "CC-BY-4.0",
+      "nodes": [
+        "P_turret"
+      ],
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "Zsky (zsky2000.itch.io)"
+        "Frontline (models made with Meshy AI, Pro plan)"
       ],
-      "draft": 1.2
+      "draft": 1.2,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "rifleman",
@@ -1176,24 +1175,21 @@
       "path": "models/submarine.glb",
       "kind": "unit",
       "size": [
-        18.77,
-        34.76,
+        17.85,
+        29.16,
         110
       ],
-      "sizeKB": 19,
-      "clips": [
-        "Idle",
-        "Move",
-        "Dive",
-        "Surface",
-        "Sink"
-      ],
+      "sizeKB": 160,
+      "clips": [],
       "nodes": [],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
+        "Frontline (models made with Meshy AI, Pro plan)"
       ],
-      "draft": 13
+      "draft": 13,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
       "id": "supply_truck",
@@ -1274,25 +1270,21 @@
       "path": "models/transport_ship.glb",
       "kind": "unit",
       "size": [
-        33.44,
-        58.64,
+        21.34,
+        46.52,
         140
       ],
-      "sizeKB": 45,
-      "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "Sink"
-      ],
-      "nodes": [
-        "radar"
-      ],
-      "license": "CC0",
+      "sizeKB": 416,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
+        "Frontline (models made with Meshy AI, Pro plan)"
       ],
-      "draft": 9
+      "draft": 9,
+      "materials": {
+        "team": "TeamPaint"
+      }
     }
   ]
 }

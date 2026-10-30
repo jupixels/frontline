@@ -1,0 +1,42 @@
+{
+  "id": "cruise_missile",
+  "date": "2026-10-30",
+  "batch": 3,
+  "replaces": "the previous models/cruise_missile.glb",
+  "style": "tools/generated/STYLE.md, aircraft variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Long slim cylindrical body, small straight wings at mid-body, cruciform tail fins, small engine intake under the rear.",
+    "taskId": "01a18b39-81f1-76d6-848f-13d31b2e0231",
+    "file": "raw/cruise_missile/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 2000,
+    "texture": true,
+    "taskId": "01a18b3a-b2ed-702e-bb36-98e373fa61e5",
+    "file": "raw/cruise_missile/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/cruise_missile.json",
+    "output": "cruise_missile.glb"
+  },
+  "movingParts": [],
+  "clips": [
+    "Crash (roll and nose-down while the renderer drops it)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: cruise_missile.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

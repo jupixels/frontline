@@ -1,0 +1,44 @@
+{
+  "input": "raw/heli_attack/smart.glb",
+  "output": "heli_attack.glb",
+  "rotateY": 90,
+  "length": 17,
+  "triangles": 10000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.22,
+    "sMax": 0.35,
+    "hueMin": 35,
+    "hueMax": 180,
+    "smooth": 2,
+    "detailBelow": 0
+  },
+  "accent": {
+    "minHeight": 0.25,
+    "normalZ": 0.55
+  },
+  "parts": [
+    {
+      "name": "P_rotor",
+      "box": [
+        -9.5,
+        9.5,
+        4.25,
+        6.5,
+        -6.3,
+        9.5
+      ],
+      "pivot": [
+        0,
+        4.5,
+        1.08
+      ],
+      "spin": 14
+    }
+  ],
+  "crash": true,
+  "spinClips": [
+    "Idle",
+    "Move"
+  ]
+}

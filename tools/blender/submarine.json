@@ -1,0 +1,21 @@
+{
+  "input": "raw/submarine/smart.glb",
+  "output": "submarine.glb",
+  "rotateY": 90,
+  "length": 110,
+  "triangles": 10000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.06,
+    "sMax": 0.3,
+    "hueMin": 0,
+    "hueMax": 360,
+    "smooth": 2,
+    "detailBelow": 0
+  },
+  "accent": {
+    "minHeight": 0.55,
+    "normalZ": 0.8
+  },
+  "parts": []
+}
