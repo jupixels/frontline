@@ -43,5 +43,5 @@ describe('sim performance', () => {
     // The real budget is one 50 ms tick (20 Hz); alone this runs at ~6 ms.
     // Generous: other suites (headless balance battles) run in parallel and share the CPU.
     expect(ms).toBeLessThan(90);
-  });
+  }, 30000);
 });
