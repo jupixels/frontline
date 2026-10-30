@@ -50,7 +50,8 @@ export class Match {
     app.setLoadingProgress(0.3, 'Building the battlefield');
     this.sim = new Simulation(setup, simContent(setup.mapId));
     app.setLoadingProgress(0.6, 'Loading units');
-    this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: setup.players });
+    this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: setup.players, localPlayer });
+    this.renderer.setQuality(app.settings.get().graphics);
     this.audio = new AudioManager(localPlayer);
 
     const r = this.renderer;
@@ -69,7 +70,10 @@ export class Match {
       structures: STRUCTURES,
       map,
       mode: opts.mode,
-      issue: (cmd) => net.submit(cmd),
+      issue: (cmd) => {
+        net.submit(cmd);
+        r.markCommand(cmd);
+      },
       onSelectionChange: (ids) => {
         r.setSelection(ids);
         if (ids.length) this.audio.uiSelect();

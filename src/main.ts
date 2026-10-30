@@ -40,8 +40,9 @@ const app = new UiApp({
     match = null;
   },
   onSettingsChange: (s) => {
-    // TODO(render/audio): apply s.graphics and s.volume once those modules expose setters.
+    // TODO(audio): apply s.volume once the audio PR lands.
     document.documentElement.dataset.quality = s.graphics;
+    match?.renderer.setQuality(s.graphics);
   },
 });
 app.start();
