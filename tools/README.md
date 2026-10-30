@@ -71,6 +71,16 @@ Model entries:
 `[roughMin, 1]` (Grass004 ships a mean roughness of 0.26, which renders as a wet glint). `files` copies a
 downloaded file as-is.
 
+`sounds` entries copy every `.mp3` under `prefix` in the zip to `out`. Optional fields:
+
+- `files`: only these names (relative to `prefix`)
+- `encode`: re-encode with ffmpeg (must be on `PATH`, or set `FFMPEG=<path>`). Output is MP3:
+  - `bitrate` (default `64k`), mono unless `stereo: true`, `sampleRate` (default 44100)
+  - `maxSeconds`: trim to this length with a short fade-out
+  - `split: n`: the file holds several takes separated by silence (the `02_weapons` recordings do); write up to `n` of them as `name_1.mp3`, `name_2.mp3`, ...
+
+Entries without `encode` don't need ffmpeg.
+
 Output is meshopt-compressed (`EXT_meshopt_compression`, with quaternion/exponential filters on animation data)
 with WebP textures. three.js loads it via `GLTFLoader` + `MeshoptDecoder`, as `src/render/units.ts` does.
 

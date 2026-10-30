@@ -24,6 +24,7 @@ import { fetchSources, defaultCacheDir } from './fetch-sources.mjs';
 import { objToDocument } from './lib/obj.mjs';
 import { shapeDocument, hexColor } from './lib/shapes.mjs';
 import { pruneAnimationChannels, bakeHoldPose, reparentKeepWorld } from './lib/anim.mjs';
+import { encodeSound } from './lib/audio.mjs';
 
 const root = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, '$1')), '..');
 const args = process.argv.slice(2);
@@ -342,14 +343,21 @@ for (const f of (manifest.files ?? []).filter((f) => match(f.out))) {
   console.log(`${f.out}  ${Math.round(data.byteLength / 1024)} KB`);
 }
 
-const sounds = manifest.sounds.filter((s) => !only || s.out.includes(only));
+// Sounds: copied as-is, or re-encoded with ffmpeg when the entry has `encode`.
+const sounds = manifest.sounds.filter((s) => match(s.out, s.prefix));
 for (const s of sounds) {
   const files = zipDir(s.zip, s.prefix);
   let n = 0;
+  let bytes = 0;
   for (const [name, data] of Object.entries(files)) {
     if (!name.endsWith('.mp3') || name.endsWith('/')) continue;
-    write(s.out + name.slice(s.prefix.length), data);
-    n++;
+    const rel = name.slice(s.prefix.length);
+    if (s.files && !s.files.includes(rel)) continue;
+    for (const [out, d] of s.encode ? encodeSound(rel, data, s.encode) : [[rel, data]]) {
+      write(s.out + out, d);
+      bytes += d.byteLength;
+      n++;
+    }
   }
-  console.log(`${s.out}  ${n} files`);
+  console.log(`${s.out}  ${n} files  ${Math.round(bytes / 1024)} KB${s.encode ? '  (encoded)' : ''}`);
 }
