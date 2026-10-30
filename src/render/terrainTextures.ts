@@ -215,6 +215,7 @@ export async function loadTerrainTextures(fallback: TerrainTextureSet, size: num
   const srcA = fallback.albedo.image.data as Uint8Array;
   const srcD = fallback.detail.image.data as Uint8Array;
   results.forEach((r, layer) => {
+    const minRough = TERRAIN_LAYERS[layer] === 'mud' ? 0.35 : 0.62;
     upscaleLayer(srcA, GEN_SIZE, layer, albedo, size);
     upscaleLayer(srcD, GEN_SIZE, layer, detail, size);
     const o = layer * layerBytes;
@@ -228,7 +229,9 @@ export async function loadTerrainTextures(fallback: TerrainTextureSet, size: num
         detail[o + p + 2] = Math.round(r.albedo[p] * 0.3 + r.albedo[p + 1] * 0.59 + r.albedo[p + 2] * 0.11);
         detail[o + p + 3] = 255;
       }
-      if (r.rough) albedo[o + p + 3] = r.rough[p];
+      // Bare ground is never glossy; some packs ship roughness far too low (grass ~0.26), which turns
+      // the whole field into a sun glint. Only mud may get wet-shiny.
+      if (r.rough) albedo[o + p + 3] = Math.round((minRough + (r.rough[p] / 255) * (1 - minRough)) * 255);
       if (r.normal) {
         detail[o + p] = r.normal[p];
         // OpenGL-convention normal maps (+Y up), which is what most CC0 packs ship.
