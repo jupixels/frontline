@@ -2,7 +2,10 @@ import * as THREE from 'three';
 import type { UnitDef } from '../shared/data';
 import { createCamoMaterial, createTintMaterial, materialRole } from './materials';
 import { bakeModel, loadModel, type BakeOptions } from './models';
-import type { UnitClass, UnitView } from './units';
+import { xrayMaterial, type UnitClass, type UnitView } from './units';
+
+/** One see-through material for every instancer: the team color comes from instance color. */
+let xrayShared: THREE.Material | null = null;
 
 const CAPACITY = 1024;
 /** Seconds per stride frame for the two baked run poses. */
@@ -30,6 +33,9 @@ export class LodInstancer {
   readonly group = new THREE.Group();
   private poses: LodPart[][] = [];
   private counts: number[] = [];
+  /** See-through silhouettes of own units, per pose and part (own instance lists). */
+  private xray: THREE.InstancedMesh[][] = [];
+  private xrayCounts: number[] = [];
   private readonly m = new THREE.Matrix4();
   private readonly q = new THREE.Quaternion();
   private readonly s = new THREE.Vector3();
@@ -89,6 +95,22 @@ export class LodInstancer {
       }
       poses.push(parts);
     }
+    xrayShared ??= xrayMaterial();
+    this.xray = poses.map((parts) =>
+      parts.map(({ mesh }) => {
+        const x = new THREE.InstancedMesh(mesh.geometry, xrayShared!, CAPACITY);
+        x.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        x.setColorAt(0, this.c.setRGB(1, 1, 1));
+        x.instanceColor!.setUsage(THREE.DynamicDrawUsage);
+        x.frustumCulled = false;
+        x.renderOrder = 3;
+        x.count = 0;
+        x.raycast = () => {};
+        this.group.add(x);
+        return x;
+      }),
+    );
+    this.xrayCounts = poses.map(() => 0);
     this.poses = poses;
     this.counts = poses.map(() => 0);
   }
@@ -99,12 +121,14 @@ export class LodInstancer {
 
   begin(): void {
     this.counts.fill(0);
+    this.xrayCounts.fill(0);
   }
 
-  add(view: UnitView, time: number): void {
+  /** `xray`: team color for a see-through silhouette when hidden (own units), or null. */
+  add(view: UnitView, time: number, xray: THREE.Color | null = null): void {
     if (!this.poses.length) return;
     let pose = 0;
-    if (view.moving && this.poses.length > 2) pose = 1 + (Math.floor(time / STRIDE + view.id * 0.37) % 2);
+    if (view.moving && this.poses.length > 2) pose = 1 + (Math.floor((time * view.gait) / STRIDE + view.id * 0.37) % 2);
     const i = this.counts[pose];
     if (i >= CAPACITY) return;
     // root carries position + yaw, body carries terrain tilt/bank and scale.
@@ -117,23 +141,29 @@ export class LodInstancer {
       else if (part.tint === 'accent') part.mesh.setColorAt(i, this.c.copy(view.teamColor).multiplyScalar(0.55));
     }
     this.counts[pose] = i + 1;
+    if (xray) {
+      const j = this.xrayCounts[pose]++;
+      for (const mesh of this.xray[pose]) {
+        mesh.setMatrixAt(j, this.m);
+        mesh.setColorAt(j, xray);
+      }
+    }
   }
 
   end(): void {
-    this.poses.forEach((parts, k) => {
-      const n = this.counts[k];
-      for (const { mesh } of parts) {
-        mesh.count = n;
-        if (!n) continue;
-        mesh.instanceMatrix.clearUpdateRanges();
-        mesh.instanceMatrix.addUpdateRange(0, n * 16);
-        mesh.instanceMatrix.needsUpdate = true;
-        if (mesh.instanceColor) {
-          mesh.instanceColor.clearUpdateRanges();
-          mesh.instanceColor.addUpdateRange(0, n * 3);
-          mesh.instanceColor.needsUpdate = true;
-        }
+    const flush = (mesh: THREE.InstancedMesh, n: number) => {
+      mesh.count = n;
+      if (!n) return;
+      mesh.instanceMatrix.clearUpdateRanges();
+      mesh.instanceMatrix.addUpdateRange(0, n * 16);
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) {
+        mesh.instanceColor.clearUpdateRanges();
+        mesh.instanceColor.addUpdateRange(0, n * 3);
+        mesh.instanceColor.needsUpdate = true;
       }
-    });
+    };
+    this.poses.forEach((parts, k) => parts.forEach(({ mesh }) => flush(mesh, this.counts[k])));
+    this.xray.forEach((meshes, k) => meshes.forEach((mesh) => flush(mesh, this.xrayCounts[k])));
   }
 }
