@@ -26,6 +26,8 @@ export interface Settings {
   motion: 'system' | 'full' | 'reduced';
   /** Hover tooltips with costs, counters and hotkeys. */
   tooltips: boolean;
+  /** Path lines for every own unit with orders, not just the selection. */
+  allPaths: boolean;
   /** On-screen touch controls: auto-detect, always or never. */
   touch: 'auto' | 'on' | 'off';
   keybinds: Keybinds;
@@ -53,6 +55,7 @@ export function defaultSettings(): Settings {
     teamPalette: 'standard',
     motion: 'system',
     tooltips: true,
+    allPaths: false,
     touch: 'auto',
     keybinds: defaultKeybinds(),
     keybindsVersion: KEYBINDS_VERSION,
@@ -106,6 +109,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     teamPalette: (['standard', 'colorblind', 'contrast', 'relative'] as const).includes(r.teamPalette as TeamPalette) ? (r.teamPalette as TeamPalette) : d.teamPalette,
     motion: r.motion === 'full' || r.motion === 'reduced' || r.motion === 'system' ? r.motion : d.motion,
     tooltips: typeof r.tooltips === 'boolean' ? r.tooltips : d.tooltips,
+    allPaths: typeof r.allPaths === 'boolean' ? r.allPaths : d.allPaths,
     touch: r.touch === 'on' || r.touch === 'off' || r.touch === 'auto' ? r.touch : d.touch,
     keybinds: keys,
     keybindsVersion: KEYBINDS_VERSION,

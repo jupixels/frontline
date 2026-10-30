@@ -115,6 +115,19 @@ export interface EconomyView {
   readonly morale: number;
 }
 
+/** One leg of a unit's orders, for path lines. */
+export interface RouteLeg {
+  readonly kind: 'move' | 'attackMove' | 'patrol' | 'attack' | 'enter' | 'build' | 'unload' | 'ability';
+  readonly to: Readonly<Vec2>;
+}
+
+/** Where a unit is going: current then queued legs, and the route of the current leg. */
+export interface UnitRoute {
+  readonly legs: readonly RouteLeg[];
+  /** Corners of the route from the unit to the end of the current leg (the last point is that end). */
+  readonly path: readonly Readonly<Vec2>[];
+}
+
 /** Richer reads for HUD build menus, queues, capture bars, fog and AI. Implemented by Simulation. */
 export interface SimViewExt {
   readonly fog: FogView;
@@ -150,6 +163,8 @@ export interface SimViewExt {
   canEnter(unit: EntityId, container: EntityId): boolean;
   /** Static terrain reachability (ignores structures): can `domain` travel from a to b? */
   reachable(domain: 'ground' | 'naval', a: Vec2, b: Vec2): boolean;
+  /** Current and queued orders of a unit and (unless `trace` is false) its traced route; null if it has nowhere to go. Read-only. */
+  route(id: EntityId, trace?: boolean): UnitRoute | null;
   /** Match over: winning team, or null while playing. */
   readonly winner: TeamId | null;
 }

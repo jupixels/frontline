@@ -9,6 +9,10 @@ import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 import './hud.css';
 import './screens.css';
+import { initInstall } from './install';
+
+initInstall();
+
 export { UiApp, type UiAppOptions, type StartInfo } from './app';
 export { MatchUi, type MatchUiContext, type NetStatus, type RenderHooks, type CameraControl } from './hud/matchUi';
 export type { ReplayControls } from './hud/replayBar';

@@ -1,10 +1,11 @@
-import type { EntityState, FrontlineView, PauseView, PlayerState, SimView, SuperweaponView } from '../shared/entities';
+import type { EntityState, FrontlineView, PauseView, PlayerState, SimView, SuperweaponView, UnitRoute } from '../shared/entities';
 import { assignSpawns } from '../shared/maps';
 import type { SimEvent } from '../shared/events';
 import { SIM_HZ, type EntityId, type MatchSetup, type PlayerId, type TeamId, type Tick, type Vec2 } from '../shared/types';
 import type { AnyPlayerCommand, EconomyView, FogView, ProductionView, ProposedEvent, SimViewExt } from './contracts';
 import { dcos, dsin, headingTo } from './math/dmath';
 import { StateHasher } from './math/hash';
+import { unitRoute } from './route';
 import { abilitySystem } from './systems/abilities';
 import { deathSystem, projectileSystem, targetingSystem, weaponsSystem } from './systems/combat';
 import { buildable, canPlace, economySystem, producible } from './systems/economy';
@@ -220,6 +221,11 @@ export class Simulation implements SimView, SimViewExt {
   canCommand(player: PlayerId, id: EntityId): boolean {
     const e = this.world.entities.get(id);
     return !!e && canCommand(this.world, player, e);
+  }
+
+  route(id: EntityId, trace = true): UnitRoute | null {
+    const e = this.world.entities.get(id);
+    return e ? unitRoute(this.world, e, trace) : null;
   }
 
   lines(player: PlayerId): readonly FrontlineView[] {
