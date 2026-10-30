@@ -2,6 +2,7 @@
   "id": "sandbox",
   "name": "Sandbox",
   "size": 600,
+  "atmosphere": "clear",
   "spawns": [
     {
       "x": -120,

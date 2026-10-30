@@ -11,6 +11,8 @@ import type { Picker } from '../shared/view';
 import { RtsCamera } from './camera';
 import { DecalKind, DecalMap } from './decals';
 import { atmosphereFor, Environment } from './environment';
+import { GrassField } from './grass';
+import { Weather } from './weather';
 import { Scenery } from './scenery';
 import { MISSILE_ARC, TacticalLayer } from './tactical';
 import { FogOfWar, LocalVisionSource, SimFogSource, type VisibilitySource } from './fog';
@@ -106,6 +108,8 @@ export class GameRenderer implements Picker {
   readonly vfx: Vfx;
   readonly fog: FogOfWar;
   readonly scenery: Scenery;
+  private readonly grass: GrassField;
+  private readonly weather: Weather;
   private readonly tactical: TacticalLayer;
   private readonly post: PostStack;
   private readonly overlay = new THREE.Scene();
@@ -151,14 +155,14 @@ export class GameRenderer implements Picker {
     this.env = new Environment(this.scene, r, atmosphere);
     this.structureDefs = setup.structures ?? (structuresJson as unknown as Record<string, RenderStructureDef>);
     const model = new TerrainModel(setup.map ?? { size: setup.mapSize });
-    this.terrain = new Terrain({ model });
+    this.terrain = new Terrain({ model, mood: atmosphere.ground });
     this.scene.add(this.terrain.mesh);
     this.cam.groundHeight = (x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL);
     this.water = new Water(this.terrain, this.env.sunDir, this.env.sun.color);
-    if (atmosphere.water) {
-      (this.water.uniforms.uShallow.value as THREE.Color).set(atmosphere.water[0]);
-      (this.water.uniforms.uDeep.value as THREE.Color).set(atmosphere.water[1]);
-    }
+    this.water.setMood(atmosphere);
+    this.grass = new GrassField(this.terrain, atmosphere);
+    this.weather = new Weather(atmosphere);
+    this.scene.add(this.grass.mesh, this.weather.mesh);
     this.scene.add(this.water.mesh);
     this.quality = QUALITY[initialQuality(gpuName(r.getContext()))];
     this.scenery = new Scenery(setup.map ?? { id: '', name: '', size: setup.mapSize, spawns: [] }, model, (x, z) => this.terrain.heightAt(x, z), this.quality.level !== 'low');
@@ -193,6 +197,7 @@ export class GameRenderer implements Picker {
     if (this.localPlayer < 0) this.fog.enabled = false;
     this.computeAllies();
     this.post = new PostStack(r, this.scene, this.cam.camera, this.fog.texture, this.fog.bounds);
+    this.post.setMood(atmosphere);
 
     this.post.fog.enabled = this.fog.enabled;
     this.setQuality(this.quality.level);
@@ -243,6 +248,8 @@ export class GameRenderer implements Picker {
     this.points.clear();
     this.decals.dispose();
     this.scenery.dispose();
+    this.grass.dispose();
+    this.weather.dispose();
     this.tactical.dispose();
     this.vfx.dispose();
     this.post.dispose();
@@ -260,6 +267,8 @@ export class GameRenderer implements Picker {
     this.env.setShadowMapSize(q.shadowMapSize);
     this.scenery?.setShadows(level === 'high' || level === 'ultra');
     this.vfx.setQuality(q);
+    this.grass.setQuality(q);
+    this.weather.setQuality(q);
     this.post.apply(q);
     this.resize();
     try {
@@ -589,6 +598,8 @@ export class GameRenderer implements Picker {
 
     this.env.updateShadows(this.cam.target, this.cam.viewDistance);
     this.water.update(this.time);
+    this.grass.update(this.cam.target, this.cam.viewDistance, this.time);
+    this.weather.update(this.cam.target, this.time);
     this.vfx.update(dt);
     this.decals.update(this.renderer, dt);
 
