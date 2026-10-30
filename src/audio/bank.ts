@@ -33,109 +33,70 @@ export interface SoundDef {
   duration?: number;
 }
 
-const v = (dir: string, stem: string, n: number, from = 1) =>
-  Array.from({ length: n }, (_, i) => `sounds/${dir}/${stem}${String(i + from).padStart(2, '0')}.mp3`);
-const f = (...names: string[]) => names.map((n) => `sounds/${n}.mp3`);
+/** Variants made with ElevenLabs by tools/build-assets.mjs: sounds/gen/<id>_01.mp3 ... */
+const g = (id: string, n: number) => Array.from({ length: n }, (_, i) => `sounds/gen/${id}_${String(i + 1).padStart(2, '0')}.mp3`);
 
 export const SOUNDS = {
   // --- small arms ---
-  rifle: {
-    files: [...f('weapons/m4_ar15_single_near_1', 'weapons/m4_ar15_single_near_2', 'weapons/ak47_single_near_1', 'weapons/ak47_single_near_2', 'weapons/ak47_single_near_3'), ...v('ww2', 'rifle_shot_', 4)],
-    far: f('weapons/m4_ar15_single_far_1', 'weapons/m4_ar15_single_far_2', 'weapons/ak47_single_far_1', 'weapons/ak47_single_far_2'),
-    farFrom: 80, volume: 0.32, vary: 0.08, range: 220, maxVoices: 6, cooldown: 0.05,
-  },
-  mg: {
-    files: f('weapons/ak47_burst_short_near_1', 'weapons/ak47_burst_short_near_2', 'weapons/smg_burst_short_near_1', 'weapons/smg_burst_short_near_2', 'weapons/smg_burst_short_near_3', 'ww2/mg_burst_01', 'ww2/mg_burst_02'),
-    far: f('weapons/ak47_burst_short_far_1', 'weapons/ak47_burst_short_far_2', 'weapons/ak47_burst_short_far_3', 'weapons/smg_burst_long_far_1'),
-    farFrom: 90, volume: 0.36, vary: 0.06, range: 260, maxVoices: 4, cooldown: 0.12,
-  },
-  sniper: {
-    files: f('weapons/sniper_rifle_near_1', 'weapons/sniper_rifle_near_2', 'weapons/sniper_rifle2_near_1', 'weapons/sniper_rifle2_near_2'),
-    far: f('weapons/sniper_rifle_far_1', 'weapons/sniper_rifle_far_2'),
-    farFrom: 100, volume: 0.5, vary: 0.04, range: 320, maxVoices: 3,
-  },
-  autocannon: {
-    files: f('bangs/shot_01', 'bangs/shot_02', 'bangs/shot_03'),
-    volume: 0.42, vary: 0.1, rate: 1.15, range: 280, maxVoices: 5, cooldown: 0.06,
-  },
+  rifle: { files: g('rifle', 3), far: g('rifle_far', 2), farFrom: 80, volume: 0.3, vary: 0.08, range: 220, maxVoices: 6, cooldown: 0.05 },
+  mg: { files: g('mg', 3), far: g('mg_far', 2), farFrom: 90, volume: 0.32, vary: 0.06, range: 260, maxVoices: 4, cooldown: 0.12 },
+  sniper: { files: g('sniper', 2), far: g('sniper_far', 1), farFrom: 100, volume: 0.45, vary: 0.04, range: 320, maxVoices: 3 },
+  autocannon: { files: g('autocannon', 3), volume: 0.28, vary: 0.08, range: 280, maxVoices: 5, cooldown: 0.06 },
   // --- heavy guns ---
-  cannon: {
-    files: v('bangs', 'cannon_', 5),
-    far: f('explosions/explosion_distant'),
-    farFrom: 160, volume: 0.6, vary: 0.07, range: 380, maxVoices: 4, cooldown: 0.08,
-  },
-  howitzer: {
-    files: v('ww2', 'howitzer_', 2),
-    far: v('ww2', 'artillery_', 2),
-    farFrom: 150, volume: 0.7, vary: 0.06, range: 520, maxVoices: 3, cooldown: 0.1,
-  },
-  naval_gun: {
-    files: f('naval/naval_GunShot', 'naval/cannon_fire_1'),
-    far: f('naval/naval_GunShotGverb'),
-    farFrom: 150, volume: 0.6, vary: 0.06, range: 480, maxVoices: 3, cooldown: 0.1,
-  },
-  naval_mg: { files: f('naval/gun3Machinegun', 'naval/gun2Heavy'), volume: 0.4, vary: 0.1, range: 220, maxVoices: 4, cooldown: 0.07 },
+  cannon: { files: g('cannon', 3), far: g('cannon_far', 1), farFrom: 160, volume: 0.42, vary: 0.07, range: 380, maxVoices: 4, cooldown: 0.08 },
+  howitzer: { files: g('howitzer', 2), far: g('howitzer_far', 2), farFrom: 150, volume: 0.67, vary: 0.06, range: 520, maxVoices: 3, cooldown: 0.1 },
+  naval_gun: { files: g('naval_gun', 2), far: g('naval_gun_far', 1), farFrom: 150, volume: 0.64, vary: 0.06, range: 480, maxVoices: 3, cooldown: 0.1 },
+  naval_mg: { files: g('naval_mg', 2), volume: 0.28, vary: 0.1, range: 220, maxVoices: 4, cooldown: 0.07 },
   // --- missiles / rockets ---
-  missile: { files: f('vehicles/missile_launch'), volume: 0.45, vary: 0.08, range: 320, maxVoices: 3, cooldown: 0.15, duration: 2.2 },
-  rocket_salvo: { files: f('vehicles/rocket_launch'), volume: 0.55, vary: 0.05, range: 420, maxVoices: 2, cooldown: 0.4 },
-  torpedo: { files: f('naval/torpedo1'), volume: 0.5, vary: 0.05, range: 260, maxVoices: 2 },
+  missile: { files: g('missile', 3), volume: 0.4, vary: 0.08, range: 320, maxVoices: 3, cooldown: 0.15 },
+  rocket_salvo: { files: g('rocket_salvo', 2), volume: 0.71, vary: 0.05, range: 420, maxVoices: 2, cooldown: 0.4 },
+  torpedo: { files: g('torpedo', 1), volume: 0.62, vary: 0.05, range: 260, maxVoices: 2 },
   // --- impacts / hits ---
-  hit_metal: { files: [...v('impacts', 'metal_medium_', 5), ...v('impacts', 'metal_heavy_', 5)], volume: 0.3, vary: 0.12, range: 140, maxVoices: 4, cooldown: 0.05 },
-  explosion_small: { files: v('explosions', 'explosion_crunch_', 5), volume: 0.55, vary: 0.1, range: 320, maxVoices: 5, cooldown: 0.05 },
-  explosion_shell: {
-    files: [...v('bangs', 'bang_', 10), ...v('ww2', 'artillery_', 6)],
-    far: f('explosions/explosion_distant', 'explosions/explosion_muffled_distant'),
-    farFrom: 170, volume: 0.65, vary: 0.08, range: 480, maxVoices: 5, cooldown: 0.05, duck: 0.25,
-  },
-  explosion_big: {
-    files: f('explosions/explosion_chunky', 'explosions/explosion_deep_01', 'explosions/explosion_deep_02'),
-    far: f('explosions/explosion_muffled_distant'),
-    farFrom: 180, volume: 0.85, vary: 0.06, range: 600, maxVoices: 3, cooldown: 0.1, duck: 0.5,
-  },
-  water_explosion: {
-    files: v('naval', 'naval_WaterSurfaceExplosion', 4),
-    volume: 0.6, vary: 0.08, range: 420, maxVoices: 3, cooldown: 0.08, duck: 0.2,
-  },
-  splash: { files: f('naval/naval_Splash', 'naval/cannon_miss_1'), volume: 0.45, vary: 0.1, range: 300, maxVoices: 3 },
-  ship_hit: { files: f('naval/cannon_hit_ship_short', 'naval/naval_ExplosionMetal'), volume: 0.6, vary: 0.08, range: 420, maxVoices: 3 },
+  hit_metal: { files: g('hit_metal', 4), volume: 0.34, vary: 0.12, range: 140, maxVoices: 4, cooldown: 0.05 },
+  explosion_small: { files: g('explosion_small', 3), volume: 0.72, vary: 0.1, range: 320, maxVoices: 5, cooldown: 0.05 },
+  explosion_shell: { files: g('explosion_shell', 4), far: g('explosion_shell_far', 2), farFrom: 170, volume: 0.42, vary: 0.08, range: 480, maxVoices: 5, cooldown: 0.05, duck: 0.25 },
+  explosion_big: { files: g('explosion_big', 2), far: g('explosion_big_far', 1), farFrom: 180, volume: 0.38, vary: 0.06, range: 600, maxVoices: 3, cooldown: 0.1, duck: 0.5 },
+  water_explosion: { files: g('water_explosion', 2), volume: 0.43, vary: 0.08, range: 420, maxVoices: 3, cooldown: 0.08, duck: 0.2 },
+  splash: { files: g('splash', 2), volume: 0.5, vary: 0.1, range: 300, maxVoices: 3 },
+  ship_hit: { files: g('ship_hit', 2), volume: 1, vary: 0.08, range: 420, maxVoices: 3 },
   // --- deaths ---
-  death_infantry: { files: f('naval/scream1', 'naval/scream2', 'naval/scream3'), volume: 0.18, vary: 0.12, range: 90, maxVoices: 2, cooldown: 0.6 },
-  death_vehicle: { files: [...v('explosions', 'explosion_crunch_', 5), 'sounds/explosions/explosion_deep_02.mp3'], volume: 0.7, vary: 0.08, range: 450, maxVoices: 3, duck: 0.3 },
-  death_tank: { files: f('explosions/explosion_chunky', 'explosions/explosion_deep_01'), far: f('explosions/explosion_muffled_distant'), farFrom: 180, volume: 0.9, vary: 0.05, range: 600, maxVoices: 2, duck: 0.55 },
-  death_air: { files: f('naval/aiplaneexplode', 'explosions/explosion_deep_01'), volume: 0.8, vary: 0.06, range: 600, maxVoices: 2, duck: 0.4 },
-  death_boat: { files: f('naval/boatexplode', 'naval/shipexplode'), volume: 0.8, vary: 0.05, range: 500, maxVoices: 2, duck: 0.4 },
-  death_ship: { files: f('naval/ship_destroyed_short'), volume: 0.9, vary: 0.03, range: 700, maxVoices: 1, duck: 0.6 },
+  death_infantry: { files: g('death_infantry', 4), volume: 0.1, vary: 0.08, range: 90, maxVoices: 2, cooldown: 0.6 },
+  death_vehicle: { files: g('death_vehicle', 3), volume: 0.39, vary: 0.08, range: 450, maxVoices: 3, duck: 0.3 },
+  death_tank: { files: g('death_tank', 2), far: g('explosion_big_far', 1), farFrom: 180, volume: 0.5, vary: 0.05, range: 600, maxVoices: 2, duck: 0.55 },
+  death_air: { files: g('death_air', 2), volume: 0.46, vary: 0.06, range: 600, maxVoices: 2, duck: 0.4 },
+  death_boat: { files: g('death_boat', 2), volume: 0.96, vary: 0.05, range: 500, maxVoices: 2, duck: 0.4 },
+  death_ship: { files: g('death_ship', 1), volume: 0.88, vary: 0.03, range: 700, maxVoices: 1, duck: 0.6 },
   // --- engines / loops ---
-  engine_low: { files: v('engines', 'engine_low_', 5), volume: 0.3, range: 160 },
-  engine_large: { files: v('engines', 'engine_large_', 5), volume: 0.36, range: 200 },
-  rotor: { files: f('vehicles/helicopter_loop'), volume: 0.42, range: 300 },
-  ship_engine: { files: f('naval/naval_BattleShipMovementAmbient'), volume: 0.3, range: 260 },
-  jet_flyby: { files: f('vehicles/jet_takeoff_flyby_CC-BY'), volume: 0.55, vary: 0.08, range: 600, maxVoices: 2, cooldown: 1.5 },
-  smoke_pop: { files: f('bangs/shot_01', 'bangs/shot_02', 'bangs/shot_03'), volume: 0.3, rate: 0.6, vary: 0.08, range: 200, maxVoices: 2, cooldown: 0.1 },
+  engine_low: { files: g('engine_low', 2), volume: 0.41, range: 160 },
+  engine_large: { files: g('engine_large', 2), volume: 0.73, range: 200 },
+  rotor: { files: g('rotor', 1), volume: 0.28, range: 300 },
+  ship_engine: { files: g('ship_engine', 1), volume: 0.1, range: 260 },
+  jet_flyby: { files: g('jet_flyby', 2), volume: 0.21, vary: 0.08, range: 600, maxVoices: 2, cooldown: 1.5 },
+  smoke_pop: { files: g('smoke_pop', 2), volume: 0.22, vary: 0.08, range: 200, maxVoices: 2, cooldown: 0.1 },
   // --- ambience ---
-  battle_distant: { files: v('ww2', 'battle_distant_', 4), volume: 0.12, vary: 0.05, flat: true, maxVoices: 2 },
+  battle_distant: { files: g('battle_distant', 3), volume: 0.07, vary: 0.05, flat: true, maxVoices: 2 },
   // --- voices & alerts (flat, voice bus) ---
-  radio_static: { files: f('alerts/radio_static_6s'), volume: 0.16, flat: true, bus: 'voice', offsetMax: 5.2, duration: 0.35, maxVoices: 2, cooldown: 0 },
-  radio_morse: { files: f('ww2/radio_morse_02'), volume: 0.2, flat: true, bus: 'voice', maxVoices: 1 },
-  siren: { files: f('alerts/siren_alarm'), volume: 0.35, flat: true, bus: 'voice', maxVoices: 1 },
-  ground_select: { files: f('voices/artil/artil.select'), volume: 0.7, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },
-  ground_action: { files: f('voices/artil/artil.action'), volume: 0.7, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },
-  ground_ready: { files: f('voices/artil/artil.ready'), volume: 0.75, flat: true, bus: 'voice', maxVoices: 1 },
-  ground_die: { files: f('voices/artil/artil.die'), volume: 0.6, flat: true, bus: 'voice', maxVoices: 1 },
-  naval_select: { files: f('voices/destroyer/destroyer.select'), volume: 0.7, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },
-  naval_action: { files: f('voices/destroyer/destroyer.action'), volume: 0.7, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },
-  naval_ready: { files: f('voices/destroyer/destroyer.ready'), volume: 0.75, flat: true, bus: 'voice', maxVoices: 1 },
-  naval_die: { files: f('voices/destroyer/destroyer.die'), volume: 0.6, flat: true, bus: 'voice', maxVoices: 1 },
-  under_attack: { files: f('voices/destroyer/destroyer.underattack'), volume: 0.85, flat: true, bus: 'voice', maxVoices: 1 },
-  airfield_select: { files: f('voices/aircraftfactory/aircraftfactory.select'), volume: 0.7, flat: true, bus: 'voice', maxVoices: 1 },
-  shipyard_select: { files: f('voices/shipyard/shipyard.select'), volume: 0.7, flat: true, bus: 'voice', maxVoices: 1 },
+  radio_static: { files: g('radio_static', 1), volume: 0.51, flat: true, bus: 'voice', offsetMax: 2.4, duration: 0.35, maxVoices: 2, cooldown: 0 },
+  radio_morse: { files: g('radio_morse', 1), volume: 0.13, flat: true, bus: 'voice', maxVoices: 1 },
+  siren: { files: g('siren', 1), volume: 0.17, flat: true, bus: 'voice', maxVoices: 1 },
+  ground_select: { files: g('voice/ground_select', 4), volume: 0.53, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },
+  ground_action: { files: g('voice/ground_action', 4), volume: 0.39, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },
+  ground_ready: { files: g('voice/ground_ready', 3), volume: 0.6, flat: true, bus: 'voice', maxVoices: 1 },
+  ground_die: { files: g('voice/ground_die', 3), volume: 0.68, flat: true, bus: 'voice', maxVoices: 1 },
+  naval_select: { files: g('voice/naval_select', 3), volume: 0.45, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },
+  naval_action: { files: g('voice/naval_action', 3), volume: 0.61, flat: true, bus: 'voice', maxVoices: 1, vary: 0.02 },
+  naval_ready: { files: g('voice/naval_ready', 2), volume: 0.41, flat: true, bus: 'voice', maxVoices: 1 },
+  naval_die: { files: g('voice/naval_die', 2), volume: 0.64, flat: true, bus: 'voice', maxVoices: 1 },
+  under_attack: { files: g('voice/under_attack', 3), volume: 0.45, flat: true, bus: 'voice', maxVoices: 1 },
+  airfield_select: { files: g('voice/airfield_select', 2), volume: 0.95, flat: true, bus: 'voice', maxVoices: 1 },
+  shipyard_select: { files: g('voice/shipyard_select', 2), volume: 1, flat: true, bus: 'voice', maxVoices: 1 },
   // --- UI (flat, sfx bus) ---
-  ui_click: { files: v('ui', 'click_', 5), volume: 0.4, flat: true, vary: 0.03, maxVoices: 2 },
-  ui_select: { files: v('ui', 'select_', 2), volume: 0.35, flat: true, vary: 0.03, maxVoices: 2 },
-  ui_confirm: { files: v('ui', 'confirm_', 4), volume: 0.45, flat: true, vary: 0.03, maxVoices: 2 },
-  ui_error: { files: v('ui', 'error_', 3), volume: 0.45, flat: true, maxVoices: 1, cooldown: 0.2 },
-  ui_open: { files: v('ui', 'open_', 4), volume: 0.4, flat: true, maxVoices: 1 },
-  ui_close: { files: v('ui', 'close_', 4), volume: 0.4, flat: true, maxVoices: 1 },
+  ui_click: { files: g('ui_click', 2), volume: 0.81, flat: true, vary: 0.03, maxVoices: 2 },
+  ui_select: { files: g('ui_select', 2), volume: 0.74, flat: true, vary: 0.03, maxVoices: 2 },
+  ui_confirm: { files: g('ui_confirm', 3), volume: 0.87, flat: true, vary: 0.03, maxVoices: 2 },
+  ui_error: { files: g('ui_error', 2), volume: 0.3, flat: true, maxVoices: 1, cooldown: 0.2 },
+  ui_open: { files: g('ui_open', 2), volume: 0.69, flat: true, maxVoices: 1 },
+  ui_close: { files: g('ui_close', 2), volume: 0.59, flat: true, maxVoices: 1 },
 } satisfies Record<string, SoundDef>;
 
 export type SoundId = keyof typeof SOUNDS;

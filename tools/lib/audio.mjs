@@ -46,6 +46,40 @@ function encodeRegion(data, e, start = 0, end = Infinity) {
   return runFfmpeg(args, data).stdout;
 }
 
+const TRIM_ENDS =
+  'silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.01,areverse,' +
+  'silenceremove=start_periods=1:start_threshold=-58dB:start_silence=0.05,areverse';
+
+/** Per-kind filters for generated (ElevenLabs) sounds, applied before peak normalization. */
+const GENERATED = {
+  // Weapons, impacts, deaths: lead and tail silence trimmed (tails stop below -58 dB), mono for the panner.
+  shot: { pre: TRIM_ENDS, peak: -1, channels: 1, bitrate: '64k' },
+  // Seamless loops from the generator: untouched so the seam stays clean.
+  loop: { pre: 'anull', peak: -1, channels: 1, bitrate: '64k' },
+  // Interface: tight trim, a bit quieter than combat at peak.
+  ui: { pre: TRIM_ENDS + ',afade=t=in:d=0.004', peak: -3, channels: 1, bitrate: '64k' },
+  // Unit voices: trimmed, band-limited like a field radio, gently compressed.
+  voice: { pre: TRIM_ENDS + ',highpass=f=280,lowpass=f=3600,acompressor=threshold=-20dB:ratio=3:attack=5:release=80', peak: -1, channels: 1, bitrate: '64k' },
+  // Music: stereo, loudness-matched, faded at both ends so the loop point is soft.
+  music: { pre: 'loudnorm=I=-18:TP=-1.5:LRA=11,afade=t=in:d=1.5,areverse,afade=t=in:d=3,areverse', channels: 2, bitrate: '112k' },
+};
+
+/** Processes one generated sound of `kind` (see GENERATED); null if the take is near-silent. */
+export function processGenerated(data, kind) {
+  const k = GENERATED[kind];
+  if (!k) throw new Error(`Unknown generated sound kind "${kind}"`);
+  let gain = 0;
+  if (k.peak !== undefined) {
+    const log = runFfmpeg(['-af', `${k.pre},volumedetect`, '-f', 'null', '-'], data).stderr.toString();
+    const max = Number(log.match(/max_volume: (-?[\d.]+) dB/)?.[1] ?? -Infinity);
+    // The generator sometimes returns a near-silent take; boosting it only amplifies noise.
+    if (!(max > -35)) return null;
+    gain = k.peak - max;
+  }
+  const af = gain ? `${k.pre},volume=${gain.toFixed(2)}dB` : k.pre;
+  return runFfmpeg(['-af', af, '-ac', String(k.channels), '-ar', '44100', '-b:a', k.bitrate, '-f', 'mp3', 'pipe:1'], data).stdout;
+}
+
 /**
  * Re-encodes one MP3 per `encode` ({ bitrate, stereo, sampleRate, maxSeconds, split }).
  * Returns [relative output name, bytes] pairs: one, or up to `split` takes named name_1.mp3, name_2.mp3...
