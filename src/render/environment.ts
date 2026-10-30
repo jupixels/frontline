@@ -17,6 +17,12 @@ export interface Atmosphere {
   hemiSky: THREE.ColorRepresentation;
   hemiGround: THREE.ColorRepresentation;
   envIntensity: number;
+  /** Light the scene with the shipped HDRI (it's a sunny sky, so only clear presets use it). */
+  hdri?: boolean;
+  /** Water tint (shallow, deep). */
+  water?: [THREE.ColorRepresentation, THREE.ColorRepresentation];
+  /** Color grade multiplier applied to the sky turbidity look. */
+  exposure?: number;
 }
 
 /** Late-afternoon "golden hour lite": warm low sun, long shadows, hazy distance. */
@@ -32,7 +38,59 @@ export const GOLDEN_HOUR: Atmosphere = {
   hemiSky: 0xcfdcf0,
   hemiGround: 0x5a5236,
   envIntensity: 1,
+  hdri: true,
 };
+
+/** Grey North Sea afternoon: flat light, soft shadows, thick haze. */
+export const OVERCAST: Atmosphere = {
+  sunElevationDeg: 52,
+  sunAzimuthDeg: 160,
+  sunColor: 0xdfe6ee,
+  sunIntensity: 1.55,
+  turbidity: 14,
+  rayleigh: 3.2,
+  fogColor: 0x9aa4ab,
+  fogDensity: 0.0017,
+  hemiSky: 0xb9c4cf,
+  hemiGround: 0x4a4f4a,
+  envIntensity: 1.35,
+  water: [0x3d6a6c, 0x142c33],
+};
+
+/** Desert noon: high harsh sun, short shadows, pale dusty haze. */
+export const NOON: Atmosphere = {
+  sunElevationDeg: 68,
+  sunAzimuthDeg: 190,
+  sunColor: 0xfff3dc,
+  sunIntensity: 3.6,
+  turbidity: 9,
+  rayleigh: 1.1,
+  fogColor: 0xd9c8a6,
+  fogDensity: 0.0009,
+  hemiSky: 0xd6e2f0,
+  hemiGround: 0x8a7350,
+  envIntensity: 1.1,
+};
+
+/** Dusk: low orange sun, long shadows, blue haze. */
+export const DUSK: Atmosphere = {
+  sunElevationDeg: 11,
+  sunAzimuthDeg: 250,
+  sunColor: 0xffb27a,
+  sunIntensity: 2.6,
+  turbidity: 10,
+  rayleigh: 2.4,
+  fogColor: 0x8d8fa0,
+  fogDensity: 0.0014,
+  hemiSky: 0x9fb2d6,
+  hemiGround: 0x4a3c30,
+  envIntensity: 0.8,
+};
+
+/** Atmosphere preset by MapDef.atmosphere name. */
+export function atmosphereFor(name: string | undefined): Atmosphere {
+  return name === 'overcast' ? OVERCAST : name === 'noon' ? NOON : name === 'dusk' ? DUSK : GOLDEN_HOUR;
+}
 
 /**
  * Sky, sun with camera-fitted shadows, IBL and distance fog.
@@ -97,6 +155,7 @@ export class Environment {
 
   /** Use `textures/sky/sky.hdr` for IBL when the asset session has shipped it. The visible sky stays procedural so the sun matches. */
   async loadHdri(): Promise<void> {
+    if (!this.atmosphere.hdri) return;
     const path = 'textures/sky/sky.hdr';
     if (!(await assetExists(path))) return;
     try {

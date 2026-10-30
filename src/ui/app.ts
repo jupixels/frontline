@@ -1,4 +1,5 @@
 import type { MatchSetup, PlayerId } from '../shared/types';
+import type { AiDifficulty } from './lobbyApi';
 import { h } from './dom';
 import { MatchUi, type MatchUiContext } from './hud/matchUi';
 import {
@@ -213,6 +214,19 @@ export class UiApp {
 
   private skirmish(): void {
     this.enterLobby(createSkirmishLobby(this.settings.get().playerName, this.opts.maps), 'skirmish');
+  }
+
+  /**
+   * Dev/test shortcut: skirmish on `mapId` against the given AIs, started at once. `teams` gives each
+   * slot's team (self first); default is everyone on their own team.
+   */
+  quickSkirmish(mapId: string, ais: AiDifficulty[] = ['normal'], teams?: number[]): void {
+    const lobby = createSkirmishLobby(this.settings.get().playerName, this.opts.maps);
+    this.enterLobby(lobby, 'skirmish');
+    lobby.setMap(mapId);
+    ais.forEach((d, i) => lobby.setOccupancy(i + 1, { ai: d }));
+    teams?.forEach((team, i) => lobby.updateSlot(i, { team }));
+    lobby.start();
   }
 
   private enterLobby(lobby: LobbyApi, mode: MatchMode): void {

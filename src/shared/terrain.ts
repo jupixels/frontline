@@ -93,6 +93,12 @@ export interface TerrainDef {
   bridges?: TerrainBridge[];
   /** What surrounds the playable square: hills (default) or open sea. */
   edge?: 'hills' | 'sea';
+  /**
+   * Rotational symmetry of the random relief: 2 (180 degrees, for two sides) or 4 (90 degrees, four
+   * corners). Features are placed symmetrically by the map; this makes the noise match, so every
+   * spawn gets identical ground.
+   */
+  symmetry?: 1 | 2 | 4;
 }
 
 // --- deterministic noise ---
@@ -277,6 +283,9 @@ export class TerrainModel {
   readonly forests: MapShape[];
   readonly bridges: TerrainBridge[];
   readonly roads: TerrainRoad[];
+  private readonly symN: number;
+  /** Averaging n rotated noise samples shrinks their spread; this restores it. */
+  private readonly symGain: number;
 
   constructor(readonly map: TerrainSource) {
     this.half = map.size / 2;
@@ -290,6 +299,28 @@ export class TerrainModel {
     this.forests = t?.forests ?? [];
     this.bridges = t?.bridges ?? [];
     this.roads = t?.roads ?? [];
+    this.symN = t?.symmetry === 4 ? 4 : t?.symmetry === 2 ? 2 : 1;
+    this.symGain = this.symN === 4 ? 1.8 : this.symN === 2 ? 1.38 : 1;
+  }
+
+  /** Noise `f` (centered on 0.5) made rotationally symmetric, with its spread restored. */
+  private sym(f: (x: number, z: number) => number, x: number, z: number): number {
+    if (this.symN === 1) return f(x, z);
+    let sum = 0;
+    let px = x;
+    let pz = z;
+    for (let i = 0; i < this.symN; i++) {
+      sum += f(px, pz);
+      if (this.symN === 2) {
+        px = -px;
+        pz = -pz;
+      } else {
+        const t = px;
+        px = -pz;
+        pz = t;
+      }
+    }
+    return 0.5 + (sum / this.symN - 0.5) * this.symGain;
   }
 
   /**
@@ -301,9 +332,9 @@ export class TerrainModel {
     const half = this.half;
     const seed = d.seed;
     if (this.flat) return this.water.length || this.cliffs.length ? this.shapedFlat(x, z) : d.base;
-    let h = d.base + (fbm(x / 260, z / 260, seed, 4) - 0.5) * 2 * d.relief + (fbm(x / 50, z / 50, seed + 7, 3) - 0.5) * 2 * d.detail;
-    // Random relief never makes puddles: keep land comfortably above the water line.
-    if (h < 1.6) h = 1.6 - (1.6 - h) * 0.15;
+    const relief = this.sym((a, b) => fbm(a / 260, b / 260, seed, 4), x, z);
+    const bumps = this.sym((a, b) => fbm(a / 50, b / 50, seed + 7, 3), x, z);
+    let h = d.base + (relief - 0.5) * 2 * d.relief + (bumps - 0.5) * 2 * d.detail;
 
     for (const hl of d.hills ?? []) {
       const dx = x - hl.x;
@@ -313,26 +344,29 @@ export class TerrainModel {
       const dist = Math.sqrt(dd);
       const p = hl.plateau ?? 0;
       const t = smoothstep(hl.r, hl.r * p, dist);
-      h += hl.h * t * (0.92 + 0.16 * valueNoise(x / 30, z / 30, seed + 41));
+      h += hl.h * t * (0.92 + 0.16 * this.sym((a, b) => valueNoise(a / 30, b / 30, seed + 41), x, z));
     }
     for (const r of d.ridges ?? []) {
       const dist = polylineDistance(r.points, x, z);
       const w = r.width / 2;
       if (dist >= w) continue;
       const t = r.cliff ? smoothstep(w, w - 7, dist) : smoothstep(w, 0, dist);
-      h += r.h * t * (0.8 + 0.4 * ridged(x / 40, z / 40, seed + 23, 2));
+      h += r.h * t * (0.8 + 0.4 * this.sym((a, b) => ridged(a / 40, b / 40, seed + 23, 2), x, z));
     }
     if (this.cliffs.length) {
       const cd = minShapeDistance(this.cliffs, x, z, 0);
-      if (cd < 6) h += smoothstep(6, -3, cd) * (7 + ridged(x / 14, z / 14, seed + 9, 3) * 7);
+      if (cd < 6) h += smoothstep(6, -3, cd) * (7 + this.sym((a, b) => ridged(a / 14, b / 14, seed + 9, 3), x, z) * 7);
     }
+
+    // Relief and basins never make puddles: keep land comfortably above the water line.
+    if (h < 1.6) h = 1.6 - (1.6 - h) * 0.15;
 
     // Rivers carve a channel; fords raise the bed to wading depth.
     for (const rv of d.rivers ?? []) {
       const dist = polylineDistance(rv.points, x, z);
       const w = rv.width / 2;
       if (dist >= w + 14) continue;
-      let bed = -(rv.depth ?? 3) + (valueNoise(x / 20, z / 20, seed + 51) - 0.5) * 0.6;
+      let bed = -(rv.depth ?? 3) + (this.sym((a, b) => valueNoise(a / 20, b / 20, seed + 51), x, z) - 0.5) * 0.6;
       for (const f of d.fords ?? []) {
         const fd = Math.sqrt((x - f.x) * (x - f.x) + (z - f.z) * (z - f.z));
         if (fd < f.r) bed = lerp(bed, -0.55, smoothstep(f.r, f.r * 0.45, fd));
@@ -351,12 +385,12 @@ export class TerrainModel {
       let wd = this.waterDistance(x, z);
       if (seaEdge) wd = Math.min(wd, -out + 40);
       sea = smoothstep(10, -16, wd);
-      floor = -3 - smoothstep(0, -70, wd) * 6 + (fbm(x / 40, z / 40, seed + 12, 2) - 0.5) * 1.5;
+      floor = -3 - smoothstep(0, -70, wd) * 6 + (this.sym((a, b) => fbm(a / 40, b / 40, seed + 12, 2), x, z) - 0.5) * 1.5;
     }
     if (!seaEdge) {
       let rim = smoothstep(-30, 180, out);
       if (this.water.length) rim *= smoothstep(20, 120, this.waterDistance(x, z));
-      if (rim > 0) h += rim * (10 + ridged(x / 160, z / 160, seed + 3, 4) * 70 + fbm(x / 70, z / 70, seed + 4, 3) * 12);
+      if (rim > 0) h += rim * (10 + this.sym((a, b) => ridged(a / 160, b / 160, seed + 3, 4), x, z) * 70 + this.sym((a, b) => fbm(a / 70, b / 70, seed + 4, 3), x, z) * 12);
     }
     return sea > 0 ? lerp(h, floor, sea) : h;
   }

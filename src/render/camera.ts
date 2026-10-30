@@ -3,7 +3,7 @@ import * as THREE from 'three';
 const PAN_SPEED = 1.1; // fraction of view distance per second
 const EDGE = 12; // px
 const MIN_DIST = 25;
-const MAX_DIST = 320;
+const MAX_DIST = 420;
 
 /** Classic RTS camera: arrows/edge pan, wheel zoom, middle-drag (or PageUp/PageDown) rotate. */
 export class RtsCamera {

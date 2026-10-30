@@ -107,6 +107,56 @@ export class Terrain {
     this.uniforms.uTile.value = 9;
   }
 
+  /** Top-down map picture for the minimap: hill-shaded ground, water, woods, roads and rock. */
+  minimapImage(px = 256): HTMLCanvasElement {
+    const c = document.createElement('canvas');
+    c.width = c.height = px;
+    const g = c.getContext('2d')!;
+    const img = g.createImageData(px, px);
+    const m = this.model;
+    const size = this.mapSize;
+    const land: Record<string, [number, number, number]> = { temperate: [74, 92, 52], coastal: [82, 96, 62], desert: [168, 140, 96] };
+    const base = land[m.style] ?? land.temperate;
+    const step = size / px;
+    for (let j = 0; j < px; j++) {
+      for (let i = 0; i < px; i++) {
+        const x = (i + 0.5) * step - size / 2;
+        const z = (j + 0.5) * step - size / 2;
+        const h = this.heightAt(x, z);
+        const hx = this.groundAt(x + step, z) - this.groundAt(x - step, z);
+        const hz = this.groundAt(x, z + step) - this.groundAt(x, z - step);
+        // Light from the north-west.
+        const shade = Math.max(0.55, Math.min(1.35, 1 + (-hx - hz) / (step * 2) * 0.9 + (h - 6) * 0.006));
+        let r: number;
+        let gg: number;
+        let b: number;
+        if (h < WATER_LEVEL - 0.1) {
+          const deep = Math.min(1, -h / 7);
+          r = 46 - deep * 26;
+          gg = 86 - deep * 40;
+          b = 98 - deep * 30;
+        } else if (m.hasCliffs && m.isCliff(x, z)) {
+          [r, gg, b] = [96 * shade, 92 * shade, 86 * shade];
+        } else if (m.bridges.length && m.bridgeDeck(x, z) !== null) {
+          [r, gg, b] = [150, 146, 136];
+        } else if (m.roads.length && m.isRoad(x, z)) {
+          [r, gg, b] = [150 * shade, 128 * shade, 96 * shade];
+        } else if (m.forests.length && m.isForest(x, z)) {
+          [r, gg, b] = [36 * shade, 58 * shade, 32 * shade];
+        } else {
+          [r, gg, b] = [base[0] * shade, base[1] * shade, base[2] * shade];
+        }
+        const o = (j * px + i) * 4;
+        img.data[o] = r;
+        img.data[o + 1] = gg;
+        img.data[o + 2] = b;
+        img.data[o + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    return c;
+  }
+
   setDecals(tex: THREE.Texture, bounds: THREE.Vector4): void {
     this.uniforms.tDecal.value = tex;
     this.uniforms.uDecalBounds.value.copy(bounds);

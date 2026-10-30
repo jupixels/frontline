@@ -10,7 +10,8 @@ import { TICK_SECONDS, type EntityId, type PlayerId, type PlayerSlot, type Vec2 
 import type { Picker } from '../shared/view';
 import { RtsCamera } from './camera';
 import { DecalKind, DecalMap } from './decals';
-import { Environment } from './environment';
+import { atmosphereFor, Environment } from './environment';
+import { Scenery } from './scenery';
 import { FogOfWar, LocalVisionSource, SimFogSource, type VisibilitySource } from './fog';
 import { CommandMarkers, HealthBars } from './overlay';
 import { PostStack } from './post';
@@ -101,6 +102,7 @@ export class GameRenderer implements Picker {
   readonly decals: DecalMap;
   readonly vfx: Vfx;
   readonly fog: FogOfWar;
+  readonly scenery: Scenery;
   private readonly post: PostStack;
   private readonly overlay = new THREE.Scene();
   private readonly healthBars = new HealthBars();
@@ -140,13 +142,22 @@ export class GameRenderer implements Picker {
     this.cam.camera.far = 3000;
     this.cam.setBounds(setup.mapSize / 2);
 
-    this.env = new Environment(this.scene, r);
+    const atmosphere = atmosphereFor(setup.map?.atmosphere);
+    this.env = new Environment(this.scene, r, atmosphere);
     this.structureDefs = setup.structures ?? (structuresJson as unknown as Record<string, RenderStructureDef>);
-    this.terrain = new Terrain({ model: new TerrainModel(setup.map ?? { size: setup.mapSize }) });
+    const model = new TerrainModel(setup.map ?? { size: setup.mapSize });
+    this.terrain = new Terrain({ model });
     this.scene.add(this.terrain.mesh);
     this.cam.groundHeight = (x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL);
     this.water = new Water(this.terrain, this.env.sunDir, this.env.sun.color);
+    if (atmosphere.water) {
+      (this.water.uniforms.uShallow.value as THREE.Color).set(atmosphere.water[0]);
+      (this.water.uniforms.uDeep.value as THREE.Color).set(atmosphere.water[1]);
+    }
     this.scene.add(this.water.mesh);
+    this.quality = QUALITY[initialQuality(gpuName(r.getContext()))];
+    this.scenery = new Scenery(setup.map ?? { id: '', name: '', size: setup.mapSize, spawns: [] }, model, (x, z) => this.terrain.heightAt(x, z), this.quality.level !== 'low');
+    this.scene.add(this.scenery.group);
     this.decals = new DecalMap(setup.mapSize * 1.3, this.quality.decalResolution);
     this.terrain.setDecals(this.decals.texture, this.decals.bounds);
     this.water.setDecals(this.decals.texture, this.decals.bounds);
@@ -222,6 +233,7 @@ export class GameRenderer implements Picker {
     this.wrecks.length = 0;
     this.points.clear();
     this.decals.dispose();
+    this.scenery.dispose();
     this.vfx.dispose();
     this.post.dispose();
     this.renderer.dispose();
@@ -236,6 +248,7 @@ export class GameRenderer implements Picker {
     this.quality = q;
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, q.pixelRatio));
     this.env.setShadowMapSize(q.shadowMapSize);
+    this.scenery?.setShadows(level === 'high' || level === 'ultra');
     this.vfx.setQuality(q);
     this.post.apply(q);
     this.resize();

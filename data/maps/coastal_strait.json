@@ -1,0 +1,1755 @@
+{
+ "id": "coastal_strait",
+ "name": "Coastal Strait",
+ "size": 1200,
+ "modes": [
+  "2v2",
+  "1v1"
+ ],
+ "atmosphere": "overcast",
+ "spawns": [
+  {
+   "x": -300,
+   "z": 445
+  },
+  {
+   "x": 300,
+   "z": 445
+  },
+  {
+   "x": 300,
+   "z": -445
+  },
+  {
+   "x": -300,
+   "z": -445
+  }
+ ],
+ "sides": [
+  [
+   0,
+   1
+  ],
+  [
+   2,
+   3
+  ]
+ ],
+ "terrain": {
+  "seed": 23,
+  "symmetry": 2,
+  "style": "coastal",
+  "base": 6,
+  "relief": 7,
+  "detail": 1,
+  "water": [
+   {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1200,
+    "d": 460
+   }
+  ],
+  "islands": [
+   {
+    "shape": "poly",
+    "points": [
+     [
+      114.6,
+      0
+     ],
+     [
+      87.2,
+      63.3
+     ],
+     [
+      33.6,
+      103.3
+     ],
+     [
+      -38.3,
+      117.9
+     ],
+     [
+      -88.4,
+      64.2
+     ],
+     [
+      -116.1,
+      0
+     ],
+     [
+      -97,
+      -70.5
+     ],
+     [
+      -37.1,
+      -114.2
+     ],
+     [
+      36.5,
+      -112.2
+     ],
+     [
+      92.4,
+      -67.1
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -347.9,
+      12
+     ],
+     [
+      -346.4,
+      82.2
+     ],
+     [
+      -411.9,
+      114.4
+     ],
+     [
+      -482.1,
+      102.2
+     ],
+     [
+      -517.1,
+      43.7
+     ],
+     [
+      -523.6,
+      -22.1
+     ],
+     [
+      -475.8,
+      -67.4
+     ],
+     [
+      -414.9,
+      -73.9
+     ],
+     [
+      -354.5,
+      -51.4
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      347.9,
+      -12
+     ],
+     [
+      346.4,
+      -82.2
+     ],
+     [
+      411.9,
+      -114.4
+     ],
+     [
+      482.1,
+      -102.2
+     ],
+     [
+      517.1,
+      -43.7
+     ],
+     [
+      523.6,
+      22.1
+     ],
+     [
+      475.8,
+      67.4
+     ],
+     [
+      414.9,
+      73.9
+     ],
+     [
+      354.5,
+      51.4
+     ]
+    ]
+   }
+  ],
+  "hills": [
+   {
+    "x": 0,
+    "z": 0,
+    "r": 90,
+    "h": 14,
+    "plateau": 0.3
+   },
+   {
+    "x": -445,
+    "z": 25,
+    "r": 70,
+    "h": 9
+   },
+   {
+    "x": -150,
+    "z": 315,
+    "r": 90,
+    "h": 14,
+    "plateau": 0.3
+   },
+   {
+    "x": 440,
+    "z": 340,
+    "r": 100,
+    "h": 18,
+    "plateau": 0.4
+   },
+   {
+    "x": -520,
+    "z": 470,
+    "r": 120,
+    "h": 20
+   },
+   {
+    "x": 445,
+    "z": -25,
+    "r": 70,
+    "h": 9
+   },
+   {
+    "x": 150,
+    "z": -315,
+    "r": 90,
+    "h": 14,
+    "plateau": 0.3
+   },
+   {
+    "x": -440,
+    "z": -340,
+    "r": 100,
+    "h": 18,
+    "plateau": 0.4
+   },
+   {
+    "x": 520,
+    "z": -470,
+    "r": 120,
+    "h": 20
+   }
+  ],
+  "cliffs": [
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -17,
+      380
+     ],
+     [
+      -23.1,
+      401.2
+     ],
+     [
+      -45,
+      401.9
+     ],
+     [
+      -55.3,
+      387.4
+     ],
+     [
+      -64.4,
+      368.2
+     ],
+     [
+      -44.2,
+      361.7
+     ],
+     [
+      -30,
+      367.4
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      237.6,
+      520
+     ],
+     [
+      213.9,
+      537.4
+     ],
+     [
+      193.7,
+      547.4
+     ],
+     [
+      166.4,
+      536.2
+     ],
+     [
+      178.8,
+      509.8
+     ],
+     [
+      193.8,
+      493
+     ],
+     [
+      218.7,
+      496.5
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      17,
+      -380
+     ],
+     [
+      23.1,
+      -401.2
+     ],
+     [
+      45,
+      -401.9
+     ],
+     [
+      55.3,
+      -387.4
+     ],
+     [
+      64.4,
+      -368.2
+     ],
+     [
+      44.2,
+      -361.7
+     ],
+     [
+      30,
+      -367.4
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -237.6,
+      -520
+     ],
+     [
+      -213.9,
+      -537.4
+     ],
+     [
+      -193.7,
+      -547.4
+     ],
+     [
+      -166.4,
+      -536.2
+     ],
+     [
+      -178.8,
+      -509.8
+     ],
+     [
+      -193.8,
+      -493
+     ],
+     [
+      -218.7,
+      -496.5
+     ]
+    ]
+   }
+  ],
+  "bridges": [
+   {
+    "a": [
+     0,
+     96
+    ],
+    "b": [
+     0,
+     246
+    ],
+    "width": 13
+   },
+   {
+    "a": [
+     0,
+     -96
+    ],
+    "b": [
+     0,
+     -246
+    ],
+    "width": 13
+   }
+  ],
+  "forests": [
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -418.5,
+      330
+     ],
+     [
+      -430.9,
+      362.8
+     ],
+     [
+      -461.1,
+      380.4
+     ],
+     [
+      -503.4,
+      387.9
+     ],
+     [
+      -522.7,
+      349.2
+     ],
+     [
+      -525.9,
+      309.7
+     ],
+     [
+      -508.1,
+      264
+     ],
+     [
+      -457.5,
+      259
+     ],
+     [
+      -433.4,
+      299.3
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      239.4,
+      330
+     ],
+     [
+      216.9,
+      376.9
+     ],
+     [
+      170,
+      391.1
+     ],
+     [
+      129.2,
+      370.8
+     ],
+     [
+      114.4,
+      330
+     ],
+     [
+      130.1,
+      290.1
+     ],
+     [
+      170,
+      269.3
+     ],
+     [
+      207.5,
+      292.5
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -156.8,
+      470
+     ],
+     [
+      -176,
+      504
+     ],
+     [
+      -210,
+      508.4
+     ],
+     [
+      -244.8,
+      504.8
+     ],
+     [
+      -264.4,
+      470
+     ],
+     [
+      -247.5,
+      432.5
+     ],
+     [
+      -210,
+      423.1
+     ],
+     [
+      -184.2,
+      444.2
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -389.6,
+      -10
+     ],
+     [
+      -404.4,
+      9.6
+     ],
+     [
+      -428,
+      25
+     ],
+     [
+      -449,
+      4
+     ],
+     [
+      -456.7,
+      -27.7
+     ],
+     [
+      -428.5,
+      -47.4
+     ],
+     [
+      -403.1,
+      -31.2
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      577.2,
+      420
+     ],
+     [
+      554.1,
+      454.1
+     ],
+     [
+      520,
+      477.8
+     ],
+     [
+      492.7,
+      447.3
+     ],
+     [
+      464.2,
+      420
+     ],
+     [
+      484,
+      384
+     ],
+     [
+      520,
+      365.7
+     ],
+     [
+      547.3,
+      392.7
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      418.5,
+      -330
+     ],
+     [
+      430.9,
+      -362.8
+     ],
+     [
+      461.1,
+      -380.4
+     ],
+     [
+      503.4,
+      -387.9
+     ],
+     [
+      522.7,
+      -349.2
+     ],
+     [
+      525.9,
+      -309.7
+     ],
+     [
+      508.1,
+      -264
+     ],
+     [
+      457.5,
+      -259
+     ],
+     [
+      433.4,
+      -299.3
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -239.4,
+      -330
+     ],
+     [
+      -216.9,
+      -376.9
+     ],
+     [
+      -170,
+      -391.1
+     ],
+     [
+      -129.2,
+      -370.8
+     ],
+     [
+      -114.4,
+      -330
+     ],
+     [
+      -130.1,
+      -290.1
+     ],
+     [
+      -170,
+      -269.3
+     ],
+     [
+      -207.5,
+      -292.5
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      156.8,
+      -470
+     ],
+     [
+      176,
+      -504
+     ],
+     [
+      210,
+      -508.4
+     ],
+     [
+      244.8,
+      -504.8
+     ],
+     [
+      264.4,
+      -470
+     ],
+     [
+      247.5,
+      -432.5
+     ],
+     [
+      210,
+      -423.1
+     ],
+     [
+      184.2,
+      -444.2
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      389.6,
+      10
+     ],
+     [
+      404.4,
+      -9.6
+     ],
+     [
+      428,
+      -25
+     ],
+     [
+      449,
+      -4
+     ],
+     [
+      456.7,
+      27.7
+     ],
+     [
+      428.5,
+      47.4
+     ],
+     [
+      403.1,
+      31.2
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -577.2,
+      -420
+     ],
+     [
+      -554.1,
+      -454.1
+     ],
+     [
+      -520,
+      -477.8
+     ],
+     [
+      -492.7,
+      -447.3
+     ],
+     [
+      -464.2,
+      -420
+     ],
+     [
+      -484,
+      -384
+     ],
+     [
+      -520,
+      -365.7
+     ],
+     [
+      -547.3,
+      -392.7
+     ]
+    ]
+   }
+  ],
+  "roads": [
+   {
+    "points": [
+     [
+      -300,
+      430
+     ],
+     [
+      -150,
+      385
+     ],
+     [
+      0,
+      340
+     ],
+     [
+      0,
+      246
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      300,
+      430
+     ],
+     [
+      150,
+      385
+     ],
+     [
+      0,
+      340
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      -560,
+      300
+     ],
+     [
+      -380,
+      315
+     ],
+     [
+      -180,
+      345
+     ],
+     [
+      0,
+      340
+     ],
+     [
+      190,
+      340
+     ],
+     [
+      380,
+      320
+     ],
+     [
+      560,
+      300
+     ]
+    ],
+    "width": 6
+   },
+   {
+    "points": [
+     [
+      300,
+      -430
+     ],
+     [
+      150,
+      -385
+     ],
+     [
+      0,
+      -340
+     ],
+     [
+      0,
+      -246
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      -300,
+      -430
+     ],
+     [
+      -150,
+      -385
+     ],
+     [
+      0,
+      -340
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      560,
+      -300
+     ],
+     [
+      380,
+      -315
+     ],
+     [
+      180,
+      -345
+     ],
+     [
+      0,
+      -340
+     ],
+     [
+      -190,
+      -340
+     ],
+     [
+      -380,
+      -320
+     ],
+     [
+      -560,
+      -300
+     ]
+    ],
+    "width": 6
+   },
+   {
+    "points": [
+     [
+      0,
+      96
+     ],
+     [
+      0,
+      40
+     ],
+     [
+      0,
+      -40
+     ],
+     [
+      0,
+      -96
+     ]
+    ],
+    "width": 7
+   }
+  ]
+ },
+ "points": [
+  {
+   "x": 0,
+   "z": 0,
+   "name": "Lighthouse",
+   "radius": 30
+  },
+  {
+   "x": -430,
+   "z": 15,
+   "name": "West Isle"
+  },
+  {
+   "x": -380,
+   "z": 300,
+   "name": "South Harbor"
+  },
+  {
+   "x": 380,
+   "z": 320,
+   "name": "South Cannery"
+  },
+  {
+   "x": 430,
+   "z": -15,
+   "name": "East Isle"
+  },
+  {
+   "x": 380,
+   "z": -300,
+   "name": "North Harbor"
+  },
+  {
+   "x": -380,
+   "z": -320,
+   "name": "North Cannery"
+  }
+ ],
+ "supplyNodes": [
+  {
+   "x": -170,
+   "z": 430
+  },
+  {
+   "x": 170,
+   "z": 430
+  },
+  {
+   "x": -300,
+   "z": 280
+  },
+  {
+   "x": 300,
+   "z": 300
+  },
+  {
+   "x": -400,
+   "z": 45
+  },
+  {
+   "x": 40,
+   "z": 32
+  },
+  {
+   "x": 170,
+   "z": -430
+  },
+  {
+   "x": -170,
+   "z": -430
+  },
+  {
+   "x": 300,
+   "z": -280
+  },
+  {
+   "x": -300,
+   "z": -300
+  },
+  {
+   "x": 400,
+   "z": -45
+  },
+  {
+   "x": -40,
+   "z": -32
+  }
+ ],
+ "structures": [
+  {
+   "type": "ruin",
+   "x": -350,
+   "z": 330,
+   "rotation": 0
+  },
+  {
+   "type": "ruin",
+   "x": 410,
+   "z": 290,
+   "rotation": 1.6
+  },
+  {
+   "type": "ruin",
+   "x": -455,
+   "z": -12,
+   "rotation": 0
+  },
+  {
+   "type": "ruin",
+   "x": 30,
+   "z": -40,
+   "rotation": 0
+  },
+  {
+   "type": "ruin",
+   "x": 350,
+   "z": -330,
+   "rotation": 3.1
+  },
+  {
+   "type": "ruin",
+   "x": -410,
+   "z": -290,
+   "rotation": 4.7
+  },
+  {
+   "type": "ruin",
+   "x": 455,
+   "z": 12,
+   "rotation": 3.1
+  },
+  {
+   "type": "ruin",
+   "x": -30,
+   "z": 40,
+   "rotation": 3.1
+  }
+ ],
+ "scatter": [
+  {
+   "models": [
+    "models/env/rock_large_a.glb",
+    "models/env/rock_large_b.glb",
+    "models/env/rock_small_a.glb",
+    "models/env/rock_tall_a.glb",
+    "models/env/rock_stone_large.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 400,
+    "w": 1200,
+    "d": 340
+   },
+   "count": 90,
+   "scale": [
+    0.6,
+    1.5
+   ]
+  },
+  {
+   "models": [
+    "models/env/rock_large_a.glb",
+    "models/env/rock_large_b.glb",
+    "models/env/rock_small_a.glb",
+    "models/env/rock_tall_a.glb",
+    "models/env/rock_stone_large.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": -400,
+    "w": 1200,
+    "d": 340
+   },
+   "count": 90,
+   "scale": [
+    0.6,
+    1.5
+   ]
+  },
+  {
+   "models": [
+    "models/env/bush_small.glb",
+    "models/env/bush_large.glb",
+    "models/env/bush_detailed.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 400,
+    "w": 1200,
+    "d": 340
+   },
+   "count": 220,
+   "scale": [
+    0.8,
+    1.5
+   ]
+  },
+  {
+   "models": [
+    "models/env/bush_small.glb",
+    "models/env/bush_large.glb",
+    "models/env/bush_detailed.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": -400,
+    "w": 1200,
+    "d": 340
+   },
+   "count": 220,
+   "scale": [
+    0.8,
+    1.5
+   ]
+  }
+ ],
+ "props": [
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 11,
+   "z": 0,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.5,
+   "z": 9.5,
+   "rotation": 2.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.5,
+   "z": 9.5,
+   "rotation": 3.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -11,
+   "z": 0,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.5,
+   "z": -9.5,
+   "rotation": 5.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.5,
+   "z": -9.5,
+   "rotation": 6.8
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 4,
+   "z": -3,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -3,
+   "z": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -419.5,
+   "z": 18.3,
+   "rotation": 1.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -427.6,
+   "z": 25.7,
+   "rotation": 2.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -438.1,
+   "z": 22.5,
+   "rotation": 4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -440.5,
+   "z": 11.7,
+   "rotation": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -432.4,
+   "z": 4.3,
+   "rotation": 6.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -421.9,
+   "z": 7.5,
+   "rotation": 7.1
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -426,
+   "z": 12,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -433,
+   "z": 20
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -370.9,
+   "z": 306.2,
+   "rotation": 2.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -380.8,
+   "z": 311,
+   "rotation": 3.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -389.9,
+   "z": 304.8,
+   "rotation": 4.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -389.1,
+   "z": 293.8,
+   "rotation": 5.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -379.2,
+   "z": 289,
+   "rotation": 6.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -370.1,
+   "z": 295.2,
+   "rotation": 7.4
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -376,
+   "z": 297,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -383,
+   "z": 305
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 386.8,
+   "z": 328.6,
+   "rotation": 2.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 376,
+   "z": 330.2,
+   "rotation": 3.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 369.1,
+   "z": 321.6,
+   "rotation": 4.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 373.2,
+   "z": 311.4,
+   "rotation": 5.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 384,
+   "z": 309.8,
+   "rotation": 6.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 390.9,
+   "z": 318.4,
+   "rotation": 7.7
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 384,
+   "z": 317,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 377,
+   "z": 325
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 434,
+   "z": -4.7,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 423.1,
+   "z": -6.4,
+   "rotation": 3.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 419.1,
+   "z": -16.7,
+   "rotation": 4.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 426,
+   "z": -25.3,
+   "rotation": 5.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 436.9,
+   "z": -23.6,
+   "rotation": 7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 440.9,
+   "z": -13.3,
+   "rotation": 8
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 434,
+   "z": -18,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 427,
+   "z": -10
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 380.8,
+   "z": -289,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 370.9,
+   "z": -293.8,
+   "rotation": 4.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 370.1,
+   "z": -304.8,
+   "rotation": 5.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 379.2,
+   "z": -311,
+   "rotation": 6.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 389.1,
+   "z": -306.2,
+   "rotation": 7.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 389.9,
+   "z": -295.2,
+   "rotation": 8.3
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 384,
+   "z": -303,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 377,
+   "z": -295
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -382.5,
+   "z": -309.3,
+   "rotation": 3.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -390.5,
+   "z": -316.8,
+   "rotation": 4.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -388,
+   "z": -327.5,
+   "rotation": 5.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -377.5,
+   "z": -330.7,
+   "rotation": 6.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -369.5,
+   "z": -323.2,
+   "rotation": 7.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -372,
+   "z": -312.5,
+   "rotation": 8.6
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -376,
+   "z": -323,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -383,
+   "z": -315
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -161,
+   "z": 437,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -178,
+   "z": 439
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -179,
+   "z": 437.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -168,
+   "z": 419,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 179,
+   "z": 437,
+   "rotation": 0.7
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 162,
+   "z": 439
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 161,
+   "z": 437.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 172,
+   "z": 419,
+   "rotation": 1.9
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -291,
+   "z": 287,
+   "rotation": 1.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -308,
+   "z": 289
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -309,
+   "z": 287.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -298,
+   "z": 269,
+   "rotation": 2.2
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 309,
+   "z": 307,
+   "rotation": 2.1
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 292,
+   "z": 309
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 291,
+   "z": 307.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 302,
+   "z": 289,
+   "rotation": 2.5
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -391,
+   "z": 52,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -408,
+   "z": 54
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -409,
+   "z": 52.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -398,
+   "z": 34,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 49,
+   "z": 39,
+   "rotation": 3.5
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 32,
+   "z": 41
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 31,
+   "z": 39.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 42,
+   "z": 21,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 179,
+   "z": -423,
+   "rotation": 4.2
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 162,
+   "z": -421
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 161,
+   "z": -422.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 172,
+   "z": -441,
+   "rotation": 3.4
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -161,
+   "z": -423,
+   "rotation": 4.9
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -178,
+   "z": -421
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -179,
+   "z": -422.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -168,
+   "z": -441,
+   "rotation": 3.7
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 309,
+   "z": -273,
+   "rotation": 5.6
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 292,
+   "z": -271
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 291,
+   "z": -272.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 302,
+   "z": -291,
+   "rotation": 4
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -291,
+   "z": -293,
+   "rotation": 6.3
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -308,
+   "z": -291
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -309,
+   "z": -292.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -298,
+   "z": -311,
+   "rotation": 4.3
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 409,
+   "z": -38,
+   "rotation": 7
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 392,
+   "z": -36
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 391,
+   "z": -37.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 402,
+   "z": -56,
+   "rotation": 4.6
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -31,
+   "z": -25,
+   "rotation": 7.7
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -48,
+   "z": -23
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -49,
+   "z": -24.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -38,
+   "z": -43,
+   "rotation": 4.9
+  }
+ ]
+}

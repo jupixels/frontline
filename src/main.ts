@@ -1,4 +1,4 @@
-import { setVolume } from './audio/audio';
+import { setMuted, setVolume } from './audio/audio';
 import { MAPS } from './game/content';
 import { Match } from './game/match';
 import { NetLobbyAdapter, netLobbyConnector } from './game/netLobby';
@@ -47,6 +47,16 @@ const app = new UiApp({
   },
 });
 app.start();
+
+// Dev shortcut: ?quick=<mapId>&ai=normal,hard&teams=0,1,0 starts a skirmish straight away.
+const params = new URLSearchParams(location.search);
+const quick = params.get('quick');
+if (quick) {
+  const ais = (params.get('ai') ?? 'normal').split(',').filter(Boolean) as ('easy' | 'normal' | 'hard')[];
+  const teams = params.get('teams')?.split(',').map(Number);
+  app.quickSkirmish(quick, ais, teams);
+}
+if (params.has('mute')) setMuted(true);
 
 // Handy for debugging in the console.
 Object.defineProperty(window, 'match', { get: () => match });

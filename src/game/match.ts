@@ -71,6 +71,7 @@ export class Match {
       structures: STRUCTURES,
       map,
       mode: opts.mode,
+      render: { minimapImage: r.terrain.minimapImage() },
       issue: (cmd) => {
         net.submit(cmd);
         r.markCommand(cmd);
