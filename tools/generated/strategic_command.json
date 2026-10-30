@@ -1,0 +1,44 @@
+{
+  "id": "strategic_command",
+  "date": "2026-10-30",
+  "batch": 6,
+  "replaces": "models/buildings/radar.glb (shared with the radar)",
+  "footprint": [
+    20,
+    20
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Strategic missile launch site: a reinforced concrete command bunker with antennas, next to it a large raised launch rail on a heavy mount holding a big olive cruise missile pointed up at a steep angle, concrete blast walls around it, square layout.",
+    "taskId": "01a18b5f-5763-7132-8735-7ab7030daad3",
+    "file": "raw/strategic_command/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 12000,
+    "texture": true,
+    "taskId": "01a18b61-023d-7284-9af9-eb7920753379",
+    "file": "raw/strategic_command/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/strategic_command.json",
+    "output": "buildings/strategic_command.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/strategic_command.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

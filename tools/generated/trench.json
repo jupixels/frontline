@@ -1,0 +1,44 @@
+{
+  "id": "trench",
+  "date": "2026-10-30",
+  "batch": 6,
+  "replaces": "models/buildings/props/sandbags.glb, stretched to the footprint",
+  "footprint": [
+    10,
+    4
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> A straight section of infantry trench about three times longer than wide: a dug trench lined with wooden revetment, sandbag parapets along both edges, a sandbagged machine gun position in the middle.",
+    "taskId": "01a18b5f-4617-7443-916f-5e4ba23ca456",
+    "file": "raw/trench/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 6000,
+    "texture": true,
+    "taskId": "01a18b60-e3ee-77e2-a693-52ab910e8933",
+    "file": "raw/trench/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/trench.json",
+    "output": "buildings/trench.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/trench.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

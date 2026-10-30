@@ -220,7 +220,7 @@
   },
   "trench": {
     "name": "Trench",
-    "model": "models/buildings/props/sandbags.glb",
+    "model": "models/buildings/trench.glb",
     "hp": 900,
     "footprint": [
       10,
@@ -235,7 +235,7 @@
   },
   "ruin": {
     "name": "Ruined Farmhouse",
-    "model": "models/buildings/props/gatehouse.glb",
+    "model": "models/buildings/ruin.glb",
     "hp": 2200,
     "footprint": [
       10,
@@ -252,7 +252,7 @@
   },
   "strategic_command": {
     "name": "Strategic Command",
-    "model": "models/buildings/radar.glb",
+    "model": "models/buildings/strategic_command.glb",
     "hp": 3000,
     "footprint": [
       20,

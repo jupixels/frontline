@@ -1,0 +1,44 @@
+{
+  "id": "power_plant",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/power_plant.glb",
+  "footprint": [
+    14,
+    14
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Military power plant: a diesel generator hall with two tall exhaust stacks, cylindrical fuel tanks, and a fenced transformer yard, square layout.",
+    "taskId": "01a18b5f-174b-73ea-91db-b6c7f5eb249b",
+    "file": "raw/power_plant/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 12000,
+    "texture": true,
+    "taskId": "01a18b60-4cdd-70f1-9193-f21f33dec3cf",
+    "file": "raw/power_plant/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/power_plant.json",
+    "output": "buildings/power_plant.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/power_plant.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

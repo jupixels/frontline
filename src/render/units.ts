@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { SUPPRESS_PINNED } from '../shared/entities';
 import type { UnitDef } from '../shared/data';
 import type { EntityState } from '../shared/entities';
-import { materialRole, teamMaterial } from './materials';
+import { materialRole, TEAM_ACCENT, TEAM_PAINT, teamMaterial } from './materials';
 import { cloneModel, loadModel, type PreparedModel } from './models';
 import { WATER_LEVEL } from './terrain';
 
@@ -239,8 +239,10 @@ export class UnitView {
     }
     // Buildings keep their paint (roofs too: a whole team-blue roof is far too loud); only explicit
     // trim materials take the team color. Ownership also shows on the foundation's edge.
+    // Generated buildings mark their own team areas (TeamPaint/TeamAccent), like the generated units.
+    const generated = src.name === TEAM_PAINT || src.name === TEAM_ACCENT;
     const role =
-      this.cls === 'structure'
+      this.cls === 'structure' && !generated
         ? /color_|flag|trim|stripe/i.test(src.name) ? 'accent' : 'keep'
         : materialRole(src, src === prepared.primaryMaterial || !prepared.primaryMaterial);
     return teamMaterial(src, role, this.teamColor, burnt, this.cls === 'infantry' ? 0.9 : 2.2, band);

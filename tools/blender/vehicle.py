@@ -48,7 +48,8 @@ bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 common.apply_transform(body, Matrix.Rotation(math.radians(cfg.get('rotateY', 0)), 4, 'Z'))
 mn, mx = common.bounds([body])
 size = mx - mn
-s = cfg['length'] / max(size.x, size.y)
+# `fit: [w, d]` (structures): the largest uniform scale that fits the footprint (game x by z).
+s = min(cfg['fit'][0] / size.x, cfg['fit'][1] / size.y) if 'fit' in cfg else cfg['length'] / max(size.x, size.y)
 common.apply_transform(body, Matrix.Scale(s, 4))
 mn, mx = common.bounds([body])
 common.apply_transform(body, Matrix.Translation(Vector((-(mn.x + mx.x) / 2, -(mn.y + mx.y) / 2, -mn.z))))
@@ -82,7 +83,7 @@ acc = cfg.get('accent', {})
 height = common.bounds([body])[1].z
 accent_faces = {i for i in paint_faces
                 if body.data.polygons[i].normal.z >= acc.get('normalZ', 0.65)
-                and body.data.polygons[i].center.z >= acc.get('minHeight', 0.62) * height}
+                and body.data.polygons[i].center.z >= acc.get('minHeightM', acc.get('minHeight', 0.62) * height)}
 common.assign_material(body, paint_faces - accent_faces, common.team_paint(detail))
 common.assign_material(body, accent_faces, common.team_paint(detail, 'TeamAccent'))
 print(f'paint: {len(paint_faces)}/{len(body.data.polygons)} faces, accent {len(accent_faces)}')
@@ -209,6 +210,8 @@ if turret:
         scan.insert(-1, (t, e))
     clip('TurretScan', [(turret, 'rotation_euler', sorted(scan, key=lambda k: k[0]))])
     loc = turret.location.copy()
+if turret and cfg.get('death', True):
+    # Ships set `death: false`: they sink (renderer) instead of popping a turret.
     clip('Death', [(turret, 'location', [(0, loc), (0.25, loc + Vector((0, 0.2, cfg.get('deathLift', 0.5)))), (0.6, loc + Vector((0, 0.3, 0.12)))])])
 # `spin` parts (radar dishes, rotors) turn in looping clips (`spinClips`, default Idle). `spinAxis` is the
 # game axis: y (vertical, default) or x (sideways, a tail rotor). All spinners share one period so the loop

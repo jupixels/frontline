@@ -126,13 +126,13 @@ npm run assets -- --only tank_mbt
 | Source | Used for | License |
 |---|---|---|
 | Modern-RTS-Animations.zip, Zsky vehicles (`*_zsky_CC-BY`) | (no longer used) | **CC-BY 4.0**, Zsky (zsky2000.itch.io) |
-| Modern-RTS-Models.zip, Zsky military base | hq, barracks, helipad, radar, supply_depot, hospital, watchtower, props, parts of the kitbashes | **CC-BY 4.0**, Zsky |
+| Modern-RTS-Models.zip, Zsky military base | map props (sandbags, barrels, containers, gas tanks, walls) | **CC-BY 4.0**, Zsky |
 | Modern-RTS-Animations.zip, Freeciv units by yd | (no longer used) | CC0 |
 | Modern-RTS-Animations.zip, toon vehicles | (no longer used). The pack README lists them as CC0; they look like CptDrunkBear's N64-style set, so they're credited to CptDrunkBear | CC0 |
-| Generated with Meshy AI (Pro plan; the output is owned by the project) | all units: infantry, vehicles, aircraft, ships | owned, no attribution needed (credited as "made with Meshy AI") |
+| Generated with Meshy AI (Pro plan; the output is owned by the project) | all units and structures (incl. trench, ruin, strategic_command) | owned, no attribution needed (credited as "made with Meshy AI") |
 | Modern-RTS-Animations.zip, Kevin Iglesias soldiers | (no longer used) | Royalty-free, commercial use OK, no resale of the assets themselves |
 | [Kenney Nature Kit](https://kenney.nl/assets/nature-kit) | `models/env/*` | CC0 |
-| [Kenney City Kit (Industrial)](https://kenney.nl/assets/city-kit-industrial) | parts of war_factory, airfield, power_plant, naval_yard | CC0 |
+| [Kenney City Kit (Industrial)](https://kenney.nl/assets/city-kit-industrial) | (no longer used) | CC0 |
 | ambientCG [Grass004](https://ambientcg.com/view?id=Grass004), [Ground103](https://ambientcg.com/view?id=Ground103), [Rock030](https://ambientcg.com/view?id=Rock030), [Ground080](https://ambientcg.com/view?id=Ground080), [Ground048](https://ambientcg.com/view?id=Ground048) | grass, dirt, rock, sand, mud | CC0 |
 | Poly Haven [Kloppenheim 06 (Pure Sky)](https://polyhaven.com/a/kloppenheim_06_puresky) by Greg Zaal, Jarod Guest | sky.hdr | CC0 |
 

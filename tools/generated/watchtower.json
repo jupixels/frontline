@@ -1,0 +1,44 @@
+{
+  "id": "watchtower",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/watchtower.glb",
+  "footprint": [
+    6,
+    6
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Military watchtower: tall square steel-and-timber lattice tower with a ladder, a sandbagged lookout platform at the top with a sloped olive roof and a searchlight.",
+    "taskId": "01a18b5f-3c7c-7688-947f-c3f930535ce9",
+    "file": "raw/watchtower/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 6000,
+    "texture": true,
+    "taskId": "01a18b60-d450-70d8-a89d-56a96a3513ce",
+    "file": "raw/watchtower/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/watchtower.json",
+    "output": "buildings/watchtower.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/watchtower.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

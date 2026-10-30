@@ -1,0 +1,44 @@
+{
+  "id": "supply_depot",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/supply_depot.glb",
+  "footprint": [
+    12,
+    12
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Supply depot: an open-sided warehouse shed with a corrugated roof on steel posts, stacked olive ammunition crates, fuel drums and pallets underneath, square layout.",
+    "taskId": "01a18b5f-2071-7734-bab9-d567079ca7a5",
+    "file": "raw/supply_depot/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 10000,
+    "texture": true,
+    "taskId": "01a18b60-535e-7750-b8f3-895284843b3b",
+    "file": "raw/supply_depot/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/supply_depot.json",
+    "output": "buildings/supply_depot.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/supply_depot.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

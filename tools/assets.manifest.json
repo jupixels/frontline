@@ -378,60 +378,81 @@
       "draft": 9
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Quarter.obj",
+      "generated": "buildings/hq.glb",
       "out": "models/buildings/hq.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Refectory.obj",
+      "generated": "buildings/barracks.glb",
       "out": "models/buildings/barracks.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/HelicopterBase.obj",
+      "generated": "buildings/helipad.glb",
       "out": "models/buildings/helipad.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/RadioStation.obj",
+      "generated": "buildings/radar.glb",
       "out": "models/buildings/radar.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Storage.obj",
+      "generated": "buildings/supply_depot.glb",
       "out": "models/buildings/supply_depot.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/MedicTent.obj",
+      "generated": "buildings/hospital.glb",
       "out": "models/buildings/hospital.glb",
       "kind": "building",
-      "credit": "zsky",
-      "length": 10
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/SniperTower.obj",
+      "generated": "buildings/watchtower.glb",
       "out": "models/buildings/watchtower.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
       "zip": "Modern-RTS-Models.zip",
@@ -546,484 +567,48 @@
       "height": 3.5
     },
     {
+      "generated": "buildings/war_factory.glb",
       "out": "models/buildings/war_factory.glb",
       "kind": "building",
-      "kitbash": [
-        {
-          "box": [
-            28,
-            0.3,
-            22
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/building-k.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 20,
-          "at": [
-            0,
-            0.3,
-            -2
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/chimney-medium.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "height": 14,
-          "at": [
-            10,
-            0.3,
-            -8
-          ]
-        },
-        {
-          "zip": "Modern-RTS-Models.zip",
-          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_01.obj",
-          "credit": "zsky",
-          "rotateY": 90,
-          "at": [
-            -11.6,
-            0.3,
-            4
-          ],
-          "length": 12.2
-        },
-        {
-          "zip": "Modern-RTS-Models.zip",
-          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_02.obj",
-          "credit": "zsky",
-          "rotateY": 90,
-          "at": [
-            -7.2,
-            0.3,
-            4
-          ],
-          "length": 12.2
-        },
-        {
-          "zip": "Modern-RTS-Models.zip",
-          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/BarrierParking.obj",
-          "credit": "zsky",
-          "at": [
-            6,
-            0.3,
-            10
-          ],
-          "length": 5
-        }
-      ]
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
+      "generated": "buildings/airfield.glb",
       "out": "models/buildings/airfield.glb",
       "kind": "building",
-      "kitbash": [
-        {
-          "box": [
-            44,
-            0.2,
-            30
-          ],
-          "color": "#55575a",
-          "name": "slab",
-          "center": false
-        },
-        {
-          "box": [
-            1,
-            0.04,
-            7
-          ],
-          "color": "#d6d3c4",
-          "name": "marking",
-          "center": false,
-          "at": [
-            8,
-            0.2,
-            -9
-          ]
-        },
-        {
-          "box": [
-            1,
-            0.04,
-            7
-          ],
-          "color": "#d6d3c4",
-          "name": "marking",
-          "center": false,
-          "at": [
-            8,
-            0.2,
-            0
-          ]
-        },
-        {
-          "box": [
-            1,
-            0.04,
-            7
-          ],
-          "color": "#d6d3c4",
-          "name": "marking",
-          "center": false,
-          "at": [
-            8,
-            0.2,
-            9
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/building-j.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 18,
-          "at": [
-            -11,
-            0.2,
-            -3
-          ]
-        },
-        {
-          "cylinder": [
-            1.4,
-            1.2,
-            10
-          ],
-          "color": "#8d8b80",
-          "name": "tower",
-          "center": false,
-          "at": [
-            18,
-            0.2,
-            -11
-          ]
-        },
-        {
-          "box": [
-            5,
-            3,
-            5
-          ],
-          "color": "#3a4a52",
-          "name": "tower_cab",
-          "center": false,
-          "at": [
-            18,
-            10.2,
-            -11
-          ]
-        },
-        {
-          "zip": "Modern-RTS-Models.zip",
-          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/GasTank.obj",
-          "credit": "zsky",
-          "at": [
-            -18,
-            0.2,
-            11
-          ],
-          "length": 7
-        }
-      ]
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
+      "generated": "buildings/power_plant.glb",
       "out": "models/buildings/power_plant.glb",
       "kind": "building",
-      "kitbash": [
-        {
-          "box": [
-            24,
-            0.3,
-            24
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/chimney-large.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "height": 16,
-          "at": [
-            -5,
-            0.3,
-            -5
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/chimney-large.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "height": 13,
-          "at": [
-            6,
-            0.3,
-            -6
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/building-c.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 12,
-          "at": [
-            3,
-            0.3,
-            6
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/detail-tank-large.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 6,
-          "at": [
-            -7,
-            0.3,
-            6
-          ]
-        }
-      ]
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
+      "generated": "buildings/naval_yard.glb",
       "out": "models/buildings/naval_yard.glb",
       "kind": "building",
-      "kitbash": [
-        {
-          "box": [
-            36,
-            1.2,
-            16
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false,
-          "at": [
-            0,
-            0,
-            -6
-          ]
-        },
-        {
-          "box": [
-            6,
-            1.2,
-            16
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false,
-          "at": [
-            -12,
-            0,
-            10
-          ]
-        },
-        {
-          "box": [
-            6,
-            1.2,
-            16
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false,
-          "at": [
-            12,
-            0,
-            10
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/building-s.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 18,
-          "at": [
-            -4,
-            1.2,
-            -8
-          ]
-        },
-        {
-          "box": [
-            0.8,
-            14,
-            0.8
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            -12,
-            1.2,
-            4
-          ]
-        },
-        {
-          "box": [
-            0.8,
-            14,
-            0.8
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            -12,
-            1.2,
-            14
-          ]
-        },
-        {
-          "box": [
-            0.8,
-            14,
-            0.8
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            12,
-            1.2,
-            4
-          ]
-        },
-        {
-          "box": [
-            0.8,
-            14,
-            0.8
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            12,
-            1.2,
-            14
-          ]
-        },
-        {
-          "box": [
-            25,
-            1.2,
-            1.2
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            0,
-            15.2,
-            4
-          ]
-        },
-        {
-          "box": [
-            25,
-            1.2,
-            1.2
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            0,
-            15.2,
-            14
-          ]
-        },
-        {
-          "box": [
-            3,
-            2,
-            11
-          ],
-          "color": "#4b4b48",
-          "name": "crane_trolley",
-          "center": false,
-          "at": [
-            3,
-            13.2,
-            9
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/shipping-container-a.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 6,
-          "at": [
-            10,
-            1.2,
-            -9
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/shipping-container-b.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 6,
-          "at": [
-            10,
-            3.8,
-            -9
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/shipping-container-c.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 6,
-          "at": [
-            14,
-            1.2,
-            -4
-          ],
-          "rotateY": 90
-        }
-      ]
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
       "zip": "kenney_nature-kit.zip",
@@ -1152,6 +737,36 @@
       "kind": "env",
       "height": 3,
       "palette": "nature"
+    },
+    {
+      "generated": "buildings/trench.glb",
+      "out": "models/buildings/trench.glb",
+      "kind": "building",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
+    },
+    {
+      "generated": "buildings/ruin.glb",
+      "out": "models/buildings/ruin.glb",
+      "kind": "building",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024
+    },
+    {
+      "generated": "buildings/strategic_command.glb",
+      "out": "models/buildings/strategic_command.glb",
+      "kind": "building",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     }
   ],
   "textures": [

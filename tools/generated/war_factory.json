@@ -1,0 +1,44 @@
+{
+  "id": "war_factory",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/war_factory.glb",
+  "footprint": [
+    20,
+    20
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Vehicle factory: large square industrial hangar with a big roll-up door, corrugated metal walls, saw-tooth roof, an overhead crane gantry outside and a smokestack.",
+    "taskId": "01a18b5e-f444-7768-a7fa-426f8de73933",
+    "file": "raw/war_factory/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 12000,
+    "texture": true,
+    "taskId": "01a18b60-3495-73b6-b6bf-a01ccb87c503",
+    "file": "raw/war_factory/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/war_factory.json",
+    "output": "buildings/war_factory.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/war_factory.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

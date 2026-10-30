@@ -18,6 +18,16 @@ Plan and budgets: `docs/MODEL_GEN_PLAN.md`. Per-model records: `tools/generated/
 - Readable from the RTS camera (40° FOV, 25–320 m): silhouette first. Slightly exaggerate the features that
   identify the unit, such as gun length, missile pods and radar dishes.
 
+**Building (structures):**
+
+> Realistic modern military base building, generic NATO style, no insignia, no text, no flags, no signs.
+> Matte weathered concrete walls and corrugated metal, roofs painted plain olive drab, light dust and grime.
+> Single building, entire structure in frame, three-quarter view from above, centered on a plain light grey
+> background, no ground, no shadow, soft even overcast lighting, photorealistic 3D render.
+
+Structures are scaled with `fit` (uniform scale to 96% of the `data/structures.json` footprint), and their
+team accent is the roof (`accent.minHeight`, or `minHeightM` when a mast makes the model tall).
+
 ## Reference images
 
 - Model: `nano-banana-2-lite` (3 credits) for previews. Use `nano-banana-2` only if lite can't give a clean
@@ -99,6 +109,7 @@ After the prefix, add one or two sentences on the specific model's identifying f
 - 2026-10-29: final models use meshy-t2.5 smart topology instead of lite + Blender decimation.
 - 2026-10-30: team color via a texture-preserving `TeamPaint` tint instead of procedural camo; 1 candidate (or
   none) when the reference is clear; 5 clips per soldier.
+- 2026-10-30: structures (building prefix, `fit`, roof accent); ships have no `Death` clip (they sink).
 - 2026-10-30: team color as an accent (`TeamAccent`) with a faint tint elsewhere. Aircraft use "plain olive drab"
   (helicopters) or "plain grey-green" (jets) paint; ships "plain haze grey, dark red-brown below the waterline,
   full hull out of the water"; the submarine matte dark grey.
