@@ -96,10 +96,50 @@ function assignBuild(builder: Entity, siteId: EntityId, queue: boolean): void {
   }
 }
 
+/** A builder may work on sites of its own player, or of a player it shares command with (co-op). */
+export function canHelpBuild(world: World, builder: Entity, site: Entity): boolean {
+  if (site.kind !== 'structure' || site.owner < 0) return false;
+  if (site.owner === builder.owner) return true;
+  return !!world.commandsFor.get(builder.owner)?.has(site.owner) || !!world.commandsFor.get(site.owner)?.has(builder.owner);
+}
+
+/** Idle engineers pick up unfinished friendly construction within this range. */
+const AUTO_BUILD_RANGE = 28;
+const AUTO_BUILD_SCAN_TICKS = 10;
+
+/**
+ * Idle builders (no order, on foot) look around every few ticks for an unfinished friendly site
+ * and start on the nearest one. A player's own orders always take precedence: only order-less
+ * builders are picked up, and any new order replaces the automatic one. Returns true if it started.
+ */
+export function autoBuild(world: World, e: Entity): boolean {
+  if (e.order || e.inside || !e.unit?.builder || (world.tick + e.id) % AUTO_BUILD_SCAN_TICKS !== 0) return false;
+  let best: Entity | null = null;
+  let bestD = Infinity;
+  world.spatial.query(e.pos.x, e.pos.z, AUTO_BUILD_RANGE + 20, (s) => {
+    if (s.kind !== 'structure' || s.dead || s.buildProgress >= 1 || !canHelpBuild(world, e, s)) return;
+    const dx = s.pos.x - e.pos.x;
+    const dz = s.pos.z - e.pos.z;
+    // Measured to the footprint edge, so big buildings count when you stand beside them.
+    const d = Math.max(0, Math.sqrt(dx * dx + dz * dz) - s.radius);
+    if (d > AUTO_BUILD_RANGE) return;
+    if (d < bestD || (d === bestD && best && s.id < best.id)) {
+      best = s;
+      bestD = d;
+    }
+  });
+  if (!best) return false;
+  e.order = { kind: 'build', siteId: (best as Entity).id };
+  e.orderQueue.length = 0;
+  e.path = null;
+  e.guard = null;
+  return true;
+}
+
 /** One tick of a builder working its build order (called from movementSystem). */
 export function builderTick(world: World, e: Entity, siteId: EntityId): void {
   const site = world.entities.get(siteId);
-  if (!site || site.dead || site.buildProgress >= 1 || site.owner !== e.owner) {
+  if (!site || site.dead || site.buildProgress >= 1 || !canHelpBuild(world, e, site)) {
     nextOrder(e);
     return;
   }
