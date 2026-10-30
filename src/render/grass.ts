@@ -43,8 +43,8 @@ export class GrassField {
     // Desert gets sparse dry scrub; elsewhere grass from lush to straw depending on the mood.
     this.density = desert ? 0.2 : 1;
     const dry = desert ? 1 : atmosphere.ground.dry;
-    const green = [new THREE.Color(0x7d9444), new THREE.Color(0x92a24e), new THREE.Color(0x6a8038)];
-    const straw = [new THREE.Color(0xc2ad6c), new THREE.Color(0xb09c62), new THREE.Color(0xcdb882)];
+    const green = [new THREE.Color(0x9aae5a), new THREE.Color(0xa9b866), new THREE.Color(0x8ea252)];
+    const straw = [new THREE.Color(0xd4c286), new THREE.Color(0xc6b47c), new THREE.Color(0xdccb95)];
     this.palette = green.map((g, i) => g.clone().lerp(straw[i], Math.min(1, dry * 0.8)));
     if (atmosphere.ground.wet > 0.4) for (const p of this.palette) p.multiplyScalar(0.8);
     (this.uniforms.uWind.value as THREE.Vector3).set(Math.sin(atmosphere.wind.heading), Math.cos(atmosphere.wind.heading), 0.15 + atmosphere.wind.strength * 0.45);
@@ -102,7 +102,7 @@ export class GrassField {
     const c1x = Math.floor((center.x + r) / CELL);
     const c0z = Math.floor((center.z - r) / CELL);
     const c1z = Math.floor((center.z + r) / CELL);
-    const perCell = 5 * this.density;
+    const perCell = 3.5 * this.density;
     let n = 0;
     const cap = this.capacity;
     for (let cz = c0z; cz <= c1z && n < cap; cz++) {
@@ -121,9 +121,10 @@ export class GrassField {
           const cover = this.terrain.grassAt(x, z);
           if (cover < 0.35 || hash2(cx + k * 31, cz - k * 17, 303) > cover) continue;
           const y = this.terrain.groundAt(x, z);
-          const size = 0.7 + hash2(cx - k, cz + k * 3, 404) * 0.9;
+          const size = 0.6 + hash2(cx - k, cz + k * 3, 404) * 0.7;
           this.q.setFromAxisAngle(this.up, hash2(cx + k, cz + k, 505) * Math.PI * 2);
-          this.s.set(size * 1.1, size * (0.8 + clump * 0.5), size * 1.1);
+          // Low and wide: tall cards catch ambient occlusion and read as dark dots from above.
+          this.s.set(size * 1.3, size * (0.62 + clump * 0.35), size * 1.3);
           this.m.compose(this.p.set(x, y - 0.05, z), this.q, this.s);
           this.mesh.setMatrixAt(n, this.m);
           const pal = this.palette[Math.floor(hash2(cx * 3 + k, cz, 606) * this.palette.length) % this.palette.length];
@@ -181,7 +182,8 @@ transformed *= 0.35 + 0.65 * vFade;
 const GRASS_FRAG_FADE = /* glsl */ `
 // Ordered dither: fade by discarding a growing share of pixels (no sorting needed).
 float dither = fract(dot(gl_FragCoord.xy, vec2(0.0671, 0.00583)) * 52.98);
-if (diffuseColor.a < 0.45 || dither > vFade) discard;
+// Dithered alpha edge: blades feather out instead of ending in a hard cut-out outline.
+if (diffuseColor.a < 0.15 + dither * 0.4 || dither > vFade) discard;
 `;
 
 /** Three crossed cards, 1 m tall, pivot at the base; normals point up. */
@@ -222,10 +224,11 @@ function bladeTexture(): THREE.Texture {
     const x = W * (0.15 + rnd() * 0.7);
     const h = H * (0.45 + rnd() * 0.52);
     const lean = (rnd() - 0.5) * W * 0.35;
-    const w = 2.5 + rnd() * 3;
+    const w = 1.6 + rnd() * 2;
     const grad = g.createLinearGradient(0, H, 0, H - h);
     const tone = 195 + rnd() * 60;
-    grad.addColorStop(0, `rgb(${tone * 0.74},${tone * 0.78},${tone * 0.66})`);
+    // Nearly flat shading along the blade: dark bases read as dirt specks from above.
+    grad.addColorStop(0, `rgb(${tone * 0.88},${tone * 0.9},${tone * 0.82})`);
     grad.addColorStop(1, `rgb(${tone},${tone},${tone * 0.9})`);
     g.fillStyle = grad;
     g.beginPath();

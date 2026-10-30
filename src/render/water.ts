@@ -70,7 +70,7 @@ export class Water {
     (u.uWind.value as THREE.Vector2).set(Math.sin(a.wind.heading), Math.cos(a.wind.heading));
     u.uWaves.value = a.waves;
     // Sun glitter only under a clear sky.
-    u.uGlint.value = (1 - a.clouds.cover * 0.6) * (1 - a.rain * 0.9);
+    u.uGlint.value = (1 - a.clouds.cover * 0.6) * (1 - a.rain) * (1 - a.rain);
     (u.uCloud.value as THREE.Vector3).set(a.clouds.cover, a.clouds.darkness, 1 / a.clouds.scale);
   }
 

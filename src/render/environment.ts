@@ -65,28 +65,30 @@ export const GOLDEN_HOUR: Atmosphere = {
 export const RAIN: Atmosphere = {
   sunElevationDeg: 48,
   sunAzimuthDeg: 160,
-  sunColor: 0xd8e0e8,
-  sunIntensity: 1.35,
-  turbidity: 16,
-  rayleigh: 3.4,
-  fogColor: 0x8e979d,
-  fogDensity: 0.0016,
+  // A brighter diffuse sun than real overcast so shapes keep their shading; thin haze so the
+  // islands and units stay crisp at RTS zoom. The rain and wet ground carry the mood.
+  sunColor: 0xdde4ec,
+  sunIntensity: 2.1,
+  turbidity: 14,
+  rayleigh: 3.0,
+  fogColor: 0x7d878e,
+  fogDensity: 0.0008,
   hemiSky: 0xb2bdc8,
   hemiGround: 0x464b46,
-  hemiIntensity: 0.55,
-  envIntensity: 1.45,
+  hemiIntensity: 0.45,
+  envIntensity: 1.2,
   water: [0x3f6b6a, 0x13282d],
-  ground: { dry: 0.05, wet: 0.75 },
-  clouds: { cover: 0.7, darkness: 0.18, scale: 220 },
+  ground: { dry: 0.05, wet: 0.6 },
+  clouds: { cover: 0.65, darkness: 0.2, scale: 220 },
   wind: { heading: -0.6, strength: 0.65 },
   rain: 0.8,
   shimmer: 0,
   waves: 1.25,
-  grade: { warmth: -0.45, saturation: 0.92, contrast: 0.3 },
+  grade: { warmth: -0.3, saturation: 1.08, contrast: 0.44 },
 };
 
 /** Plain overcast (no rain), for maps that ask for it by name. */
-export const OVERCAST: Atmosphere = { ...RAIN, rain: 0, ground: { dry: 0.15, wet: 0.2 }, fogDensity: 0.0014, waves: 1 };
+export const OVERCAST: Atmosphere = { ...RAIN, rain: 0, ground: { dry: 0.15, wet: 0.2 }, waves: 1 };
 
 /** Desert Oilfields: hot noon, short hard shadows, pale dust haze and heat shimmer. */
 export const HAZE: Atmosphere = {

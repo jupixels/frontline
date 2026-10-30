@@ -26,7 +26,8 @@ export class Weather {
     const w = atmosphere.wind;
     // Horizontal drift in m/s.
     this.uniforms.uWind.value.set(Math.sin(w.heading), Math.cos(w.heading)).multiplyScalar(2 + w.strength * 7);
-    this.uniforms.uOpacity.value = 0.18 + atmosphere.rain * 0.17;
+    // Light enough that the streaks read as weather, not as a grey veil over the battlefield.
+    this.uniforms.uOpacity.value = 0.1 + atmosphere.rain * 0.12;
     this.geo = new THREE.InstancedBufferGeometry();
     this.geo.setAttribute('position', new THREE.Float32BufferAttribute([-0.5, 0, 0, 0.5, 0, 0, 0.5, 1, 0, -0.5, 1, 0], 3));
     this.geo.setIndex([0, 1, 2, 0, 2, 3]);
