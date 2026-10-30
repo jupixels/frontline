@@ -15,6 +15,7 @@ interface Flight {
   arc: number;
   last: THREE.Vector3;
   trailAcc: number;
+  trail: boolean;
 }
 
 export interface Emitter {
@@ -28,6 +29,8 @@ export interface Emitter {
   acc: number;
   fireAcc: number;
   scale: number;
+  /** Smoke screen radius (fills a disc with white smoke instead of a rising column). */
+  screen?: number;
 }
 
 interface FlashLight {
@@ -143,9 +146,32 @@ export class Vfx {
   }
 
   /** Visual-only rocket/missile flight with a smoke trail. The sim's impact event draws the blast. */
-  rocket(from: THREE.Vector3, to: THREE.Vector3, speed = 110): void {
+  rocket(from: THREE.Vector3, to: THREE.Vector3, speed = 110, arc = 0.06): void {
     const dist = from.distanceTo(to);
-    this.flights.push({ from: from.clone(), to: to.clone(), t: 0, dur: Math.max(dist / speed, 0.15), arc: dist * 0.06, last: from.clone(), trailAcc: 0 });
+    this.flights.push({ from: from.clone(), to: to.clone(), t: 0, dur: Math.max(dist / speed, 0.15), arc: dist * arc, last: from.clone(), trailAcc: 0, trail: true });
+  }
+
+  /** Artillery shell: a faint glowing round on a high arc, no smoke trail. */
+  shell(from: THREE.Vector3, to: THREE.Vector3, speed = 160): void {
+    const dist = from.distanceTo(to);
+    this.flights.push({ from: from.clone(), to: to.clone(), t: 0, dur: Math.max(dist / speed, 0.3), arc: dist * 0.3, last: from.clone(), trailAcc: 0, trail: false });
+  }
+
+  /** Smoke screen filling a circle until it disperses after `duration` seconds. */
+  smokeScreen(x: number, z: number, radius: number, duration: number): void {
+    const pos = new THREE.Vector3(x, this.host.heightAt(x, z), z);
+    // Initial billow from the canisters.
+    for (let i = 0; i < this.n(radius * 2.5); i++) {
+      const a = rr(0, Math.PI * 2);
+      const r = Math.sqrt(Math.random()) * radius * 0.6;
+      this.smoke.spawn({
+        x: x + Math.cos(a) * r, y: pos.y + 0.8, z: z + Math.sin(a) * r, vx: Math.cos(a) * rr(1, 4), vy: rr(0.5, 2), vz: Math.sin(a) * rr(1, 4),
+        life: rr(5, 8), size0: radius * 0.2, size1: radius * rr(0.5, 0.8), r: 0.72, g: 0.73, b: 0.74, a: 0.85, drag: 0.6, spin: rr(-0.2, 0.2),
+      });
+    }
+    this.emitters.push({
+      pos, life: duration, age: 0, smokeRate: radius * radius * 0.06, fireTime: 0, acc: 0, fireAcc: 0, scale: 1, screen: radius,
+    });
   }
 
   hitSparks(x: number, y: number, z: number): void {
@@ -302,7 +328,7 @@ export class Vfx {
       const moved = p.distanceTo(f.last);
       f.trailAcc += moved;
       const dir = moved > 1e-4 ? new THREE.Vector3().subVectors(p, f.last).divideScalar(moved) : new THREE.Vector3();
-      while (f.trailAcc > 0.7) {
+      while (f.trail && f.trailAcc > 0.7) {
         f.trailAcc -= 0.7;
         const back = f.trailAcc;
         this.smoke.spawn({
@@ -310,7 +336,7 @@ export class Vfx {
           life: rr(1.6, 2.6), size0: 0.4, size1: rr(1.8, 2.8), r: 0.62, g: 0.6, b: 0.58, a: 0.55, drag: 1, spin: 0.4,
         });
       }
-      this.additive.spawn({ x: p.x, y: p.y, z: p.z, life: 0.05, size0: 1.3, size1: 0.9, r: 9, g: 5, b: 2 });
+      this.additive.spawn({ x: p.x, y: p.y, z: p.z, life: 0.05, size0: f.trail ? 1.3 : 0.6, size1: f.trail ? 0.9 : 0.4, r: 9, g: 5, b: 2 });
       f.last.copy(p);
       if (k >= 1) this.flights.splice(i, 1);
     }
@@ -330,6 +356,22 @@ export class Vfx {
       const taper = e.life < 0 ? 0 : Math.min(1, e.life / 8);
       e.acc += dt * e.smokeRate * taper * this.amount;
       const s = e.scale;
+      if (e.screen) {
+        while (e.acc >= 1) {
+          e.acc -= 1;
+          const a = rr(0, Math.PI * 2);
+          const r = Math.sqrt(Math.random()) * e.screen;
+          const gy = this.host.heightAt(e.pos.x + Math.cos(a) * r, e.pos.z + Math.sin(a) * r);
+          const shade = rr(0.66, 0.78);
+          this.smoke.spawn({
+            x: e.pos.x + Math.cos(a) * r, y: gy + rr(0.5, 2), z: e.pos.z + Math.sin(a) * r,
+            vx: rr(-0.4, 0.4) + WIND.x * 0.3, vy: rr(0.2, 0.8), vz: rr(-0.4, 0.4) + WIND.z * 0.3,
+            life: rr(6, 9), size0: e.screen * 0.25, size1: e.screen * rr(0.5, 0.75), r: shade, g: shade, b: shade * 1.02, a: 0.7,
+            drag: 0.5, spin: rr(-0.15, 0.15),
+          });
+        }
+        continue;
+      }
       while (e.acc >= 1) {
         e.acc -= 1;
         const gray = rr(0.05, 0.11);

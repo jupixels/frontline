@@ -45,12 +45,12 @@ export class HealthBars {
     this.count = 0;
   }
 
-  /** `widthPx` in CSS pixels; `selected` draws a brighter frame. */
-  add(pos: THREE.Vector3, fill: number, widthPx: number, selected: boolean): void {
+  /** `widthPx` in CSS pixels; `selected` draws a brighter frame; `progress` draws a blue build bar. */
+  add(pos: THREE.Vector3, fill: number, widthPx: number, selected: boolean, progress = false): void {
     if (this.count >= MAX_BARS) return;
     const i = this.count++;
     this.aWorld.setXYZ(i, pos.x, pos.y, pos.z);
-    this.aData.setXYZW(i, THREE.MathUtils.clamp(fill, 0, 1), widthPx, selected ? 1 : 0, 0);
+    this.aData.setXYZW(i, THREE.MathUtils.clamp(fill, 0, 1), widthPx, selected ? 1 : 0, progress ? 1 : 0);
   }
 
   end(): void {
@@ -85,7 +85,8 @@ varying vec2 vUv;
 varying vec4 vData;
 void main() {
   float fill = vData.x;
-  vec3 hpColor = fill > 0.6 ? vec3(0.45, 0.95, 0.35) : fill > 0.3 ? vec3(0.98, 0.8, 0.25) : vec3(0.98, 0.3, 0.2);
+  vec3 hpColor = vData.w > 0.5 ? vec3(0.35, 0.7, 1.0)
+    : fill > 0.6 ? vec3(0.45, 0.95, 0.35) : fill > 0.3 ? vec3(0.98, 0.8, 0.25) : vec3(0.98, 0.3, 0.2);
   vec3 c = vUv.x < fill ? hpColor : vec3(0.08, 0.09, 0.08);
   // 1px-ish frame.
   vec2 px = fwidth(vUv);
@@ -99,7 +100,7 @@ interface Marker {
   mesh: THREE.Mesh;
   age: number;
   life: number;
-  kind: 'ring' | 'target';
+  kind: 'ring' | 'target' | 'incoming';
   follow?: () => THREE.Vector3 | null;
 }
 
@@ -143,6 +144,27 @@ export class CommandMarkers {
     mesh.renderOrder = 6;
     this.group.add(mesh);
     this.markers.push({ mesh, age: 0, life: 0.9, kind: 'target', follow });
+  }
+
+  /**
+   * Indirect fire on its way: a red danger circle of the blast radius with a crosshair, pulsing
+   * faster as impact nears. Lasts until the shells land.
+   */
+  incoming(x: number, z: number, radius: number, seconds: number): void {
+    const mat = this.material(ATTACK_COLOR);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(radius * 0.94, radius, 64).rotateX(-Math.PI / 2), mat);
+    const fill = new THREE.Mesh(new THREE.CircleGeometry(radius, 48).rotateX(-Math.PI / 2), this.material(ATTACK_COLOR));
+    (fill.material as THREE.MeshBasicMaterial).opacity = 0.12;
+    ring.add(fill);
+    const bar = Math.max(radius * 0.06, 0.25);
+    for (const [w, d] of [[radius * 0.5, bar], [bar, radius * 0.5]]) {
+      const cross = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), mat);
+      ring.add(cross);
+    }
+    ring.position.set(x, this.heightAt(x, z) + 0.3, z);
+    ring.traverse((o) => (o.renderOrder = 6));
+    this.group.add(ring);
+    this.markers.push({ mesh: ring, age: 0, life: seconds + 0.25, kind: 'incoming' });
   }
 
   /** Show/update/hide a factory's rally line. Pass null to hide. */
@@ -192,8 +214,19 @@ export class CommandMarkers {
       const mat = m.mesh.material as THREE.MeshBasicMaterial;
       if (t >= 1) {
         this.group.remove(m.mesh);
-        mat.dispose();
+        m.mesh.traverse((o) => {
+          const mm = o as THREE.Mesh;
+          (mm.material as THREE.Material).dispose();
+          if (m.kind === 'incoming') mm.geometry.dispose();
+        });
         this.markers.splice(i, 1);
+        continue;
+      }
+      if (m.kind === 'incoming') {
+        // Pulse speeds up toward impact.
+        const left = m.life - m.age;
+        const rate = 4 + 18 / Math.max(left, 0.3);
+        mat.opacity = 0.55 + 0.45 * Math.sin(m.age * rate);
         continue;
       }
       if (m.kind === 'ring') {

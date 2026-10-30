@@ -71,8 +71,9 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
   }
   vec3 c = inputColor.rgb;
   float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
-  vec3 explored = mix(vec3(lum) * vec3(0.8, 0.87, 1.0), c, 0.35) * 0.45;
-  vec3 hidden = vec3(lum) * vec3(0.75, 0.85, 1.0) * 0.1;
+  // Kept fairly bright on purpose: the battlefield should still read; fog mostly drains color.
+  vec3 explored = mix(vec3(lum) * vec3(0.85, 0.9, 1.0), c, 0.5) * 0.7;
+  vec3 hidden = mix(vec3(lum) * vec3(0.8, 0.87, 1.0), c, 0.15) * 0.38;
   vec3 res = mix(hidden, explored, smoothstep(0.05, 0.95, f.g));
   res = mix(res, c, smoothstep(0.05, 0.95, f.r));
   outputColor = vec4(res, inputColor.a);
@@ -208,6 +209,14 @@ export class PostStack {
     this.fog.setCamera(this.camera);
     if (this.tiltShift) this.tiltShift.blendMode.opacity.value = THREE.MathUtils.clamp(1 - zoom * 2.2, 0, 1);
     this.composer.render(dt);
+  }
+
+  dispose(): void {
+    for (const d of this.disposables) d.dispose();
+    this.disposables = [];
+    this.fog.dispose();
+    this.lut.dispose();
+    this.composer.dispose();
   }
 
   get qualityLevel(): string | undefined {

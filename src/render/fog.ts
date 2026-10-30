@@ -1,17 +1,18 @@
 import * as THREE from 'three';
 import type { UnitDef } from '../shared/data';
-import type { SimView } from '../shared/entities';
+import { FOG_EXPLORED, FOG_VISIBLE, type FogView, type SimView } from '../shared/entities';
 import type { PlayerId, PlayerSlot } from '../shared/types';
 
 /**
- * Where the renderer gets fog-of-war visibility from.
- * TODO(sim): replace `LocalVisionSource` with the sim's fog-of-war API once it lands (the sim should
- * own visibility so it's identical for gameplay and rendering). The renderer only needs "is this
- * point currently visible / ever explored for the local player".
+ * Where the renderer gets fog-of-war visibility from: the sim's fog (`SimFogSource`) in a match,
+ * or a local stand-in when the sim has none.
  */
 export interface VisibilitySource {
-  /** Grid cells per side covering the map square. */
+  /** Grid cells per side. */
   readonly resolution: number;
+  /** World meters covered by the square grid, starting at (origin, origin). */
+  readonly worldSize: number;
+  readonly origin: number;
   /** Recompute visibility from the current sim state. */
   update(sim: SimView): void;
   /** 0..255 visibility now (soft edges allowed). Row-major, row 0 at minimum z. */
@@ -23,10 +24,12 @@ export interface VisibilitySource {
 /** Width of the soft edge at the rim of a unit's sight circle, in meters. */
 const EDGE = 8;
 
-/** Placeholder: circles of `def.sight` around the local player's (and allies') units. */
+/** Fallback when the sim offers no fog (tests, old sims): circles of `def.sight` around own/allied units. */
 export class LocalVisionSource implements VisibilitySource {
   readonly visible: Uint8Array;
   readonly explored: Uint8Array;
+  readonly worldSize: number;
+  readonly origin: number;
   private readonly allies = new Set<PlayerId>();
 
   constructor(
@@ -36,6 +39,8 @@ export class LocalVisionSource implements VisibilitySource {
     players: PlayerSlot[],
     localPlayer: PlayerId,
   ) {
+    this.worldSize = mapSize;
+    this.origin = -mapSize / 2;
     this.visible = new Uint8Array(resolution * resolution);
     this.explored = new Uint8Array(resolution * resolution);
     const team = players.find((p) => p.id === localPlayer)?.team;
@@ -80,6 +85,47 @@ export class LocalVisionSource implements VisibilitySource {
   }
 }
 
+/**
+ * The sim's deterministic fog of war (`SimViewExt.fog`), seen from one player. FOG_VISIBLE cells are
+ * visible, FOG_EXPLORED and up are explored; the renderer smooths and blurs the hard cell edges.
+ */
+export class SimFogSource implements VisibilitySource {
+  readonly resolution: number;
+  readonly worldSize: number;
+  readonly origin: number;
+  readonly visible: Uint8Array;
+  readonly explored: Uint8Array;
+  private version = -1;
+
+  constructor(
+    private readonly fog: FogView,
+    private readonly player: PlayerId,
+    mapSize: number,
+  ) {
+    // Grid cell (0,0) is the map's -x,-z corner.
+    this.origin = -mapSize / 2;
+    this.resolution = Math.max(fog.cols, fog.rows);
+    this.worldSize = this.resolution * fog.cellSize;
+    this.visible = new Uint8Array(this.resolution * this.resolution);
+    this.explored = new Uint8Array(this.resolution * this.resolution);
+  }
+
+  update(): void {
+    if (this.fog.version === this.version) return;
+    this.version = this.fog.version;
+    const cells = this.fog.cells(this.player);
+    const { cols, rows } = this.fog;
+    const n = this.resolution;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = cells[r * cols + c];
+        this.visible[r * n + c] = v >= FOG_VISIBLE ? 255 : 0;
+        this.explored[r * n + c] = v >= FOG_EXPLORED ? 255 : 0;
+      }
+    }
+  }
+}
+
 const UPDATE_EVERY = 0.1;
 
 /**
@@ -88,27 +134,32 @@ const UPDATE_EVERY = 0.1;
  */
 export class FogOfWar {
   readonly texture: THREE.DataTexture;
-  readonly bounds: THREE.Vector4;
+  /** (minX, minZ, size, size) of the grid in world meters; shared with the post effect. */
+  readonly bounds = new THREE.Vector4();
   enabled = true;
-  private readonly current: Float32Array;
-  private readonly data: Uint8Array;
+  private current = new Float32Array(0);
+  private data = new Uint8Array(0);
   private timer = UPDATE_EVERY;
+  private source!: VisibilitySource;
 
-  constructor(
-    private source: VisibilitySource,
-    private readonly mapSize: number,
-  ) {
-    const n = source.resolution;
-    this.current = new Float32Array(n * n * 2);
-    this.data = new Uint8Array(n * n * 2);
-    this.texture = new THREE.DataTexture(this.data, n, n, THREE.RGFormat, THREE.UnsignedByteType);
+  constructor(source: VisibilitySource) {
+    this.texture = new THREE.DataTexture(new Uint8Array(2), 1, 1, THREE.RGFormat, THREE.UnsignedByteType);
     this.texture.minFilter = this.texture.magFilter = THREE.LinearFilter;
-    this.texture.needsUpdate = true;
-    this.bounds = new THREE.Vector4(-mapSize / 2, -mapSize / 2, mapSize, mapSize);
+    this.setSource(source);
   }
 
   setSource(source: VisibilitySource): void {
     this.source = source;
+    const n = source.resolution;
+    if (this.data.length !== n * n * 2) {
+      this.current = new Float32Array(n * n * 2);
+      this.data = new Uint8Array(n * n * 2);
+      this.texture.dispose();
+      this.texture.image = { data: this.data, width: n, height: n };
+    }
+    this.bounds.set(source.origin, source.origin, source.worldSize, source.worldSize);
+    this.timer = UPDATE_EVERY;
+    this.texture.needsUpdate = true;
   }
 
   update(sim: SimView, dt: number): void {
@@ -140,13 +191,25 @@ export class FogOfWar {
     if (changed) this.texture.needsUpdate = true;
   }
 
+  private cellIndex(x: number, z: number): number {
+    const n = this.source.resolution;
+    const size = this.source.worldSize;
+    const o = this.source.origin;
+    const i = Math.floor(((x - o) / size) * n);
+    const j = Math.floor(((z - o) / size) * n);
+    return i < 0 || j < 0 || i >= n || j >= n ? -1 : j * n + i;
+  }
+
   /** True when (x, z) is currently visible to the local player (always true with fog disabled). */
   isVisible(x: number, z: number): boolean {
     if (!this.enabled) return true;
-    const n = this.source.resolution;
-    const i = Math.floor(((x + this.mapSize / 2) / this.mapSize) * n);
-    const j = Math.floor(((z + this.mapSize / 2) / this.mapSize) * n);
-    if (i < 0 || j < 0 || i >= n || j >= n) return false;
-    return this.source.visible[j * n + i] > 127;
+    const i = this.cellIndex(x, z);
+    return i >= 0 && this.source.visible[i] > 127;
+  }
+
+  isExplored(x: number, z: number): boolean {
+    if (!this.enabled) return true;
+    const i = this.cellIndex(x, z);
+    return i >= 0 && this.source.explored[i] > 127;
   }
 }

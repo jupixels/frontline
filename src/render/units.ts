@@ -17,9 +17,13 @@ const CLIPS = {
 };
 type AnimState = 'idle' | 'move';
 
-export type UnitClass = 'infantry' | 'vehicle' | 'heli' | 'jet' | 'ship';
+export type UnitClass = 'infantry' | 'vehicle' | 'heli' | 'jet' | 'ship' | 'structure';
+
+/** A structure seen through the unit view: footprint in meters (x, z). */
+export type ViewDef = UnitDef & { footprint?: [number, number] };
 
 export function unitClass(def: UnitDef): UnitClass {
+  if (def.armor === 'structure') return 'structure';
   if (def.domain === 'naval') return 'ship';
   if (def.domain === 'air') return def.speed > 35 ? 'jet' : 'heli';
   if (def.armor === 'infantry') return 'infantry';
@@ -84,7 +88,7 @@ export class UnitView {
 
   constructor(
     readonly id: number,
-    readonly def: UnitDef,
+    readonly def: ViewDef,
     readonly owner: number,
     readonly teamColor: THREE.Color,
     private readonly host: UnitHost,
@@ -103,8 +107,36 @@ export class UnitView {
     this.ring.renderOrder = 5;
     this.ring.visible = false;
     this.root.add(this.ring);
+    if (this.cls === 'structure') this.root.add(this.buildFoundation());
     loadModel(def.model).then((m) => this.attach(m));
   }
+
+  /** Concrete pad under a building with a team-colored edge, so ownership reads from above. */
+  private buildFoundation(): THREE.Object3D {
+    const [w, d] = this.def.footprint ?? [this.def.radius * 2, this.def.radius * 2];
+    const g = new THREE.Group();
+    const slab = new THREE.Mesh(
+      new THREE.BoxGeometry(w * 1.04, 1.6, d * 1.04),
+      new THREE.MeshStandardMaterial({ color: 0x5b5a54, roughness: 0.95, metalness: 0 }),
+    );
+    slab.position.y = -0.55;
+    slab.receiveShadow = true;
+    g.add(slab);
+    const edgeMat = new THREE.MeshBasicMaterial({ color: this.teamColor, transparent: true, opacity: 0.85, depthWrite: false, toneMapped: false });
+    const t = 0.5;
+    for (const [sx, sz, ex, ez] of [[w, t, 0, d / 2], [w, t, 0, -d / 2], [t, d, w / 2, 0], [t, d, -w / 2, 0]]) {
+      const bar = new THREE.Mesh(new THREE.PlaneGeometry(sx * 1.04, sz).rotateX(-Math.PI / 2), edgeMat);
+      bar.position.set(ex * 1.04, 0.28, ez * 1.04);
+      bar.renderOrder = 4;
+      g.add(bar);
+    }
+    return g;
+  }
+
+  /** Construction progress 0..1; the building rises out of its foundation. */
+  build = 1;
+  /** Structures stay drawn (as last seen) once explored. */
+  seenOnce = false;
 
   get loaded(): boolean {
     return !!this.model;
@@ -162,7 +194,11 @@ export class UnitView {
   }
 
   private materialFor(src: THREE.Material, prepared: PreparedModel, burnt: boolean, band?: THREE.Vector2): THREE.Material {
-    const role = materialRole(src, src === prepared.primaryMaterial || !prepared.primaryMaterial);
+    // Buildings keep their paint; their colored trim (doors, roof bands, tanks) takes the team color.
+    const role =
+      this.cls === 'structure'
+        ? /orange|red|color_|flag/i.test(src.name) ? 'accent' : 'keep'
+        : materialRole(src, src === prepared.primaryMaterial || !prepared.primaryMaterial);
     return teamMaterial(src, role, this.teamColor, burnt, this.cls === 'infantry' ? 0.9 : 2.2, band);
   }
 
@@ -231,7 +267,7 @@ export class UnitView {
 
   /** How long a wreck stays before sinking away. */
   get wreckLifetime(): number {
-    return this.cls === 'infantry' ? 14 : this.cls === 'ship' ? 25 : 45;
+    return this.cls === 'infantry' ? 14 : this.cls === 'ship' ? 25 : this.cls === 'structure' ? 60 : 45;
   }
 
   get wreckDone(): boolean {
@@ -292,6 +328,20 @@ export class UnitView {
     r.rotation.y = yaw;
 
     switch (this.cls) {
+      case 'structure': {
+        // Sit on the lowest corner so the foundation never floats; the slab hides the rest.
+        const [w, d] = this.def.footprint ?? [this.def.radius * 2, this.def.radius * 2];
+        const s = Math.sin(yaw);
+        const c = Math.cos(yaw);
+        let low = ground;
+        for (const [ox, oz] of [[w / 2, d / 2], [-w / 2, d / 2], [w / 2, -d / 2], [-w / 2, -d / 2]]) {
+          low = Math.min(low, this.host.heightAt(x + ox * c + oz * s, z - ox * s + oz * c));
+        }
+        r.position.set(x, low * 0.6 + ground * 0.4, z);
+        const k = this.build >= 1 ? 1 : 0.05 + 0.95 * this.build;
+        this.body.scale.set(this.scale, this.scale * k, this.scale);
+        break;
+      }
       case 'infantry':
         r.position.set(x, ground, z);
         break;
