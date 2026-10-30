@@ -6,6 +6,9 @@ import type { AnyPlayerCommand, SimPlayerSlot } from '../src/sim/contracts';
 import { Prng } from '../src/sim/math/prng';
 import { Simulation } from '../src/sim/simulation';
 import { testContent } from './fixtures';
+import units from '../data/units.json';
+import valley from '../data/maps/valley_pass.json';
+import type { MapDef, UnitDef } from '../src/shared/data';
 
 const setup: MatchSetup = {
   seed: 1234,
@@ -53,6 +56,17 @@ describe('determinism', () => {
     expect(a.counts.died).toBeGreaterThan(5);
     expect(a.counts.abilityUsed).toBeGreaterThan(5);
     expect(a.counts.incoming).toBeGreaterThan(5);
+  }, 60000);
+
+  it('stays identical with Phase 2 orders on real terrain (lines, transports, garrisons, patrol, superweapon, pause)', () => {
+    const a = phase2Run();
+    const b = phase2Run();
+    expect(a.hashes).toEqual(b.hashes);
+    expect(a.counts.line).toBeGreaterThan(0);
+    expect(a.counts.boarded).toBeGreaterThan(0);
+    expect(a.counts.superweaponImpact).toBeGreaterThan(0);
+    expect(a.counts.paused).toBeGreaterThan(0);
+    expect(a.counts.fired).toBeGreaterThan(50);
   }, 60000);
 
   it('stays identical when two players command the same army (co-op hook)', () => {
@@ -146,6 +160,51 @@ function battleRun(): { hashes: number[]; counts: Record<string, number> } {
     }
     for (const ev of sim.step(commands)) if (ev.type in counts) counts[ev.type]++;
     for (const ev of sim.proposedEvents) if (ev.type in counts) counts[ev.type]++;
+    if (t % 50 === 0) hashes.push(sim.hash());
+  }
+  hashes.push(sim.hash());
+  return { hashes, counts };
+}
+
+/** Valley Pass (relief, river, bridges, woods) with every Phase 2 command in the mix. */
+function phase2Run(): { hashes: number[]; counts: Record<string, number> } {
+  const s: MatchSetup = { ...setup, mapId: 'valley_pass', players: setup.players.slice(0, 2) };
+  const sim = new Simulation(s, { units: units as Record<string, UnitDef>, map: valley as unknown as MapDef });
+  const w = sim.world;
+  const script = new Prng(5);
+  const hashes: number[] = [];
+  const counts: Record<string, number> = { line: 0, boarded: 0, superweaponImpact: 0, paused: 0, fired: 0 };
+  for (const p of s.players) {
+    w.players.get(p.id)!.supply = 9000;
+    w.players.get(p.id)!.superCharge = 1e9;
+    const hq = [...w.entities.values()].find((e) => e.owner === p.id && e.type === 'hq')!;
+    const dir = hq.pos.z > 0 ? -1 : 1;
+    w.spawnStructure('strategic_command', p.id, { x: hq.pos.x + 60, z: hq.pos.z }, 0, true);
+    w.spawnStructure('trench', p.id, { x: hq.pos.x, z: hq.pos.z + dir * 60 }, 0, true);
+    for (const [i, type] of ['tank_mbt', 'ifv', 'at_soldier', 'at_soldier', 'artillery', 'jeep'].entries()) w.spawnUnit(type, p.id, { x: hq.pos.x - 40 + i * 10, z: hq.pos.z + dir * 40 }, 0);
+  }
+  for (let t = 0; t < 2400; t++) {
+    const commands: AnyPlayerCommand[] = [];
+    for (const p of s.players) {
+      const mine = [...w.entities.values()].filter((e) => e.owner === p.id && e.kind === 'unit' && !e.inside && e.type !== 'supply_truck');
+      const ids = (pred: (type: string) => boolean) => mine.filter((e) => pred(e.type)).map((e) => e.id);
+      const trench = [...w.entities.values()].find((e) => e.owner === p.id && e.type === 'trench');
+      const ifv = mine.find((e) => e.type === 'ifv');
+      if (t === 10 && trench) commands.push({ player: p.id, cmd: { type: 'enter', units: ids((x) => x === 'rifleman').slice(0, 4), target: trench.id } });
+      if (t === 20 && ifv) commands.push({ player: p.id, cmd: { type: 'enter', units: ids((x) => x === 'rifleman').slice(4, 8), target: ifv.id } });
+      if (t === 300 && ifv) commands.push({ player: p.id, cmd: { type: 'unload', units: [ifv.id], at: { x: script.range(-60, 60), z: script.range(-60, 60) } } });
+      if (t === 120) commands.push({ player: p.id, cmd: { type: 'holdLine', units: ids((x) => x === 'tank_mbt' || x === 'at_soldier' || x === 'artillery'), points: [{ x: -80, z: p.id ? -90 : 90 }, { x: 0, z: p.id ? -70 : 70 }, { x: 80, z: p.id ? -90 : 90 }] } });
+      if (t === 700) {
+        const line = sim.lines(p.id)[0];
+        if (line) commands.push({ player: p.id, cmd: { type: 'advanceLine', line: line.id, distance: 50 } });
+      }
+      if (t === 200) commands.push({ player: p.id, cmd: { type: 'patrol', units: ids((x) => x === 'jeep'), target: { x: script.range(-100, 100), z: 0 } } });
+      if (t === 900) commands.push({ player: p.id, cmd: { type: 'superweapon', at: { x: script.range(-50, 50), z: p.id ? 60 : -60 } } });
+      if (t === 1000 && p.id === 0) commands.push({ player: 0, cmd: { type: 'pauseVote', paused: true } });
+      if (t === 1200 && p.id === 1) commands.push({ player: 1, cmd: { type: 'pauseVote', paused: false } });
+      if (t % 150 === 75) commands.push({ player: p.id, cmd: { type: 'move', units: ids((x) => x === 'jeep' || x === 'ifv'), target: { x: script.range(-80, 80), z: script.range(-80, 80) }, attackMove: true } });
+    }
+    for (const ev of sim.step(commands)) if (ev.type in counts) counts[ev.type]++;
     if (t % 50 === 0) hashes.push(sim.hash());
   }
   hashes.push(sim.hash());
