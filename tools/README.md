@@ -121,6 +121,30 @@ npm run assets -- --only tank_mbt
 - Check raw files in the viewer before building: `/tools/viewer.html?files=/a.glb,/b.glb&len=9.5&rts=110`
   (files must be served by Vite, e.g. copied under `public/`; `rts` frames like the game camera).
 
+## Generated sounds (ElevenLabs)
+
+Every shipped sound lives in `public/assets/sounds/gen/` and was made with the ElevenLabs MCP server
+(sound effects, Text to Speech with two designed voices, "Frontline Ground Commander" and "Frontline Naval
+Officer", and Music). Raw generations stay outside the repo, like the Meshy models:
+
+- `~/Downloads/frontline-sfx/<id>/<n>/*.mp3`: one take per numbered folder. Output `gen/<id>_0n.mp3`; ids
+  ending in `_far` are the distant variants.
+- `~/Downloads/frontline-sfx/voice/<id>/*.mp3`: voice lines. Output `gen/voice/<id>_0n.mp3`.
+- `~/Downloads/frontline-sfx/music/<state>/*.mp3`: one track per music state. Output `gen/music/<state>.mp3`.
+
+`npm run assets -- --only sounds/gen` (or `--sfx <dir>`) clears `gen/` and rebuilds it with ffmpeg
+(`processGenerated` in `lib/audio.mjs`):
+
+- one-shots: silence trimmed at both ends, peak at -1 dB, mono
+- loops (`generatedSounds.loops`): untouched apart from level, so the seam stays clean
+- UI: tight trim, peak at -3 dB
+- voices: trimmed, field-radio EQ and light compression
+- music: stereo, loudness-normalized to -18 LUFS, faded in and out
+
+Takes peaking below -35 dB are skipped with a warning (the generator sometimes returns near-silence); regenerate
+them. File counts per sound are set in `src/audio/bank.ts` (`g(id, n)`), and `tests/audio.test.ts` checks that every
+referenced file exists.
+
 ## Sources and licenses
 
 | Source | Used for | License |

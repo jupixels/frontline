@@ -9,7 +9,7 @@
 // textures become 1K WebP. Writes public/assets/models/catalog.json describing every model.
 // Output is committed (Pages can't serve LFS).
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
 import { homedir } from 'node:os';
 import { unzipSync } from 'fflate';
@@ -24,7 +24,7 @@ import { fetchSources, defaultCacheDir } from './fetch-sources.mjs';
 import { objToDocument } from './lib/obj.mjs';
 import { shapeDocument, hexColor } from './lib/shapes.mjs';
 import { pruneAnimationChannels, bakeHoldPose, reparentKeepWorld } from './lib/anim.mjs';
-import { encodeSound } from './lib/audio.mjs';
+import { encodeSound, processGenerated } from './lib/audio.mjs';
 
 const root = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, '$1')), '..');
 const args = process.argv.slice(2);
@@ -36,6 +36,8 @@ const srcDir = arg('--src') ?? process.env.FRONTLINE_ASSET_SRC ?? join(homedir()
 const cacheDir = arg('--cache') ?? defaultCacheDir();
 // Models made with Meshy and post-processed by tools/blender/ (see tools/generated/).
 const generatedDir = arg('--generated') ?? process.env.FRONTLINE_GENERATED_SRC ?? join(homedir(), 'Downloads', 'frontline-generated');
+// Sounds made with ElevenLabs: <id>/<n>/*.mp3, voice/<id>/*.mp3 and music/<state>/*.mp3 (see tools/README.md).
+const sfxDir = arg('--sfx') ?? process.env.FRONTLINE_SFX_SRC ?? join(homedir(), 'Downloads', 'frontline-sfx');
 const only = arg('--only');
 const outRoot = join(root, 'public', 'assets');
 const manifestPath = join(root, 'tools', 'assets.manifest.json');
@@ -371,4 +373,40 @@ for (const s of sounds) {
     }
   }
   console.log(`${s.out}  ${n} files  ${Math.round(bytes / 1024)} KB${s.encode ? '  (encoded)' : ''}`);
+}
+
+// Generated sounds (ElevenLabs): trimmed, levelled and re-encoded per kind into sounds/gen/.
+const gen = manifest.generatedSounds;
+if (gen && existsSync(sfxDir) && match(gen.out)) {
+  const nn = (i) => String(i + 1).padStart(2, '0');
+  const mp3s = (dir) => (existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.mp3')).sort() : []);
+  const subdirs = (dir) => readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+  const jobs = [];
+  rmSync(join(outRoot, gen.out), { recursive: true, force: true }); // takes can be dropped, so no stale files
+  for (const id of subdirs(sfxDir).filter((d) => !gen.skip.includes(d)).sort()) {
+    const kind = id.startsWith('ui_') ? 'ui' : gen.loops.includes(id) ? 'loop' : 'shot';
+    const takes = subdirs(join(sfxDir, id)).sort((a, b) => Number(a) - Number(b));
+    takes.forEach((t, i) => {
+      const [file] = mp3s(join(sfxDir, id, t));
+      if (file) jobs.push([join(sfxDir, id, t, file), `${id}_${nn(i)}.mp3`, kind]);
+    });
+  }
+  for (const id of existsSync(join(sfxDir, 'voice')) ? subdirs(join(sfxDir, 'voice')).sort() : []) {
+    mp3s(join(sfxDir, 'voice', id)).forEach((file, i) => jobs.push([join(sfxDir, 'voice', id, file), `voice/${id}_${nn(i)}.mp3`, 'voice']));
+  }
+  for (const state of existsSync(join(sfxDir, 'music')) ? subdirs(join(sfxDir, 'music')).sort() : []) {
+    const [file] = mp3s(join(sfxDir, 'music', state));
+    if (file) jobs.push([join(sfxDir, 'music', state, file), `music/${state}.mp3`, 'music']);
+  }
+  let bytes = 0;
+  for (const [src, out, kind] of jobs) {
+    const d = processGenerated(readFileSync(src), kind);
+    if (!d) {
+      console.warn(`  skipped near-silent take ${src}; regenerate it`);
+      continue;
+    }
+    write(gen.out + out, d);
+    bytes += d.byteLength;
+  }
+  console.log(`${gen.out}  ${jobs.length} files  ${Math.round(bytes / 1024)} KB  (generated)`);
 }

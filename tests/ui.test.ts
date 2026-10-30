@@ -233,8 +233,9 @@ describe('keybinds & settings', () => {
 describe('credits', () => {
   it('reads every bullet of the README credits section', () => {
     const lines = parseCredits(readFileSync('README.md', 'utf8'));
-    expect(lines.length).toBeGreaterThanOrEqual(9);
+    expect(lines.length).toBeGreaterThanOrEqual(5);
     expect(lines.some((l) => l.includes('Zsky'))).toBe(true);
+    expect(lines.some((l) => l.includes('ElevenLabs'))).toBe(true);
     expect(lines.some((l) => l.includes('Kevin Iglesias'))).toBe(true);
   });
 });

@@ -2,16 +2,17 @@ import type { AudioEngine, Voice } from './engine';
 
 export type MusicState = 'off' | 'menu' | 'calm' | 'battle' | 'victory' | 'defeat';
 
-const LAMENT = 'sounds/music/war_lament_01.mp3';
-const WAR = 'sounds/music/call_to_war_01.mp3';
+const MENU = 'sounds/gen/music/menu.mp3';
+const CALM = 'sounds/gen/music/calm.mp3';
+const BATTLE = 'sounds/gen/music/battle.mp3';
 
 /** Which track each state plays and how loud (before the music bus volume). */
 const STATES: Record<Exclude<MusicState, 'off'>, { track: string; gain: number }> = {
-  menu: { track: LAMENT, gain: 0.6 },
-  calm: { track: LAMENT, gain: 0.28 },
-  battle: { track: WAR, gain: 0.5 },
-  victory: { track: WAR, gain: 0.6 },
-  defeat: { track: LAMENT, gain: 0.55 },
+  menu: { track: MENU, gain: 1 },
+  calm: { track: CALM, gain: 0.47 },
+  battle: { track: BATTLE, gain: 0.7 },
+  victory: { track: BATTLE, gain: 0.84 },
+  defeat: { track: MENU, gain: 0.95 },
 };
 
 const CROSSFADE = 3;
