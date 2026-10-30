@@ -61,6 +61,9 @@ export class AudioEngine {
     };
     for (const e of ['pointerdown', 'keydown', 'touchstart']) addEventListener(e, unlock, true);
     onAudioSettingsChange(() => this.applySettings());
+    // Created after the player already clicked (e.g. the match starts from a menu button): browsers
+    // allow audio straight away once the page has had a gesture.
+    if (navigator.userActivation?.hasBeenActive) unlock();
   }
 
   /** Context exists and is running (a user gesture happened). */
