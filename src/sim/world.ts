@@ -189,6 +189,8 @@ export interface Entity extends EntityState {
   rank: number;
   /** Last tick this entity took damage (rank 3 self-heal waits for quiet). */
   hurtAt: Tick;
+  /** Demolition countdown end (game tick), 0 = not being demolished. */
+  demolishAt: Tick;
   /** Who last hurt this entity, and when (idle units turn on attackers they can see). */
   lastAttacker: EntityId;
   /** Frontline membership and assigned slot. */
@@ -435,6 +437,7 @@ export class World {
       xp: 0,
       rank: 0,
       hurtAt: -100000,
+      demolishAt: 0,
       lastAttacker: 0,
       line: 0,
       lineSlot: null,

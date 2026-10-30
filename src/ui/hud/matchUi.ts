@@ -80,12 +80,13 @@ export interface MatchUiContext {
 
 const ATTACK_ALERT_COOLDOWN_MS = 12000;
 
-const BLOCK_TEXT: Record<'supply' | 'cp' | 'requirements' | 'placement' | 'queueFull', string> = {
+const BLOCK_TEXT: Record<'supply' | 'cp' | 'requirements' | 'placement' | 'queueFull' | 'demolishHq', string> = {
   supply: 'Not enough supply',
   cp: 'Command point cap reached: hold more points to field more units',
   requirements: 'Requirements not met',
   placement: "Can't build there",
   queueFull: 'Production queue is full',
+  demolishHq: "The HQ can't be demolished",
 };
 const ATTACK_ALERT_CELL = 80;
 
@@ -645,6 +646,13 @@ export class MatchUi {
           const b = this.buildSites.get(ev.id);
           if (b !== undefined) this.busyEngineers.delete(b);
           this.buildSites.delete(ev.id);
+          break;
+        }
+        case 'demolish': {
+          // Our own demolitions only (it isn't a loss, so no "destroyed" alert).
+          if (ev.state !== 'done' || this.stats.info(ev.id)?.owner !== me) break;
+          const what = this.stats.info(ev.id)?.type;
+          this.alert({ kind: 'info', text: `${what ? a.displayName(what) : 'Building'} demolished: +${ev.refund} supply`, pos: ev.at });
           break;
         }
         case 'built': {

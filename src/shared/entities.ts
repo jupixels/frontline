@@ -27,6 +27,8 @@ export interface EntityState {
   readonly rank?: number;
   /** Frontline the unit holds (SimViewExt.lines), 0 = none. */
   readonly line?: number;
+  /** Structures being demolished: the game tick (gameTick) the building comes down. */
+  readonly demolishAt?: number;
 }
 
 /** Suppression level at which infantry go prone. */

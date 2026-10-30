@@ -33,6 +33,20 @@ function badgeTexture(key: string): THREE.CanvasTexture {
       g.strokeStyle = '#f1c75a';
       g.stroke();
     }
+  } else if (key.startsWith('d')) {
+    // Demolition countdown: a warning plate with the seconds left.
+    g.fillStyle = 'rgba(60,10,6,0.85)';
+    g.strokeStyle = '#ff7a5c';
+    g.lineWidth = 3;
+    g.beginPath();
+    g.roundRect(8, 6, 80, 36, 8);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#ffd9d0';
+    g.font = 'bold 24px monospace';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(`⚠ ${key.slice(1)}s`, 48, 25);
   } else {
     // Garrison: a shield with the occupant count.
     g.fillStyle = 'rgba(10,14,10,0.8)';

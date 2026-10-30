@@ -24,8 +24,10 @@ export type SimEvent =
   | { type: 'placed'; id: EntityId; builder: EntityId }
   /** A capture point lost its owner. */
   | { type: 'neutralized'; point: EntityId; from: PlayerId }
+  /** A building's demolition started (countdown), was cancelled, or finished (it's gone, `refund` paid back). */
+  | { type: 'demolish'; id: EntityId; state: 'started' | 'cancelled' | 'done'; at: Vec2; refund: number }
   /** Production or placement was refused. */
-  | { type: 'blocked'; player: PlayerId; reason: 'supply' | 'cp' | 'requirements' | 'placement' | 'queueFull' }
+  | { type: 'blocked'; player: PlayerId; reason: 'supply' | 'cp' | 'requirements' | 'placement' | 'queueFull' | 'demolishHq' }
   /** Sudden death began: HQs lose armor and every team bleeds. */
   | { type: 'suddenDeath'; tick: Tick }
   | { type: 'abilityUsed'; id: EntityId; ability: string; at?: Vec2; targetId?: EntityId }

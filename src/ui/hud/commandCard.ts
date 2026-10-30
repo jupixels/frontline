@@ -1,6 +1,6 @@
 import type { Command } from '../../shared/commands';
 import type { EntityState, SimView } from '../../shared/entities';
-import type { EntityId, PlayerId } from '../../shared/types';
+import { SIM_HZ, type EntityId, type PlayerId } from '../../shared/types';
 import { fmtInt, h, setChildren } from '../dom';
 import { abilityIcon, entityIcon, icon, type IconId } from '../icons';
 import type { InputController } from '../input';
@@ -248,7 +248,8 @@ export class CommandCard {
     if (structures.length) {
       const type = structures[0].type;
       const same = structures.filter((s) => s.type === type && a.buildProgress(s) === undefined);
-      if (!same.length) return { title: a.displayName(type), hint: 'Under construction', buttons: [] };
+      const wreck = this.demolishButton(structures);
+      if (!same.length) return { title: a.displayName(type), hint: 'Under construction', buttons: wreck ? [wreck] : [] };
       const producible = new Set(a.producible(same[0]));
       const all = a.allProduces(type).filter((u) => a.units[u]);
       const queues = same.map((f) => a.queue(f));
@@ -331,10 +332,59 @@ export class CommandCard {
           },
         });
       }
+      if (wreck) buttons.push(wreck);
       const total = queues.reduce((n, q) => n + q.length, 0);
       return { title: same.length > 1 ? `${a.displayName(type)} ×${same.length}` : a.displayName(type), hint: all.length ? (total ? `${total} queued · Shift ×5` : 'Shift ×5 · Right-click cancels') : '', buttons };
     }
     return { title: '', hint: '', buttons: [] };
+  }
+
+  /**
+   * Demolish for every selected structure: unfinished sites are cancelled (full refund), finished ones
+   * get a 5 s countdown and pay back half their cost. Pressing it again during the countdown cancels.
+   */
+  private demolishButton(structures: EntityState[]): CardButton | null {
+    if (!structures.length) return null;
+    const k = this.keybinds();
+    const a = this.adapter;
+    const hq = structures.filter((s) => s.type === 'hq');
+    const ok = structures.filter((s) => s.type !== 'hq');
+    const sites = ok.filter((s) => a.buildProgress(s) !== undefined);
+    const counting = ok.filter((s) => s.demolishAt);
+    const now = this.sim.gameTick ?? this.sim.tick;
+    const left = counting.length ? Math.max(0, Math.ceil((Math.min(...counting.map((s) => s.demolishAt!)) - now) / SIM_HZ)) : 0;
+    const refund = ok.reduce((n, s) => n + (a.buildProgress(s) !== undefined ? (a.structures[s.type]?.cost ?? 0) : Math.floor((a.structures[s.type]?.cost ?? 0) * 0.5)), 0);
+    const onlySites = ok.length > 0 && sites.length === ok.length;
+    const label = counting.length ? 'Cancel demolition' : onlySites ? 'Cancel construction' : 'Demolish';
+    return {
+      id: 'demolish',
+      icon: icon(onlySites ? 'cancel' : 'skull'),
+      label,
+      key: k.demolish,
+      active: counting.length > 0,
+      locked: !ok.length,
+      cooldownText: counting.length ? `${left}` : '',
+      tip: () => ({
+        title: label,
+        icon: icon(onlySites ? 'cancel' : 'skull', 'ic-md'),
+        body: [
+          counting.length
+            ? `Coming down in ${left}s. Press again to call it off.`
+            : onlySites
+              ? 'Stop construction and get everything spent on it back.'
+              : 'Tear the building down after a 5 s countdown. Unfinished sites are cancelled at once with a full refund. Garrisons walk out, queued units are refunded.',
+        ],
+        costs: ok.length && !counting.length ? [{ kind: 'supply', text: `+${refund} back` }] : undefined,
+        keys: [[keyLabel(k.demolish), label]],
+        warn: hq.length ? "The HQ can't be demolished" : undefined,
+      }),
+      run: () => {
+        if (!ok.length) return this.notify("The HQ can't be demolished");
+        // Toggle as a group: if any are counting down, cancel those; otherwise start them all.
+        const ids = (counting.length ? counting : ok).map((s) => s.id);
+        this.issue({ type: 'demolish', structures: ids });
+      },
+    };
   }
 
   /** Right click on a production button: cancel the last queued unit of that type. */

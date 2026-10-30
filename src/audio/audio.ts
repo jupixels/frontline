@@ -265,6 +265,11 @@ export class AudioManager {
           this.alert('produced', [voiceLine(unitAudio(u.type, this.units).voice, 'ready')]);
           break;
         }
+        case 'demolish':
+          // The building comes down: a dull collapse where it stood.
+          if (ev.state === 'done' && this.audible(view, ev.at)) this.play('explosion_small', ev.at);
+          else if (ev.state !== 'done' && this.lookup(ev.id, view)?.owner === this.localPlayer) playFlat('ui_confirm', { gain: 0.6 });
+          break;
         case 'built': {
           const s = this.lookup(ev.id, view);
           if (s?.owner === this.localPlayer) playFlat('ui_confirm');
