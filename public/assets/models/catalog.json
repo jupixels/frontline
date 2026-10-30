@@ -1086,27 +1086,25 @@
       "path": "models/rifleman.glb",
       "kind": "unit",
       "size": [
-        2.2,
-        1.86,
-        0.38
+        1.25,
+        1.5,
+        0.47
       ],
-      "sizeKB": 493,
+      "sizeKB": 189,
       "clips": [
-        "AssaultRifle_Aim01",
-        "AssaultRifle_Aim01_Shoot01",
-        "AssaultRifle_Reload01",
-        "Damage01",
         "Death01",
         "Death02",
-        "Idle01",
-        "MilitaryIdle01",
+        "Fire",
+        "Hit",
+        "Idle",
+        "Reload",
         "Run01_Forward",
         "Walk01_Forward"
       ],
       "nodes": [],
-      "license": "royalty-free, no resale",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "Kevin Iglesias (Human Soldier Animations FREE)"
+        "Frontline (models made with Meshy AI, Pro plan)"
       ],
       "materials": {
         "team": "Uniform"
@@ -1241,64 +1239,27 @@
       "path": "models/tank_mbt.glb",
       "kind": "unit",
       "size": [
-        3.44,
-        3.85,
+        3.8,
+        3.19,
         9.5
       ],
-      "sizeKB": 128,
+      "sizeKB": 260,
       "clips": [
-        "Idle",
-        "Move",
-        "Fire",
-        "TurretTurn",
+        "Death",
         "TurretScan",
-        "Hit",
-        "Death"
+        "Fire"
       ],
       "nodes": [
         "P_barrel",
-        "P_turret",
-        "wheels_0",
-        "wheels_1",
-        "wheels_2",
-        "wheels_3",
-        "wheels_4",
-        "wheels_5",
-        "wheels_6",
-        "wheels_7",
-        "wheels_8",
-        "wheels_9",
-        "wheels_10",
-        "wheels_11",
-        "wheels_12",
-        "wheels_13",
-        "wheels_14",
-        "wheels_15",
-        "wheels_16",
-        "wheels_17",
-        "wheels_18",
-        "wheels_19",
-        "wheels_20",
-        "wheels_21",
-        "wheels_22",
-        "wheels_23",
-        "wheels_24",
-        "wheels_25",
-        "wheels_26",
-        "wheels_27",
-        "wheels_28",
-        "wheels_29",
-        "wheels_30",
-        "wheels_31",
-        "wheels_32",
-        "wheels_33",
-        "wheels_34",
-        "wheels_35"
+        "P_turret"
       ],
-      "license": "CC0",
+      "license": "owned (Meshy Pro output)",
       "credits": [
-        "yd (Freeciv units, OpenGameArt)"
-      ]
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "Paint"
+      }
     },
     {
       "id": "transport_ship",

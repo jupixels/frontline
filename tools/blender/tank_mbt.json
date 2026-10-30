@@ -1,0 +1,16 @@
+{
+  "input": "raw/tank_mbt/smart.glb",
+  "output": "tank_mbt.glb",
+  "rotateY": 90,
+  "length": 9.5,
+  "triangles": 12000,
+  "textureSize": 1024,
+  "paint": { "color": "#5b6347", "vMin": 0.27, "sMax": 0.3, "hueMin": 35, "hueMax": 90, "smooth": 2, "detailBelow": 0.95 },
+  "parts": [
+    { "name": "P_turret", "box": [-1.75, 1.75, 1.7, 3.4, -4.0, 5.0], "pivot": [0, 1.65, -1.1] },
+    { "name": "P_barrel", "from": "P_turret", "parent": "P_turret", "box": [-0.4, 0.4, 1.75, 2.5, 1.0, 5.0], "pivot": [0, 2.1, 1.2] }
+  ],
+  "cap": { "radius": 1.5, "center": [0, 1.62, -1.1] },
+  "recoil": 0.45,
+  "deathLift": 0.6
+}

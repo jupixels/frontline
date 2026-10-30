@@ -1,7 +1,7 @@
 // Builds optimized game assets from the raw asset zips plus the free sources fetched by
 // fetch-sources.mjs.
 //
-//   npm run assets -- [--src <dir with the zips>] [--cache <dir for downloads>] [--only <substring>]
+//   npm run assets -- [--src <dir with the zips>] [--cache <dir for downloads>] [--generated <dir>] [--only <substring>]
 //
 // Reads tools/assets.manifest.json. Models (GLB/glTF/OBJ, or kitbashed from several parts) are
 // normalized to meters, centered and set on y=0, recolored, stripped of unlisted clips and
@@ -34,6 +34,8 @@ const arg = (name) => {
 };
 const srcDir = arg('--src') ?? process.env.FRONTLINE_ASSET_SRC ?? join(homedir(), 'Downloads');
 const cacheDir = arg('--cache') ?? defaultCacheDir();
+// Models made with Meshy and post-processed by tools/blender/ (see tools/generated/).
+const generatedDir = arg('--generated') ?? process.env.FRONTLINE_GENERATED_SRC ?? join(homedir(), 'Downloads', 'frontline-generated');
 const only = arg('--only');
 const outRoot = join(root, 'public', 'assets');
 const manifestPath = join(root, 'tools', 'assets.manifest.json');
@@ -90,8 +92,16 @@ async function loadSource(spec) {
   return doc.setLogger(quiet);
 }
 
+/** A `generated` source: a GLB in the generated folder, written by a tools/blender/ script. */
+function generatedFile(spec) {
+  const p = join(generatedDir, spec.generated);
+  if (!existsSync(p)) throw new Error(`Missing ${p}. Run the tools/blender/ script for it (see tools/generated/), or pass --generated <dir>.`);
+  return readFileSync(p);
+}
+
 async function loadSourceRaw(spec) {
   if (spec.box || spec.cylinder || spec.arch) return shapeDocument(spec);
+  if (spec.generated) return io.readJSON(parseGlb(generatedFile(spec)));
   const dir = posix.dirname(spec.path) + '/';
   const files = zipDir(spec.zip, dir);
   const sibling = (rel) => files[posix.normalize(dir + rel.replaceAll('\\', '/'))];
@@ -252,7 +262,7 @@ function catalogEntry(m, doc, bytes) {
 
 async function buildModel(m) {
   const doc = m.kitbash ? await kitbash(m.kitbash) : await loadSource(m);
-  const before = m.kitbash ? 0 : zipFile(m.zip, m.path).byteLength;
+  const before = m.kitbash ? 0 : m.generated ? generatedFile(m).byteLength : zipFile(m.zip, m.path).byteLength;
 
   if (m.holdPose) bakeHoldPose(doc, m.holdPose);
   for (const [node, parent] of Object.entries(m.reparent ?? {})) reparentKeepWorld(doc, node, parent);
@@ -310,7 +320,7 @@ const catalogPath = join(outRoot, 'models', 'catalog.json');
 const catalog = new Map(
   only && existsSync(catalogPath) ? JSON.parse(readFileSync(catalogPath, 'utf8')).models.map((e) => [e.id, e]) : [],
 );
-for (const m of manifest.models.filter((m) => match(m.out, m.path))) {
+for (const m of manifest.models.filter((m) => match(m.out, m.path, m.generated))) {
   const e = await buildModel(m);
   catalog.set(e.id, e);
 }

@@ -90,6 +90,10 @@
     "kenney_city-kit-industrial.zip": {
       "author": "Kenney (kenney.nl)",
       "license": "CC0"
+    },
+    "meshy": {
+      "author": "Frontline (models made with Meshy AI, Pro plan)",
+      "license": "owned (Meshy Pro output)"
     }
   },
   "palettes": {
@@ -108,61 +112,17 @@
   },
   "models": [
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/soldiers/Rifleman.glb",
+      "generated": "rifleman.glb",
       "out": "models/rifleman.glb",
       "kind": "unit",
-      "credit": "kevin-iglesias",
+      "credit": "meshy",
       "scale": 1,
       "center": false,
-      "clips": [
-        "MilitaryIdle01",
-        "Idle01",
-        "AssaultRifle_Aim01",
-        "AssaultRifle_Aim01_Shoot01",
-        "AssaultRifle_Reload01",
-        "Run01_Forward",
-        "Walk01_Forward",
-        "Damage01",
-        "Death01",
-        "Death02"
-      ],
-      "meshMaterials": {
-        "HumanM_BodyMesh": {
-          "name": "Uniform",
-          "color": "#5b6347"
-        },
-        "Human_SoldierHelmet": {
-          "name": "Helmet",
-          "color": "#4a5238"
-        },
-        "Human_AssaultRifle": {
-          "name": "Weapon",
-          "color": "#2e2e2c",
-          "metallic": 0.4,
-          "roughness": 0.5
-        }
-      },
+      "textureSize": 512,
       "materials": {
         "team": "Uniform"
       },
-      "animTolerance": 0.0005,
-      "animPrune": {
-        "dropBones": "jaw"
-      },
-      "holdPose": {
-        "clip": "WeaponHold_AssaultRifle01",
-        "into": [
-          "Idle01",
-          "MilitaryIdle01",
-          "Walk01_Forward",
-          "Run01_Forward"
-        ],
-        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
-      },
-      "reparent": {
-        "Human_AssaultRifle": "B-handProp.R"
-      }
+      "animTolerance": 0.0005
     },
     {
       "zip": "Modern-RTS-Animations.zip",
@@ -311,12 +271,15 @@
       "length": 6.8
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Tank_MBT.glb",
+      "generated": "tank_mbt.glb",
       "out": "models/tank_mbt.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 9.5
+      "credit": "meshy",
+      "length": 9.5,
+      "textureSize": 1024,
+      "materials": {
+        "team": "Paint"
+      }
     },
     {
       "out": "models/aa_tank.glb",
@@ -341,7 +304,7 @@
           "center": false,
           "at": [
             0.02,
-            2.0,
+            2,
             -0.16
           ],
           "parent": "P_turret"
@@ -704,7 +667,7 @@
       "out": "models/buildings/props/wooden_box.glb",
       "kind": "prop",
       "credit": "zsky",
-      "height": 1.0
+      "height": 1
     },
     {
       "zip": "Modern-RTS-Models.zip",
