@@ -70,6 +70,9 @@ export interface EconomyView {
   netPower: number;
   commandPoints: { used: number; cap: number };
   morale: number;
+  /** Tech tier 1..3. */
+  tier: number;
+  pointsHeld: number;
 }
 
 export interface TeamMorale {
@@ -162,6 +165,8 @@ export class SimAdapter {
         netPower: x.power,
         commandPoints: { used: x.cp, cap: x.cpCap },
         morale: x.morale,
+        tier: x.tier,
+        pointsHeld: x.pointsHeld,
       };
     }
     const p = this.sim.player(player) as (PlayerState & Loose) | undefined;
@@ -176,7 +181,48 @@ export class SimAdapter {
       netPower: p?.power ?? 0,
       commandPoints: { used: num(p?.commandPoints) ?? used, cap: num(p?.commandPointCap) ?? FALLBACK_CP_CAP },
       morale: p?.morale ?? 0,
+      tier: 1,
+      pointsHeld: 0,
     };
+  }
+
+  /**
+   * Whose army `player` plays: their own, or a teammate's in shared-command co-op. The HUD shows
+   * that army's economy, base and production.
+   */
+  armyOf(player: PlayerId): PlayerId {
+    const slot = this.slots.get(player);
+    const army = slot?.army !== undefined ? this.slots.get(slot.army) : undefined;
+    return army && army.team === slot!.team && army.army === undefined ? army.id : player;
+  }
+
+  /** Teammates sharing `player`'s army (co-op), the army owner included, `player` excluded. */
+  coCommanders(player: PlayerId): PlayerSlot[] {
+    const army = this.armyOf(player);
+    return this.setup.players.filter((p) => p.id !== player && this.armyOf(p.id) === army);
+  }
+
+  /** Whether `player` may order `e` (owner, shared command, co-op role). */
+  canOrder(player: PlayerId, e: EntityState): boolean {
+    if (this.ext) return this.ext.canCommand(player, e.id);
+    return e.owner === player;
+  }
+
+  /** Whether `e` belongs to `player`'s army (orderable or not: co-op roles may limit orders). */
+  inArmy(player: PlayerId, e: EntityState): boolean {
+    return e.owner === player || e.owner === this.armyOf(player);
+  }
+
+  /** Every unit a structure type can ever train (locked ones included), from data. */
+  allProduces(type: string): string[] {
+    return this.structures[type]?.produces ?? [];
+  }
+
+  /** Structure types `owner` has finished. */
+  ownedStructures(owner: PlayerId): Set<string> {
+    const out = new Set<string>();
+    for (const e of this.sim.entities()) if (e.owner === owner && e.kind === 'structure' && this.buildProgress(e) === undefined) out.add(e.type);
+    return out;
   }
 
   /**
@@ -275,6 +321,11 @@ export class SimAdapter {
   abilities(e: EntityState): { ability: string; cooldown: number; active: boolean; info: AbilityInfo }[] {
     if (!this.ext) return [];
     return this.ext.abilities(e.id).flatMap((a) => (ABILITIES[a.ability] ? [{ ...a, info: ABILITIES[a.ability] }] : []));
+  }
+
+  /** 0.5..1 fire rate and accuracy factor from distance to friendly supply (1 = fully supplied). */
+  readiness(e: EntityState): number {
+    return this.ext && e.kind === 'unit' ? this.ext.readiness(e.id) : 1;
   }
 
   unitDef(type: string): UnitDef | undefined {

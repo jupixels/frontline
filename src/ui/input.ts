@@ -52,6 +52,12 @@ export interface InputOptions {
   canEnter?: (units: EntityId[], target: EntityState) => boolean;
   /** The frontline being drawn (screen points), or null when the stroke ends. */
   onLineStroke?: (points: { x: number; y: number }[] | null) => void;
+  /** Whether the local player may order this entity (own, or shared command). Default: owner check. */
+  owns?: (e: EntityState) => boolean;
+  /** Whether `e` is an enemy (right-click attacks it). Default: anything not owned. */
+  hostile?: (e: EntityState) => boolean;
+  /** Units "select army" picks (combat units, not engineers or trucks). Default: every unit. */
+  isArmy?: (e: EntityState) => boolean;
 }
 
 /**
@@ -127,8 +133,19 @@ export class InputController {
 
   private own(ids: Iterable<EntityId>): EntityId[] {
     const out: EntityId[] = [];
-    for (const id of ids) if (this.sim.get(id)?.owner === this.localPlayer) out.push(id);
+    for (const id of ids) {
+      const e = this.sim.get(id);
+      if (e && this.owns(e)) out.push(id);
+    }
     return out;
+  }
+
+  owns(e: EntityState): boolean {
+    return this.opts.owns ? this.opts.owns(e) : e.owner === this.localPlayer;
+  }
+
+  private hostile(e: EntityState): boolean {
+    return this.opts.hostile ? this.opts.hostile(e) : !this.owns(e);
   }
 
   /** Units first: a box over units and buildings selects only the units. */
@@ -156,7 +173,7 @@ export class InputController {
 
   selectArmy(): void {
     const ids: EntityId[] = [];
-    for (const e of this.sim.entities()) if (e.owner === this.localPlayer && e.kind === 'unit') ids.push(e.id);
+    for (const e of this.sim.entities()) if (e.kind === 'unit' && !e.inside && this.owns(e) && (!this.opts.isArmy || this.opts.isArmy(e))) ids.push(e.id);
     this.select(ids);
   }
 
@@ -231,14 +248,17 @@ export class InputController {
 
   /** Selected own mobile units (structures can't take move orders). */
   units(): EntityId[] {
-    return [...this.selection].filter((id) => this.sim.get(id)?.kind === 'unit');
+    return [...this.selection].filter((id) => {
+      const e = this.sim.get(id);
+      return !!e && e.kind === 'unit' && this.owns(e);
+    });
   }
 
   private factories(): EntityId[] {
     const isF = this.opts.isFactory;
     return [...this.selection].filter((id) => {
       const e = this.sim.get(id);
-      return !!e && e.kind === 'structure' && (!isF || isF(e));
+      return !!e && e.kind === 'structure' && this.owns(e) && (!isF || isF(e));
     });
   }
 
@@ -378,8 +398,8 @@ export class InputController {
     const id = this.picker.pickEntity(sx, sy);
     const ent = id !== null ? this.sim.get(id) : undefined;
     const hasUnits = this.units().length > 0;
-    if (ent && ent.owner === this.localPlayer) return this.setCursor('select');
-    if (ent && ent.owner >= 0 && hasUnits) return this.setCursor('attack');
+    if (ent && this.owns(ent)) return this.setCursor('select');
+    if (ent && ent.owner >= 0 && ent.kind !== 'point' && hasUnits && this.hostile(ent)) return this.setCursor('attack');
     if (hasUnits || this.factories().length) return this.setCursor(this.picker.pickGround(sx, sy) ? (hasUnits ? 'move' : 'rally') : 'invalid');
     this.setCursor(ent ? 'select' : 'default');
   }
@@ -439,7 +459,7 @@ export class InputController {
     this.dragStart = null;
     this.box.style.display = 'none';
     if (!this.enabled) return;
-    const additive = e.shiftKey;
+    let additive = e.shiftKey;
     if (Math.abs(e.clientX - s.x) >= DRAG_PX || Math.abs(e.clientY - s.y) >= DRAG_PX) {
       this.select(this.preferUnits(this.own(this.picker.entitiesInRect(s.x, s.y, e.clientX, e.clientY))), additive);
       return;
@@ -449,11 +469,13 @@ export class InputController {
     const now = performance.now();
     const isDouble = id !== null && this.lastClick.id === id && now - this.lastClick.t < DOUBLE_CLICK_MS;
     this.lastClick = { t: now, id: id ?? -1 };
-    if (!ent || ent.owner !== this.localPlayer) {
-      // Clicking empty ground (or an enemy, to inspect) clears unless adding.
-      if (!additive) this.select([]);
+    if (!ent || !this.owns(ent)) {
+      // Clicking empty ground clears; clicking anything else (enemy, ally, point) inspects it.
+      if (!additive) this.select(ent ? [ent.id] : []);
       return;
     }
+    // Own entities replace an inspected foreign one.
+    if (additive && [...this.selection].some((id) => { const s = this.sim.get(id); return !!s && !this.owns(s); })) additive = false;
     if (e.ctrlKey || e.metaKey || isDouble) {
       this.select(this.visibleOfType(ent.type), additive);
       return;
@@ -482,7 +504,7 @@ export class InputController {
       this.opts.onOrderMarker?.({ x: sx, y: sy }, 'move');
       return;
     }
-    if (target && target.owner !== this.localPlayer && target.owner >= 0 && target.kind !== 'point') {
+    if (target && target.owner >= 0 && target.kind !== 'point' && this.hostile(target)) {
       this.issue({ type: 'attack', units, targetId: target.id, queue });
       this.opts.onOrderMarker?.({ x: sx, y: sy }, 'attack');
       return;

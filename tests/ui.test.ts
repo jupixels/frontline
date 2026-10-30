@@ -189,7 +189,9 @@ describe('keybinds & settings', () => {
     expect(keyLabel('KeyA')).toBe('A');
     expect(keyLabel('Digit3')).toBe('3');
     expect(keyLabel('Space')).toBe('Space');
-    expect(isBindable('Digit1')).toBe(false);
+    // Control groups are rebindable now: digits are ordinary keys.
+    expect(isBindable('Digit1')).toBe(true);
+    expect(isBindable('Escape')).toBe(false);
     expect(isBindable('ShiftLeft')).toBe(false);
     expect(isBindable('KeyG')).toBe(true);
   });
@@ -274,7 +276,7 @@ describe('StatsTracker', () => {
   it('credits kills, losses and damage even after the victim is removed', () => {
     const ents = [unit(1, 0), unit(2, 1)];
     const sim = fakeSim(ents, []);
-    const stats = new StatsTracker(sim, SETUP);
+    const stats = new StatsTracker(sim, SETUP, new SimAdapter(sim, SETUP, {}), 0);
     stats.handle([{ type: 'hit', id: 2, by: 1, damage: 80, at: { x: 0, z: 0 } }]);
     ents.splice(1, 1);
     stats.handle([{ type: 'died', id: 2, killer: 1 }, { type: 'removed', id: 2 }]);

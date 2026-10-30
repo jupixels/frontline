@@ -1,6 +1,6 @@
 import type { VictoryMode } from '../../shared/types';
 import { button, h, setChildren } from '../dom';
-import { ICONS } from '../glyphs';
+import { icon } from '../icons';
 import {
   TEAM_COLORS,
   isHost,
@@ -164,7 +164,7 @@ export class LobbyScreen implements Screen {
             { class: 'room-code' },
             h('span', { class: 'label' }, 'Room code'),
             h('span', { class: 'code mono' }, s.code),
-            h('button', { class: 'btn btn-ghost', type: 'button', title: 'Copy invite link', onclick: () => this.copyLink(s.code!), html: `${ICONS.copy}<span>Copy link</span>` }),
+            h('button', { class: 'btn btn-ghost', type: 'button', title: 'Copy invite link', onclick: () => this.copyLink(s.code!), html: `${icon('copy', 'ic-sm')}<span>Copy link</span>` }),
           )
         : null,
       h('div', { class: 'lobby-status mono' }, h('span', { class: `dot ${s.status}` }), status, h('span', { class: 'dim' }, ` · ${players}/${s.slots.filter((x) => x.state !== 'closed').length}`)),

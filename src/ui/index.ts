@@ -1,6 +1,19 @@
 // Public surface of the UI workstream. src/main.ts and src/game/ import from here.
+import '@fontsource/barlow/400.css';
+import '@fontsource/barlow/500.css';
+import '@fontsource/barlow/600.css';
+import '@fontsource/barlow-condensed/500.css';
+import '@fontsource/barlow-condensed/600.css';
+import '@fontsource/barlow-condensed/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import './hud.css';
+import './screens.css';
 export { UiApp, type UiAppOptions, type StartInfo } from './app';
 export { MatchUi, type MatchUiContext, type NetStatus, type RenderHooks, type CameraControl } from './hud/matchUi';
+export type { ReplayControls } from './hud/replayBar';
+export { TutorialPanel, type TutorialStepView } from './hud/tutorialPanel';
+export { displaySetup, type TeamPalette } from './teamColors';
 export { InputController, type InputOptions, type TargetMode } from './input';
 export * from './lobbyApi';
 export { SettingsStore, type Settings, type QualityPreset, type VolumeSettings } from './settings';

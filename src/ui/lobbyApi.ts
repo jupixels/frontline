@@ -11,7 +11,12 @@ import { MAX_PLAYERS } from '../shared/types';
  * every peer edits its own team/color/ready. State changes arrive as whole snapshots.
  */
 
-export type MatchMode = 'online' | 'skirmish';
+export type MatchMode = 'online' | 'skirmish' | 'tutorial' | 'replay';
+
+/** Matches that run on this machine only: they can pause and change speed. */
+export function isLocalMode(mode: MatchMode): boolean {
+  return mode !== 'online';
+}
 export type AiDifficulty = NonNullable<PlayerSlot['aiDifficulty']>;
 
 /** Lobby-facing summary of a map (built from `data/maps/*.json` via `mapInfoFromDef`). */

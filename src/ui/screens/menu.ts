@@ -1,5 +1,7 @@
 import { h } from '../dom';
+import { icon, type IconId } from '../icons';
 import { normalizeRoomCode } from '../lobbyApi';
+import { loadRecord, ACHIEVEMENTS } from '../records';
 import type { SettingsStore } from '../settings';
 import type { Screen } from './screen';
 
@@ -7,13 +9,16 @@ export interface MenuActions {
   host(): void;
   join(code: string): void;
   skirmish(): void;
+  tutorial(): void;
+  replays(): void;
+  record(): void;
   settings(): void;
   credits(): void;
 }
 
-const VERSION = 'v0.1.0';
+const VERSION = 'v0.3.0';
 
-/** Title screen: Play Online (Host / Join by code), Skirmish vs AI, Settings, Credits. */
+/** Title screen: play (tutorial, skirmish, online host/join), replays, service record, settings, credits. */
 export class MenuScreen implements Screen {
   readonly el: HTMLElement;
   private readonly online: HTMLElement;
@@ -32,6 +37,7 @@ export class MenuScreen implements Screen {
       maxlength: 9,
       spellcheck: 'false',
       autocomplete: 'off',
+      'aria-label': 'Room code',
       value: initialCode,
       oninput: () => {
         this.codeInput.value = this.codeInput.value.toUpperCase();
@@ -46,13 +52,14 @@ export class MenuScreen implements Screen {
     this.online = h(
       'div',
       { class: 'menu-sub' },
-      h('button', { class: 'menu-subitem', type: 'button', onclick: () => this.run(() => actions.host()) }, h('span', { class: 'mi-arrow' }, '›'), 'Host game', h('span', { class: 'mi-hint' }, 'get a room code')),
       h(
-        'div',
-        { class: 'menu-join' },
-        this.codeInput,
-        h('button', { class: 'btn btn-accent', type: 'button', onclick: () => this.tryJoin() }, 'Join'),
+        'button',
+        { class: 'menu-subitem', type: 'button', onclick: () => this.run(() => actions.host()) },
+        h('span', { html: icon('plus', 'ic-sm') }),
+        h('span', null, 'Host a game'),
+        h('span', { class: 'mi-hint' }, 'get a room code to share'),
       ),
+      h('div', { class: 'menu-join' }, this.codeInput, h('button', { class: 'btn btn-accent', type: 'button', onclick: () => this.tryJoin() }, 'Join')),
       this.joinError,
     );
 
@@ -60,19 +67,28 @@ export class MenuScreen implements Screen {
       class: 'input callsign-input',
       maxlength: 20,
       spellcheck: 'false',
+      'aria-label': 'Callsign',
       value: settings.get().playerName,
       onchange: () => settings.update({ playerName: nameInput.value }),
     });
 
-    const item = (n: string, label: string, hint: string, onclick: () => void, extra?: HTMLElement) =>
+    const item = (ic: IconId, label: string, hint: string, onclick: () => void, extra?: HTMLElement, primary = false) =>
       h(
         'div',
-        { class: 'menu-group' },
-        h('button', { class: 'menu-item', type: 'button', onclick }, h('span', { class: 'mi-num' }, n), h('span', { class: 'mi-label' }, label), h('span', { class: 'mi-hint' }, hint)),
+        { class: `menu-group${primary ? ' primary' : ''}` },
+        h(
+          'button',
+          { class: 'menu-item', type: 'button', onclick },
+          h('span', { class: 'mi-icon', html: icon(ic) }),
+          h('span', { class: 'mi-body' }, h('span', { class: 'mi-label' }, label), h('span', { class: 'mi-hint' }, hint)),
+          h('span', { class: 'mi-arrow', html: icon('back', 'ic-sm') }),
+        ),
         extra,
       );
 
-    const playOnline = item('01', 'Play online', 'P2P · up to 8 players', () => this.toggleOnline(), this.online);
+    const rec = loadRecord();
+    const unlocked = ACHIEVEMENTS.filter((a) => rec.achievements[a.id]).length;
+    const firstVisit = rec.matches === 0 && !rec.tutorialDone;
 
     this.el = h(
       'div',
@@ -83,34 +99,41 @@ export class MenuScreen implements Screen {
         h(
           'header',
           { class: 'wordmark' },
-          h('div', { class: 'wm-tag' }, 'OPERATIONAL'),
-          h('h1', { class: 'wm-title' }, 'FRONTLINE'),
-          h('div', { class: 'wm-sub' }, 'Combined arms real-time strategy'),
+          h('div', { class: 'wm-tag' }, 'Combined arms · real-time strategy'),
+          h('h1', { class: 'wm-title' }, 'Frontline'),
+          h('div', { class: 'wm-sub' }, 'Hold the line. Break their Morale.'),
         ),
         h(
           'nav',
           { class: 'menu-nav' },
-          playOnline,
-          item('02', 'Skirmish vs AI', 'offline · easy to hard', () => this.run(() => actions.skirmish())),
-          item('03', 'Settings', 'graphics · audio · keys', () => actions.settings()),
-          item('04', 'Credits', 'models · sound · music', () => actions.credits()),
+          item('tutorial', 'Basic training', firstVisit ? 'new here? start with this · 10 min' : 'camera, orders, building, Morale, frontlines', () => this.run(() => actions.tutorial()), undefined, firstVisit),
+          item('army', 'Skirmish', 'vs AI · easy to hard · up to 8 sides', () => this.run(() => actions.skirmish()), undefined, !firstVisit),
+          item('globe', 'Play online', 'peer to peer · co-op or versus', () => this.toggleOnline(), this.online),
+          item('replay', 'Replays', 'watch a saved match', () => actions.replays()),
+          item('medal', 'Service record', rec.matches ? `${rec.wins}/${rec.matches} won · ${unlocked}/${ACHIEVEMENTS.length} medals` : 'stats and medals', () => actions.record()),
+          item('gear', 'Settings', 'graphics · audio · controls · accessibility', () => actions.settings()),
+          item('credits', 'Credits', 'models · sound · music', () => actions.credits()),
         ),
         h('label', { class: 'callsign' }, h('span', { class: 'label' }, 'Callsign'), nameInput),
       ),
       h(
         'aside',
-        { class: 'sitrep panel' },
-        h('div', { class: 'panel-title' }, h('span', null, 'SITREP'), h('span', { class: 'dim mono' }, new Date().toISOString().slice(0, 10))),
+        { class: 'menu-side' },
         h(
-          'ul',
-          { class: 'sitrep-list' },
-          h('li', null, h('b', null, 'Modes'), ' 1v1 · 2v2 · 4-player FFA, rooms up to 8'),
-          h('li', null, h('b', null, 'Victory'), ' Frontline (Morale) or Annihilation'),
-          h('li', null, h('b', null, 'Netcode'), ' Peer-to-peer lockstep, no server, no install'),
-          h('li', null, h('b', null, 'Invite'), ' Host, then share the room link'),
+          'section',
+          { class: 'panel sitrep brackets' },
+          h('div', { class: 'panel-title' }, h('span', null, 'Sitrep'), h('span', { class: 'dim' }, VERSION)),
+          h(
+            'ul',
+            { class: 'sitrep-list' },
+            sitrep('point', 'Victory', 'Hold more strategic points than the enemy to drain their Morale. At zero, they break.'),
+            sitrep('line', 'Frontlines', 'Draw a line and your units hold it by role: infantry in cover, AT on the flanks, armor behind.'),
+            sitrep('team', 'Co-op', 'Shared command: two or more players run one army, optionally split into ground, air, navy and logistics.'),
+            sitrep('link', 'Invite', 'Host a game and share the link. No install, no account, no server.'),
+          ),
         ),
       ),
-      h('footer', { class: 'menu-foot mono' }, h('span', null, `FRONTLINE ${VERSION}`), h('span', { class: 'dim' }, 'three.js · WebRTC · TypeScript')),
+      h('footer', { class: 'menu-foot' }, h('span', null, `Frontline ${VERSION}`), h('span', { class: 'faint' }, 'three.js · WebRTC · TypeScript')),
     );
 
     if (initialCode) this.toggleOnline(true);
@@ -126,7 +149,7 @@ export class MenuScreen implements Screen {
   private tryJoin(): void {
     const code = normalizeRoomCode(this.codeInput.value);
     if (!code) {
-      this.joinError.textContent = 'Room codes are 6 letters/digits, like K7Q2MX';
+      this.joinError.textContent = 'Room codes are 6 letters or digits, like K7Q2MX';
       return;
     }
     this.run(() => this.actions.join(code));
@@ -157,4 +180,8 @@ export class MenuScreen implements Screen {
     const input = this.el.querySelector<HTMLInputElement>('.callsign-input');
     if (input && input.value.trim() && input.value !== this.settings.get().playerName) this.settings.update({ playerName: input.value });
   }
+}
+
+function sitrep(ic: IconId, title: string, text: string): HTMLElement {
+  return h('li', null, h('span', { class: 'sr-icon', html: icon(ic, 'ic-sm') }), h('div', null, h('b', null, title), h('span', null, text)));
 }
