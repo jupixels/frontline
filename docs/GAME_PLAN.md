@@ -219,6 +219,15 @@ Built by **one session** on one branch (user decision, 2026-10-29), in this orde
 ### Phase 3 — Polish
 **Shared command (optional co-op mode):** 2+ players control one army with a shared base and economy, optionally split into roles (ground / air / navy / logistics). The sim's `canCommand` hook (Phase 1) makes this a lobby option, not a rewrite.
 
+**UI/UX and icon overhaul (user request, 2026-10-29):** a full pass over every screen and the in-match HUD. This covers:
+- a consistent visual language (type scale, spacing, color and states)
+- a custom icon set for every unit, structure, order, ability and resource, drawn in one style and readable at small sizes
+- clearer command-card layout and hotkey hints
+- better selection and group panels, alerts and the minimap
+- tooltips that show costs, counters and cooldowns
+- smooth, quick transitions
+- a usability review against real play: fewer clicks for common actions, nothing important hidden
+
 Tutorial mission, replays UI, achievements/stats screen, accessibility (colorblind team colors, rebindable keys), and mobile/tablet touch controls (stretch goal).
 
 ### Milestones
