@@ -17,6 +17,13 @@ function setWidth(el: HTMLElement, frac: number): void {
   if (el.style.width !== w) el.style.width = w;
 }
 
+/** Chip label for a side in a many-sided match: the player's name, "AI 3" for an AI slot, or "Team 2". */
+function shortName(tm: { team: number; players: readonly { id: number; name: string; kind?: string }[] }): string {
+  if (tm.players.length !== 1) return `Team ${tm.team + 1}`;
+  const p = tm.players[0];
+  return p.kind === 'ai' || /^AI/.test(p.name) ? `AI ${p.id + 1}` : p.name;
+}
+
 /**
  * Top of the HUD. Left: supply (with income), power and command-point meters, tech tier. Center:
  * Morale per team with the strategic points race between them, and the clock. Right: network,
@@ -39,6 +46,10 @@ export class TopBar {
   private readonly clock = h('span', { class: 'clock-value' }, '00:00');
   private readonly net = h('span', { class: 'net mono' });
   private readonly partners = h('div', { class: 'partners' });
+  private readonly resPanel: HTMLElement;
+  private readonly centerPanel: HTMLElement;
+  private readonly rightPanel: HTMLElement;
+  private centerRoom = '';
   private moraleKey = '';
   private pointsKey = '';
   private samples: { t: number; v: number }[] = [];
@@ -98,13 +109,10 @@ export class TopBar {
     const clock = h('div', { class: 'clock' }, h('span', { html: icon('clock', 'ic-sm') }), this.clock);
     tipText(clock, 'Game time', 'Sudden death starts at 90:00: HQs lose their armor and every side bleeds Morale.');
 
-    this.el = h(
-      'div',
-      { class: 'hud-topbar' },
-      h('div', { class: 'hud-panel res-panel' }, supplyRes, this.powerRes, this.cpRes, this.tierRes),
-      h('div', { class: 'hud-panel center-panel' }, this.morale, h('div', { class: 'center-foot' }, this.points, clock)),
-      h('div', { class: 'hud-panel right-panel' }, this.partners, this.net, help, menu),
-    );
+    this.resPanel = h('div', { class: 'hud-panel res-panel' }, supplyRes, this.powerRes, this.cpRes, this.tierRes);
+    this.centerPanel = h('div', { class: 'hud-panel center-panel' }, this.morale, h('div', { class: 'center-foot' }, this.points, clock));
+    this.rightPanel = h('div', { class: 'hud-panel right-panel' }, this.partners, this.net, help, menu);
+    this.el = h('div', { class: 'hud-topbar' }, this.resPanel, this.centerPanel, this.rightPanel);
     this.renderPartners();
   }
 
@@ -163,12 +171,41 @@ export class TopBar {
 
     this.renderMorale();
     this.renderPoints();
+    this.fitCenter();
 
     const parts: string[] = [];
     if (opts.pingMs !== undefined) parts.push(`${Math.round(opts.pingMs)} ms`);
     if (opts.showFps) parts.push(`${this.fps.toFixed(0)} fps`, `T${tick}`);
     setText(this.net, parts.join(' · '));
     this.net.classList.toggle('bad', (opts.pingMs ?? 0) > 250);
+  }
+
+  /**
+   * The centered Morale panel may only use the room between the side panels (it wraps into a second
+   * row of chips when that runs out), so it never covers the resources or the menu buttons.
+   */
+  private fitCenter(): void {
+    const top = this.el.clientWidth;
+    if (!top) return;
+    const side = Math.max(this.resPanel.offsetLeft + this.resPanel.offsetWidth, top - this.rightPanel.offsetLeft) + 12;
+    const room = Math.max(200, top - 2 * side);
+    if (`${room}` !== this.centerRoom) this.centerPanel.style.maxWidth = `${(this.centerRoom = `${room}`)}px`;
+    // Many sides: as few balanced rows of chips as fit beside our own card.
+    const mine = this.morale.querySelector<HTMLElement>('.morale.mine');
+    const chip = this.morale.querySelector<HTMLElement>('.morale.chip');
+    if (!mine || !chip) return;
+    const n = this.morale.childElementCount - 1;
+    const gap = 6;
+    const avail = room - 16;
+    const step = chip.offsetWidth + gap;
+    let rows = 1;
+    while (rows < n && mine.offsetWidth + gap + Math.ceil(n / rows) * step > avail) rows++;
+    // Past two rows beside our card, put our card on top and give the chips the full width.
+    const stacked = rows > 2;
+    const cols = String(stacked ? Math.ceil(n / Math.ceil(n / Math.max(1, Math.floor((avail + gap) / step)))) : Math.ceil(n / rows));
+    this.morale.classList.toggle('stacked', stacked);
+    if (this.morale.style.getPropertyValue('--cols') !== cols) this.morale.style.setProperty('--cols', cols);
+    this.morale.style.setProperty('--rows', String(rows));
   }
 
   private renderMorale(): void {
@@ -184,14 +221,19 @@ export class TopBar {
     const firstRender = this.moraleKey === '';
     this.moraleKey = key;
     const lead = Math.max(0, ...held.values());
+    // With more than two sides, the others become compact chips; the leader on points is marked.
+    const multi = teams.length > 2;
+    const leaders = [...held].filter(([, n]) => n === lead && lead > 0).map(([t]) => t);
     if (firstRender || this.morale.childElementCount !== teams.length) {
+      this.centerPanel.classList.toggle('multi', multi);
       setChildren(
         this.morale,
         teams.map((tm, i) => {
+          const mine = tm.team === myTeam;
           const chip = h(
             'div',
-            { class: `morale${tm.team === myTeam ? ' mine' : ''}${i === 1 && teams.length === 2 ? ' right' : ''}`, style: { '--team-color': tm.color }, dataset: { team: String(tm.team) } },
-            h('span', { class: 'morale-name' }, tm.team === myTeam ? 'Our Morale' : teams.length === 2 ? 'Enemy' : tm.players.map((p) => p.name).join(' · ')),
+            { class: `morale${mine ? ' mine' : ''}${multi && !mine ? ' chip' : ''}${i === 1 && teams.length === 2 ? ' right' : ''}`, style: { '--team-color': tm.color }, dataset: { team: String(tm.team) } },
+            h('span', { class: 'morale-name' }, mine ? 'Our Morale' : teams.length === 2 ? 'Enemy' : shortName(tm)),
             h('span', { class: 'morale-value' }),
             h('span', { class: 'morale-bar' }, h('span', { class: 'morale-fill' })),
             h('span', { class: 'morale-drain' }),
@@ -223,7 +265,8 @@ export class TopBar {
       setText(chip.querySelector('.morale-value')!, fmtInt(tm.morale));
       setWidth(chip.querySelector('.morale-fill')!, frac);
       const behind = lead - (held.get(tm.team) ?? 0);
-      setText(chip.querySelector('.morale-drain')!, !tm.defeated && behind > 0 ? `▼ ${behind} pt${behind > 1 ? 's' : ''} behind` : '');
+      setText(chip.querySelector('.morale-drain')!, !tm.defeated && behind > 0 ? (multi ? `▼ ${behind} behind` : `▼ ${behind} pt${behind > 1 ? 's' : ''} behind`) : '');
+      chip.classList.toggle('lead', multi && leaders.length === 1 && leaders[0] === tm.team);
       chip.classList.toggle('low', frac < 0.25 && !tm.defeated);
       chip.classList.toggle('draining', behind > 0 && !tm.defeated);
       chip.classList.toggle('defeated', tm.defeated);
@@ -232,6 +275,7 @@ export class TopBar {
 
   private renderPoints(): void {
     const pts = this.adapter.points().sort((p, q) => p.pos.x - q.pos.x || p.pos.z - q.pos.z);
+    this.points.classList.toggle('many', pts.length > 9);
     const key = JSON.stringify(pts.map((p) => [p.id, p.owner, p.capturer ?? -1, Math.round((p.progress ?? 0) * 20)]));
     if (key === this.pointsKey) return;
     const rebuild = this.points.childElementCount !== pts.length;
