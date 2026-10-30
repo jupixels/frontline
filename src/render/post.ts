@@ -120,7 +120,7 @@ function buildGradeLut(size = 32): LookupTexture {
   return lut;
 }
 
-/** pmndrs/postprocessing stack: N8AO → (fog of war, bloom, tone mapping, LUT, vignette, tilt-shift) → SMAA. */
+/** pmndrs/postprocessing stack: N8AO → [tilt-shift] → (fog of war, bloom, tone mapping, LUT, vignette) → SMAA. */
 export class PostStack {
   readonly composer: EffectComposer;
   readonly fog: FogOfWarEffect;
@@ -173,6 +173,12 @@ export class PostStack {
       add(ao);
     }
 
+    // Tilt-shift is a convolution: it gets its own pass on the HDR image, before tone mapping.
+    if (q.tiltShift) {
+      this.tiltShift = new TiltShiftEffect({ focusArea: 0.5, feather: 0.4, kernelSize: KernelSize.MEDIUM });
+      add(new EffectPass(this.camera, this.tiltShift));
+    }
+
     const effects: Effect[] = [this.fog];
     if (q.bloom) {
       effects.push(
@@ -188,10 +194,6 @@ export class PostStack {
     effects.push(new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC }));
     effects.push(new LUT3DEffect(this.lut));
     effects.push(new VignetteEffect({ offset: 0.32, darkness: 0.42, blendFunction: BlendFunction.NORMAL }));
-    if (q.tiltShift) {
-      this.tiltShift = new TiltShiftEffect({ focusArea: 0.55, feather: 0.35, kernelSize: KernelSize.MEDIUM });
-      effects.push(this.tiltShift);
-    }
     for (const e of effects) if (e !== this.fog) this.disposables.push(e);
     add(new EffectPass(this.camera, ...effects), false);
     if (q.smaa) add(new EffectPass(this.camera, new SMAAEffect({ preset: SMAAPreset.MEDIUM })));

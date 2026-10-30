@@ -263,7 +263,7 @@ export class Vfx {
     const y = this.host.heightAt(x, z);
     this.smoke.spawn({
       x: x + rr(-0.6, 0.6) * size, y: y + 0.3, z: z + rr(-0.6, 0.6) * size, vx: rr(-0.4, 0.4) + WIND.x * 0.4, vy: rr(0.4, 1.4), vz: rr(-0.4, 0.4) + WIND.z * 0.4,
-      life: rr(1.6, 2.8), size0: size * 0.8, size1: size * rr(2.5, 4), r: 0.5, g: 0.44, b: 0.35, a: 0.32, drag: 0.8, spin: 0.25,
+      life: rr(1.4, 2.4), size0: size * 0.6, size1: size * rr(1.8, 2.8), r: 0.34, g: 0.3, b: 0.24, a: 0.16, drag: 0.8, spin: 0.25,
     });
   }
 
