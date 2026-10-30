@@ -1,0 +1,41 @@
+{
+  "id": "power_pole",
+  "date": "2026-10-30",
+  "batch": "props",
+  "replaces": "map dressing prop (new; for the maps session)",
+  "style": "tools/generated/STYLE.md, prop",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "Realistic map prop, generic, no text, no logos, no markings. Matte weathered materials. Single object, entire object in frame, three-quarter view from slightly above, centered on a plain light grey background, no ground, no shadow, soft even overcast lighting, photorealistic 3D render. A tall weathered wooden utility power pole with a crossarm, ceramic insulators and short cut wire ends.",
+    "taskId": "01a18ee8-2269-704d-a28a-3f909c1e0fce",
+    "file": "raw/power_pole/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 2000,
+      "texture": true,
+      "taskId": "01a18ee8-9c4d-7604-943b-014428a09498",
+      "file": "raw/power_pole/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/power_pole.json",
+    "output": "buildings/props/power_pole.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/props/power_pole.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

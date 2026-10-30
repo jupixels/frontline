@@ -28,6 +28,8 @@ export interface Settings {
   tooltips: boolean;
   /** Path lines for every own unit with orders, not just the selection. */
   allPaths: boolean;
+  /** Team-colored rings under units: always, fading in at far zoom, or off. */
+  teamRings: 'always' | 'far' | 'off';
   /** On-screen touch controls: auto-detect, always or never. */
   touch: 'auto' | 'on' | 'off';
   keybinds: Keybinds;
@@ -56,6 +58,7 @@ export function defaultSettings(): Settings {
     motion: 'system',
     tooltips: true,
     allPaths: false,
+    teamRings: 'far',
     touch: 'auto',
     keybinds: defaultKeybinds(),
     keybindsVersion: KEYBINDS_VERSION,
@@ -112,6 +115,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     motion: r.motion === 'full' || r.motion === 'reduced' || r.motion === 'system' ? r.motion : d.motion,
     tooltips: typeof r.tooltips === 'boolean' ? r.tooltips : d.tooltips,
     allPaths: typeof r.allPaths === 'boolean' ? r.allPaths : d.allPaths,
+    teamRings: r.teamRings === 'always' || r.teamRings === 'far' || r.teamRings === 'off' ? r.teamRings : d.teamRings,
     touch: r.touch === 'on' || r.touch === 'off' || r.touch === 'auto' ? r.touch : d.touch,
     keybinds: keys,
     keybindsVersion: KEYBINDS_VERSION,

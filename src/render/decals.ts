@@ -30,6 +30,7 @@ export class DecalMap {
   private readonly stamps: THREE.InstancedMesh;
   private readonly params: THREE.InstancedBufferAttribute;
   private readonly fadeScene = new THREE.Scene();
+  private fade!: THREE.MeshBasicMaterial;
   private count = 0;
   private fadeTimer = 0;
   private cleared = false;
@@ -93,6 +94,15 @@ export class DecalMap {
       }),
     );
     this.fadeScene.add(fade);
+    this.fade = fade.material as THREE.MeshBasicMaterial;
+  }
+
+  /**
+   * How much of the track channel (G) survives each fade pass: closer to 1 keeps tread marks on the
+   * ground longer, so the front line slowly scars over. Scorch (R) never fades; wakes (B) fade fast.
+   */
+  setTrackFade(keep: number): void {
+    this.fade.color.g = keep;
   }
 
   get texture(): THREE.Texture {

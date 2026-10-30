@@ -1,0 +1,41 @@
+{
+  "id": "fuel_tank",
+  "date": "2026-10-30",
+  "batch": "props",
+  "replaces": "map dressing prop (new; for the maps session)",
+  "style": "tools/generated/STYLE.md, prop",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "Realistic military map prop, generic, no text, no logos, no markings. Matte weathered materials, light dust and rust. Single object, entire object in frame, three-quarter view from above, centered on a plain light grey background, no ground, no shadow, soft even overcast lighting, photorealistic 3D render. A large cylindrical horizontal fuel storage tank on concrete saddles, faded olive-grey paint with rust streaks, a small ladder and pipes.",
+    "taskId": "01a18ee8-027a-70fb-8152-62ce4948aefb",
+    "file": "raw/fuel_tank/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 2000,
+      "texture": true,
+      "taskId": "01a18ee8-8e2a-728a-8022-f57d70e88c9d",
+      "file": "raw/fuel_tank/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/fuel_tank.json",
+    "output": "buildings/props/fuel_tank.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/props/fuel_tank.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}
