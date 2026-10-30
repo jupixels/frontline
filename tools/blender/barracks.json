@@ -3,8 +3,8 @@
   "output": "buildings/barracks.glb",
   "rotateY": 0,
   "fit": [
-    13.44,
-    11.52
+    12.32,
+    10.56
   ],
   "triangles": 10000,
   "textureSize": 1024,
@@ -20,5 +20,7 @@
     "minHeight": 0.55,
     "normalZ": 0.8
   },
-  "parts": []
+  "parts": [],
+  "stretch": 2.0,
+  "heightScale": 1.8
 }

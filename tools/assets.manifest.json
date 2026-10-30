@@ -125,6 +125,32 @@
       "animTolerance": 0.0005
     },
     {
+      "generated": "rifleman_b.glb",
+      "out": "models/rifleman_b.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "scale": 1,
+      "center": false,
+      "textureSize": 512,
+      "materials": {
+        "team": "TeamAccent"
+      },
+      "animTolerance": 0.0005
+    },
+    {
+      "generated": "rifleman_c.glb",
+      "out": "models/rifleman_c.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "scale": 1,
+      "center": false,
+      "textureSize": 512,
+      "materials": {
+        "team": "TeamAccent"
+      },
+      "animTolerance": 0.0005
+    },
+    {
       "generated": "supply_truck.glb",
       "out": "models/supply_truck.glb",
       "kind": "unit",

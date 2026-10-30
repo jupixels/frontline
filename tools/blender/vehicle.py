@@ -50,7 +50,15 @@ mn, mx = common.bounds([body])
 size = mx - mn
 # `fit: [w, d]` (structures): the largest uniform scale that fits the footprint (game x by z).
 s = min(cfg['fit'][0] / size.x, cfg['fit'][1] / size.y) if 'fit' in cfg else cfg['length'] / max(size.x, size.y)
-common.apply_transform(body, Matrix.Scale(s, 4))
+# `stretch` lets the short side grow (up to that factor) toward the footprint, so a long narrow building
+# still fills it; `heightScale` exaggerates low buildings so they read at RTS zoom. Both readability only.
+sx = sy = sz = s
+if 'fit' in cfg:
+    k = cfg.get('stretch', 1)
+    sx = min(cfg['fit'][0] / size.x, s * k)
+    sy = min(cfg['fit'][1] / size.y, s * k)
+sz = s * cfg.get('heightScale', 1)
+common.apply_transform(body, Matrix.Diagonal((sx, sy, sz, 1)))
 mn, mx = common.bounds([body])
 common.apply_transform(body, Matrix.Translation(Vector((-(mn.x + mx.x) / 2, -(mn.y + mx.y) / 2, -mn.z))))
 mn, mx = common.bounds([body])

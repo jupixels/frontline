@@ -131,11 +131,11 @@
       "path": "models/buildings/barracks.glb",
       "kind": "building",
       "size": [
-        13.44,
-        2.53,
-        4.32
+        12.32,
+        4.17,
+        7.91
       ],
-      "sizeKB": 240,
+      "sizeKB": 243,
       "clips": [],
       "nodes": [],
       "license": "owned (Meshy Pro output)",
@@ -171,11 +171,11 @@
       "path": "models/buildings/hospital.glb",
       "kind": "building",
       "size": [
-        11.52,
-        2.07,
-        11.48
+        10.8,
+        3.88,
+        10.76
       ],
-      "sizeKB": 212,
+      "sizeKB": 213,
       "clips": [],
       "nodes": [],
       "license": "owned (Meshy Pro output)",
@@ -231,9 +231,9 @@
       "path": "models/buildings/power_plant.glb",
       "kind": "building",
       "size": [
-        13.44,
-        5.37,
-        13.3
+        12.6,
+        7.55,
+        12.47
       ],
       "sizeKB": 242,
       "clips": [],
@@ -554,11 +554,11 @@
       "path": "models/buildings/supply_depot.glb",
       "kind": "building",
       "size": [
-        11.52,
-        6.8,
-        11.41
+        10.8,
+        8.28,
+        10.7
       ],
-      "sizeKB": 211,
+      "sizeKB": 212,
       "clips": [],
       "nodes": [],
       "license": "owned (Meshy Pro output)",
@@ -594,11 +594,11 @@
       "path": "models/buildings/war_factory.glb",
       "kind": "building",
       "size": [
-        19.2,
-        9.46,
-        13.14
+        18,
+        10.64,
+        16.01
       ],
-      "sizeKB": 278,
+      "sizeKB": 279,
       "clips": [],
       "nodes": [],
       "license": "owned (Meshy Pro output)",
@@ -1150,6 +1150,60 @@
       "draft": 1.2,
       "materials": {
         "team": "TeamPaint"
+      }
+    },
+    {
+      "id": "rifleman_b",
+      "path": "models/rifleman_b.glb",
+      "kind": "unit",
+      "size": [
+        1.3,
+        1.49,
+        0.36
+      ],
+      "sizeKB": 189,
+      "clips": [
+        "Death01",
+        "Death02",
+        "Fire",
+        "Idle",
+        "Run01_Forward",
+        "Walk01_Forward"
+      ],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamAccent"
+      }
+    },
+    {
+      "id": "rifleman_c",
+      "path": "models/rifleman_c.glb",
+      "kind": "unit",
+      "size": [
+        0.7,
+        1.39,
+        0.59
+      ],
+      "sizeKB": 179,
+      "clips": [
+        "Death01",
+        "Death02",
+        "Fire",
+        "Idle",
+        "Run01_Forward",
+        "Walk01_Forward"
+      ],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ],
+      "materials": {
+        "team": "TeamAccent"
       }
     },
     {

@@ -3,8 +3,8 @@
   "output": "buildings/hospital.glb",
   "rotateY": 0,
   "fit": [
-    11.52,
-    11.52
+    10.8,
+    10.8
   ],
   "triangles": 10000,
   "textureSize": 1024,
@@ -20,5 +20,6 @@
     "minHeight": 0.55,
     "normalZ": 0.8
   },
-  "parts": []
+  "parts": [],
+  "heightScale": 2.0
 }

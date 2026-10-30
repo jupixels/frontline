@@ -6,6 +6,11 @@ import { materialRole, TEAM_ACCENT, TEAM_PAINT, teamMaterial } from './materials
 import { cloneModel, loadModel, type PreparedModel } from './models';
 import { WATER_LEVEL } from './terrain';
 
+/** Look-alike models a unit type picks from per entity, for squad variety (the far LOD uses the first). */
+const VARIANTS: Record<string, string[]> = {
+  'models/rifleman.glb': ['models/rifleman.glb', 'models/rifleman_b.glb', 'models/rifleman_c.glb'],
+};
+
 /** Infantry are drawn larger than life so they read at RTS zoom. */
 export const INFANTRY_SCALE = 1.6;
 
@@ -109,7 +114,8 @@ export class UnitView {
     this.ring.visible = false;
     this.root.add(this.ring);
     if (this.cls === 'structure') this.root.add(this.buildFoundation());
-    loadModel(def.model).then((m) => this.attach(m));
+    const variants = VARIANTS[def.model];
+    loadModel(variants ? variants[id % variants.length] : def.model).then((m) => this.attach(m));
   }
 
   private edgeMat: THREE.MeshBasicMaterial | null = null;

@@ -3,8 +3,8 @@
   "output": "buildings/power_plant.glb",
   "rotateY": 0,
   "fit": [
-    13.44,
-    13.44
+    12.6,
+    12.6
   ],
   "triangles": 12000,
   "textureSize": 1024,
@@ -20,5 +20,6 @@
     "minHeight": 0.55,
     "normalZ": 0.8
   },
-  "parts": []
+  "parts": [],
+  "heightScale": 1.5
 }
