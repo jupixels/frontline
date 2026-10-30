@@ -393,17 +393,18 @@ export class SkirmishAi {
     for (const f of this.k.own) {
       if (f.kind !== 'structure' || f.type === 'hq' || !this.complete(f)) continue;
       if (this.sim.queue(f.id).length >= this.p.queue) continue;
-      const options = this.sim.producible(f.id).filter((u) => mix[u] && u !== 'engineer' && !(infantryFull && UNIT_DEFS[u].armor === 'infantry'));
-      if (!options.length) continue;
-      // Transports when a point needs one.
-      if (wantTransport && options.includes('heli_transport') && !this.k.own.some((e) => e.type === 'heli_transport')) {
+      const producible = this.sim.producible(f.id);
+      // Transports when a point needs one (they're not part of the fighting mix).
+      if (wantTransport && producible.includes('heli_transport') && !this.k.own.some((e) => e.type === 'heli_transport')) {
         cands.push({ f, unit: 'heli_transport', score: 1 });
         continue;
       }
-      if (wantTransport && options.includes('transport_ship') && !this.k.own.some((e) => e.type === 'transport_ship' || e.type === 'heli_transport')) {
+      if (wantTransport && producible.includes('transport_ship') && !this.k.own.some((e) => e.type === 'transport_ship' || e.type === 'heli_transport')) {
         cands.push({ f, unit: 'transport_ship', score: 0.9 });
         continue;
       }
+      const options = producible.filter((u) => mix[u] && u !== 'engineer' && !(infantryFull && UNIT_DEFS[u].armor === 'infantry'));
+      if (!options.length) continue;
       let wsum = 0;
       for (const u of options) wsum += mix[u];
       let pick: string | null = null;
