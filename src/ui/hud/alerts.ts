@@ -1,6 +1,6 @@
 import type { Vec2 } from '../../shared/types';
 import { h } from '../dom';
-import { ICONS } from '../glyphs';
+import { icon, type IconId } from '../icons';
 
 export type AlertKind = 'attack' | 'capture' | 'lost' | 'ready' | 'info' | 'warn';
 
@@ -16,6 +16,7 @@ interface Live extends Alert {
 }
 
 const LIFE_MS = 9000;
+const ICON: Record<AlertKind, IconId> = { attack: 'attack', capture: 'point', lost: 'lost', ready: 'check', info: 'info', warn: 'alert' };
 const MAX_SHOWN = 5;
 
 /** Left-side feed of recent alerts. Space jumps to the newest one with a position, then older ones. */
@@ -26,7 +27,10 @@ export class AlertFeed {
   private cursor = -1;
   private lastJump = 0;
 
-  constructor(private readonly onJump: (pos: Vec2) => void) {
+  constructor(
+    private readonly onJump: (pos: Vec2) => void,
+    private readonly jumpKey: () => string = () => 'Space',
+  ) {
     this.el = h('div', { class: 'alert-feed' });
   }
 
@@ -34,9 +38,9 @@ export class AlertFeed {
     const el = h(
       'div',
       { class: `alert ${a.kind}${a.pos ? ' jumpable' : ''}`, onclick: () => a.pos && this.onJump(a.pos) },
-      h('span', { class: 'alert-icon', html: a.kind === 'capture' ? ICONS.flag : a.kind === 'ready' ? ICONS.cp : ICONS.alert }),
+      h('span', { class: 'alert-icon', html: icon(ICON[a.kind], 'ic-sm') }),
       h('span', { class: 'alert-text' }, a.text),
-      a.pos ? h('span', { class: 'alert-key mono' }, 'SPACE') : null,
+      a.pos ? h('span', { class: 'alert-key kbd' }, this.jumpKey()) : null,
     );
     // Only the newest jumpable alert advertises the Space key.
     if (a.pos) for (const l of this.live) l.el.querySelector('.alert-key')?.remove();

@@ -159,7 +159,7 @@ export class Backdrop {
     this.sweep = (this.sweep + dt * 0.55) % (Math.PI * 2);
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.strokeStyle = 'rgba(157, 255, 122, 0.10)';
+    ctx.strokeStyle = 'rgba(232, 180, 80, 0.10)';
     ctx.lineWidth = 1;
     for (let i = 1; i <= 4; i++) {
       ctx.beginPath();
@@ -174,9 +174,9 @@ export class Backdrop {
     ctx.stroke();
     // Sweep wedge.
     const grad = ctx.createConicGradient(this.sweep - 0.9, 0, 0);
-    grad.addColorStop(0, 'rgba(157, 255, 122, 0)');
-    grad.addColorStop(0.14, 'rgba(157, 255, 122, 0.10)');
-    grad.addColorStop(0.1433, 'rgba(157, 255, 122, 0)');
+    grad.addColorStop(0, 'rgba(232, 180, 80, 0)');
+    grad.addColorStop(0.14, 'rgba(232, 180, 80, 0.10)');
+    grad.addColorStop(0.1433, 'rgba(232, 180, 80, 0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(0, 0, R, 0, Math.PI * 2);
@@ -199,7 +199,7 @@ export class Backdrop {
       const age = now - b.seen;
       const a = Math.max(0, 1 - age / 4);
       if (a <= 0) continue;
-      ctx.fillStyle = b.hostile ? `rgba(230, 95, 75, ${0.75 * a})` : `rgba(157, 255, 122, ${0.75 * a})`;
+      ctx.fillStyle = b.hostile ? `rgba(230, 95, 75, ${0.75 * a})` : `rgba(232, 180, 80, ${0.75 * a})`;
       const s = 3 * Math.min(devicePixelRatio || 1, 2);
       if (b.hostile) {
         ctx.beginPath();

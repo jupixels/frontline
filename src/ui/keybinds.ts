@@ -1,5 +1,6 @@
 // Rebindable hotkeys. Bindings are KeyboardEvent.code values (physical keys), so they work the
-// same on every keyboard layout. Control groups stay on the digit row and are not rebindable.
+// same on every keyboard layout. Every keyboard action is here, control groups included; only mouse
+// buttons and the Shift/Ctrl modifiers (add, queue, set group) are fixed.
 
 export type ActionId =
   | 'attackMove'
@@ -28,12 +29,30 @@ export type ActionId =
   | 'slot5'
   | 'slot6'
   | 'slot7'
-  | 'slot8';
+  | 'slot8'
+  | 'slot9'
+  | 'slot10'
+  | 'slot11'
+  | 'slot12'
+  | 'idleEngineer'
+  | 'jumpBase'
+  | 'gameSpeedUp'
+  | 'gameSpeedDown'
+  | 'fieldManual'
+  | 'group1'
+  | 'group2'
+  | 'group3'
+  | 'group4'
+  | 'group5'
+  | 'group6'
+  | 'group7'
+  | 'group8'
+  | 'group9';
 
 export interface ActionInfo {
   id: ActionId;
   label: string;
-  group: 'Orders' | 'Command card' | 'Camera & selection' | 'Interface';
+  group: 'Orders' | 'Command card' | 'Camera & selection' | 'Control groups' | 'Interface';
   key: string;
 }
 
@@ -57,6 +76,10 @@ export const ACTIONS: readonly ActionInfo[] = [
   { id: 'slot6', label: 'Slot 6', group: 'Command card', key: 'KeyK' },
   { id: 'slot7', label: 'Slot 7', group: 'Command card', key: 'KeyL' },
   { id: 'slot8', label: 'Slot 8', group: 'Command card', key: 'KeyO' },
+  { id: 'slot9', label: 'Slot 9', group: 'Command card', key: 'KeyI' },
+  { id: 'slot10', label: 'Slot 10', group: 'Command card', key: 'KeyM' },
+  { id: 'slot11', label: 'Slot 11', group: 'Command card', key: 'Semicolon' },
+  { id: 'slot12', label: 'Slot 12', group: 'Command card', key: 'Comma' },
   { id: 'panUp', label: 'Pan camera up', group: 'Camera & selection', key: 'KeyW' },
   { id: 'panDown', label: 'Pan camera down', group: 'Camera & selection', key: 'KeyS' },
   { id: 'panLeft', label: 'Pan camera left', group: 'Camera & selection', key: 'KeyA' },
@@ -64,10 +87,17 @@ export const ACTIONS: readonly ActionInfo[] = [
   { id: 'centerSelection', label: 'Center on selection', group: 'Camera & selection', key: 'KeyC' },
   { id: 'selectArmy', label: 'Select all army', group: 'Camera & selection', key: 'F2' },
   { id: 'jumpAlert', label: 'Jump to last alert', group: 'Camera & selection', key: 'Space' },
+  { id: 'idleEngineer', label: 'Next idle engineer', group: 'Camera & selection', key: 'Period' },
+  { id: 'jumpBase', label: 'Jump to HQ', group: 'Camera & selection', key: 'Backspace' },
+  ...([1, 2, 3, 4, 5, 6, 7, 8, 9] as const).map((n) => ({ id: `group${n}` as ActionId, label: `Group ${n} (Ctrl: set · Shift: add)`, group: 'Control groups' as const, key: `Digit${n}` })),
   { id: 'menu', label: 'Game menu', group: 'Interface', key: 'F10' },
+  { id: 'fieldManual', label: 'Field manual', group: 'Interface', key: 'F1' },
+  { id: 'gameSpeedUp', label: 'Game speed up (skirmish, replay)', group: 'Interface', key: 'Equal' },
+  { id: 'gameSpeedDown', label: 'Game speed down (skirmish, replay)', group: 'Interface', key: 'Minus' },
 ];
 
-export const SLOT_ACTIONS: readonly ActionId[] = ['slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'slot6', 'slot7', 'slot8'];
+export const SLOT_ACTIONS: readonly ActionId[] = ['slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'slot6', 'slot7', 'slot8', 'slot9', 'slot10', 'slot11', 'slot12'];
+export const GROUP_ACTIONS: readonly ActionId[] = ['group1', 'group2', 'group3', 'group4', 'group5', 'group6', 'group7', 'group8', 'group9'];
 
 export type Keybinds = Record<ActionId, string>;
 
@@ -166,9 +196,8 @@ export function keyLabel(code: string): string {
   return NAMED[code] ?? code;
 }
 
-/** Keys that can't be bound: modifiers (used for queue/add/group) and the digit row (groups). */
+/** Keys that can't be bound: modifiers (used for queue/add/group) and Escape (cancel/back). */
 export function isBindable(code: string): boolean {
-  if (/^Digit\d$/.test(code)) return false;
   if (/^(Shift|Control|Alt|Meta)(Left|Right)$/.test(code)) return false;
   if (code === 'Escape') return false;
   return code.length > 0;

@@ -1,4 +1,5 @@
 import { button, h, setChildren } from '../dom';
+import { entityIcon } from '../icons';
 import type { MatchMode } from '../lobbyApi';
 
 /** "Waiting for <player>" banner while lockstep is stalled on a peer. */
@@ -142,7 +143,7 @@ export class GameMenu {
     private readonly actions: GameMenuActions,
   ) {
     this.body = h('div', { class: 'modal-body game-menu' });
-    this.el = h('div', { class: 'overlay-modal hidden' }, h('div', { class: 'modal panel narrow' }, h('div', { class: 'panel-title' }, h('span', null, this.mode === 'skirmish' ? 'PAUSED' : 'MENU')), this.body));
+    this.el = h('div', { class: 'overlay-modal hidden' }, h('div', { class: 'modal panel narrow' }, h('div', { class: 'panel-title' }, h('span', null, this.mode === 'online' ? 'Menu' : 'Paused')), this.body));
     this.el.addEventListener('pointerdown', (e) => {
       if (e.target === this.el) actions.resume();
     });
@@ -170,7 +171,7 @@ export class GameMenu {
       this.mode === 'online' && a.pauseVote ? button('Vote to pause', () => a.pauseVote?.(), 'btn-block') : null,
       button('Settings', () => a.settings(), 'btn-block'),
       button('Surrender', () => this.confirm('Surrender?', 'Your forces stand down and your team loses you as a player.', 'Surrender', () => a.surrender()), 'btn-block'),
-      button('Quit to menu', () => this.confirm('Quit to menu?', this.mode === 'online' ? 'Leaving counts as a surrender for your slot.' : 'Progress in this skirmish is lost.', 'Quit', () => a.quit()), 'btn-block btn-ghost'),
+      button('Quit to menu', () => this.confirm('Quit to menu?', this.mode === 'online' ? 'Leaving counts as a surrender for your slot.' : this.mode === 'replay' ? 'Stop watching this replay.' : 'Progress in this match is lost.', 'Quit', () => a.quit()), 'btn-block btn-ghost'),
     );
   }
 
@@ -187,4 +188,101 @@ export class GameMenu {
 /** Large centered banner (VICTORY / DEFEAT) shown before the results screen. */
 export function outcomeBanner(text: string, cls: string): HTMLElement {
   return h('div', { class: `outcome-banner ${cls}` }, h('span', { class: 'eyebrow mono' }, 'MATCH OVER'), h('span', { class: 'outcome-text' }, text));
+}
+
+export interface ManualContext {
+  keys: Record<string, string>;
+}
+
+/** F1 field manual: controls (live keybinds), how Morale wins, the economy and the counter wheel. */
+export class FieldManual {
+  readonly el: HTMLElement;
+  private readonly body: HTMLElement;
+  private tab = 0;
+
+  constructor(
+    private readonly ctx: () => ManualContext,
+    private readonly onClose: () => void,
+  ) {
+    this.body = h('div', { class: 'manual-body' });
+    this.el = h(
+      'div',
+      { class: 'overlay-modal hidden' },
+      h('div', { class: 'modal panel manual brackets' }, h('div', { class: 'panel-title' }, h('span', null, 'Field manual'), button('Close', () => this.onClose(), 'btn-ghost btn-sm')), this.body),
+    );
+    this.el.addEventListener('pointerdown', (e) => {
+      if (e.target === this.el) this.onClose();
+    });
+  }
+
+  get visible(): boolean {
+    return !this.el.classList.contains('hidden');
+  }
+
+  show(): void {
+    this.render();
+    this.el.classList.remove('hidden');
+  }
+
+  hide(): void {
+    this.el.classList.add('hidden');
+  }
+
+  private render(): void {
+    const k = this.ctx().keys;
+    const tabs = ['Controls', 'Winning', 'Economy', 'Counters'];
+    const kb = (label: string, key: string) => h('div', { class: 'man-key' }, h('span', null, label), h('span', { class: 'kbd' }, key));
+    const pages: (() => HTMLElement)[] = [
+      () =>
+        h(
+          'div',
+          { class: 'man-cols' },
+          h('section', null, h('h4', null, 'Mouse'), kb('Select / box select', 'Left'), kb('Move · attack · rally', 'Right'), kb('Formation facing', 'Right-drag'), kb('Select all of a type', 'Double-click'), kb('Rotate camera', 'Middle-drag'), kb('Zoom', 'Wheel')),
+          h('section', null, h('h4', null, 'Orders'), kb('Attack-move', k.attackMove), kb('Stop', k.stop), kb('Hold position', k.hold), kb('Patrol', k.patrol), kb('Build menu', k.build), kb('Board / garrison', k.enter), kb('Unload', k.unload), kb('Draw frontline (hold, drag)', k.drawLine), kb('Queue any order', 'Shift')),
+          h('section', null, h('h4', null, 'Camera & army'), kb('Pan', `${k.panUp}${k.panLeft}${k.panDown}${k.panRight}`), kb('Select army', k.selectArmy), kb('Next idle engineer', k.idleEngineer), kb('Jump to HQ', k.jumpBase), kb('Jump to last alert', k.jumpAlert), kb('Center on selection', k.centerSelection), kb('Save / recall group', `Ctrl+${k.group1} · ${k.group1}`)),
+        ),
+      () =>
+        h(
+          'div',
+          { class: 'man-text' },
+          h('p', null, h('b', null, 'Morale. '), 'Each side starts with 1,000 Morale. Whoever holds fewer strategic points than the leader loses Morale every second; units lost cost a little more. At zero a side breaks and loses. Destroying the enemy HQ also wins.'),
+          h('p', null, h('b', null, 'Shaken. '), 'Below 25% a side is shaken: its pinned troops recover slowly. Both sides are told.'),
+          h('p', null, h('b', null, 'Points. '), 'Stand ground units on a point to capture it. An enemy point must be neutralized first. The diamonds in the top bar show every point; click one to look at it.'),
+          h('p', null, h('b', null, 'Frontlines. '), `Select units, hold ${k.drawLine} and drag a line. They spread along it by role and hold it: infantry seek cover, AT teams take the flanks, tanks stay behind, artillery far back. Advance the line with ${k.advanceLine}.`),
+          h('p', null, h('b', null, 'Sudden death. '), 'At 90 minutes HQs lose their armor and every side bleeds, so every match ends.'),
+        ),
+      () =>
+        h(
+          'div',
+          { class: 'man-text' },
+          h('p', null, h('b', null, 'Supply '), 'pays for everything. Your HQ earns some; held points and Supply Depots earn more. Supply trucks carry it home, so cutting their routes starves the enemy.'),
+          h('p', null, h('b', null, 'Power '), 'comes from Power Plants. Short on power, production runs at half speed and radar and defenses go dark.'),
+          h('p', null, h('b', null, 'Command points '), 'cap your army size. Holding points raises the cap; a side that is behind gets a little extra.'),
+          h('p', null, h('b', null, 'Tiers. '), 'A Radar Station unlocks Tier 2 (tanks, artillery, helicopters, most ships). Strategic Command unlocks Tier 3 (jets, bombers, cruisers) and the cruise missile.'),
+          h('p', null, h('b', null, 'Readiness. '), 'Units far from friendly supply slowly lose fire rate and accuracy.'),
+        ),
+      () => {
+        const pair = (a: string, b: string, text: string) => h('div', { class: 'man-counter' }, h('span', { html: entityIcon(a, undefined, 'ic-md') }), h('span', { class: 'man-arrow' }, '›'), h('span', { html: entityIcon(b, undefined, 'ic-md') }), h('span', null, text));
+        return h(
+          'div',
+          { class: 'man-counters' },
+          pair('sniper', 'rifleman', 'Snipers and machine guns pin infantry'),
+          pair('at_soldier', 'tank_mbt', 'AT teams ambush tanks'),
+          pair('tank_mbt', 'scout_car', 'Tanks crush light vehicles and infantry'),
+          pair('artillery', 'trench', 'Artillery breaks static and clumped targets'),
+          pair('heli_attack', 'tank_light', 'Attack helicopters hunt armor'),
+          pair('aa_tank', 'heli_attack', 'Mobile AA shreds helicopters'),
+          pair('jet_fighter', 'heli_transport', 'Fighters rule the air'),
+          pair('destroyer', 'submarine', 'Destroyers hunt subs and boats'),
+          pair('submarine', 'cruiser', 'Subs sink capital ships'),
+          pair('cruiser', 'hq', 'Capital ships bombard the shore'),
+        );
+      },
+    ];
+    setChildren(
+      this.body,
+      h('div', { class: 'segmented' }, tabs.map((t, i) => h('button', { class: i === this.tab ? 'on' : '', type: 'button', onclick: () => ((this.tab = i), this.render()) }, t))),
+      pages[this.tab](),
+    );
+  }
 }

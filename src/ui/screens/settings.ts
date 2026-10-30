@@ -1,23 +1,27 @@
 import { button, h, setChildren } from '../dom';
-import { ACTIONS, isBindable, keyLabel, type ActionId } from '../keybinds';
+import { icon, type IconId } from '../icons';
+import { ACTIONS, conflicts, isBindable, keyLabel, type ActionId } from '../keybinds';
 import { QUALITY_PRESETS, type Settings, type SettingsStore, type VolumeSettings } from '../settings';
+import { PALETTE_INFO } from '../teamColors';
 import type { Screen } from './screen';
 
-type Tab = 'gameplay' | 'graphics' | 'audio' | 'controls';
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'gameplay', label: 'Gameplay' },
-  { id: 'graphics', label: 'Graphics' },
-  { id: 'audio', label: 'Audio' },
-  { id: 'controls', label: 'Controls' },
+type Tab = 'gameplay' | 'graphics' | 'audio' | 'controls' | 'access';
+const TABS: { id: Tab; label: string; icon: IconId }[] = [
+  { id: 'gameplay', label: 'Gameplay', icon: 'army' },
+  { id: 'graphics', label: 'Graphics', icon: 'display' },
+  { id: 'audio', label: 'Audio', icon: 'sound' },
+  { id: 'controls', label: 'Controls', icon: 'keyboard' },
+  { id: 'access', label: 'Accessibility', icon: 'access' },
 ];
 
 /** Settings modal. Every change is applied and saved immediately. */
 export class SettingsScreen implements Screen {
   readonly el: HTMLElement;
   private readonly body: HTMLElement;
-  private readonly tabsEl: HTMLElement;
+  private readonly nav: HTMLElement;
   private tab: Tab = 'gameplay';
   private capturing: ActionId | null = null;
+  private filter = '';
   private readonly unsub: () => void;
 
   constructor(
@@ -25,16 +29,15 @@ export class SettingsScreen implements Screen {
     private readonly onClose: () => void,
   ) {
     this.body = h('div', { class: 'modal-body settings-body' });
-    this.tabsEl = h('div', { class: 'tabs' });
+    this.nav = h('nav', { class: 'settings-nav' });
     this.el = h(
       'div',
       { class: 'screen modal-screen' },
       h(
         'div',
-        { class: 'modal panel settings' },
-        h('div', { class: 'panel-title' }, h('span', null, 'SETTINGS'), button('Done', onClose, 'btn-ghost btn-sm')),
-        this.tabsEl,
-        this.body,
+        { class: 'modal panel settings brackets' },
+        h('div', { class: 'panel-title' }, h('span', null, 'Settings'), button('Done', onClose, 'btn-ghost btn-sm')),
+        h('div', { class: 'settings-layout' }, this.nav, this.body),
       ),
     );
     this.unsub = store.subscribe(() => this.render());
@@ -43,20 +46,22 @@ export class SettingsScreen implements Screen {
 
   private render(): void {
     setChildren(
-      this.tabsEl,
-      TABS.map((t) =>
-        h('button', { class: `tab${t.id === this.tab ? ' active' : ''}`, type: 'button', onclick: () => this.setTab(t.id) }, t.label),
-      ),
+      this.nav,
+      TABS.map((t) => h('button', { class: t.id === this.tab ? 'active' : '', type: 'button', onclick: () => this.setTab(t.id) }, h('span', { html: icon(t.icon, 'ic-sm') }), t.label)),
     );
     const s = this.store.get();
     const scroll = this.body.scrollTop;
-    setChildren(this.body, this.tab === 'gameplay' ? this.gameplay(s) : this.tab === 'graphics' ? this.graphics(s) : this.tab === 'audio' ? this.audio(s) : this.controls(s));
+    const focused = (document.activeElement as HTMLInputElement | null)?.classList.contains('kb-filter');
+    const page = { gameplay: () => this.gameplay(s), graphics: () => this.graphics(s), audio: () => this.audio(s), controls: () => this.controls(s), access: () => this.access(s) }[this.tab]();
+    setChildren(this.body, page);
     this.body.scrollTop = scroll;
+    if (focused) this.body.querySelector<HTMLInputElement>('.kb-filter')?.focus();
   }
 
   private setTab(t: Tab): void {
     this.tab = t;
     this.capturing = null;
+    this.body.scrollTop = 0;
     this.render();
   }
 
@@ -68,10 +73,10 @@ export class SettingsScreen implements Screen {
       row('Callsign', 'Shown to other players in lobbies.', name),
       row(
         'Edge-pan speed',
-        'Screen-edge and arrow-key scrolling. 0 turns edge-pan off.',
+        'Screen-edge and keyboard scrolling. 0 turns edge-pan off.',
         slider(s.edgePanSpeed, 0, 2.5, 0.05, (v) => this.store.update({ edgePanSpeed: v }), (v) => (v === 0 ? 'Off' : `${v.toFixed(2)}×`)),
       ),
-      row('Interface scale', 'Size of the in-game HUD.', slider(s.uiScale, 0.85, 1.25, 0.05, (v) => this.store.update({ uiScale: v }), (v) => `${Math.round(v * 100)}%`)),
+      row('Tooltips', 'Costs, counters, cooldowns and hotkeys when hovering buttons.', toggle(s.tooltips, (v) => this.store.update({ tooltips: v }))),
       row('Show FPS', 'Frame rate and sim tick in the top bar.', toggle(s.showFps, (v) => this.store.update({ showFps: v }))),
     );
   }
@@ -80,6 +85,7 @@ export class SettingsScreen implements Screen {
     return h(
       'div',
       { class: 'form' },
+      h('div', { class: 'form-section' }, 'Quality preset'),
       h(
         'div',
         { class: 'preset-grid' },
@@ -92,7 +98,7 @@ export class SettingsScreen implements Screen {
           ),
         ),
       ),
-      h('p', { class: 'dim small' }, 'Presets switch shadows, ambient occlusion, bloom and particle budgets. Changes apply on the next match if the renderer cannot switch live.'),
+      h('p', { class: 'dim small' }, 'Presets switch shadows, ambient occlusion, bloom and particle budgets.'),
     );
   }
 
@@ -109,16 +115,57 @@ export class SettingsScreen implements Screen {
     );
   }
 
+  private access(s: Settings): HTMLElement {
+    return h(
+      'div',
+      { class: 'form' },
+      h('div', { class: 'form-section' }, 'Team colors'),
+      h(
+        'div',
+        { class: 'palette-opts' },
+        PALETTE_INFO.map((p) =>
+          h(
+            'button',
+            { class: `palette-opt${s.teamPalette === p.id ? ' active' : ''}`, type: 'button', onclick: () => this.store.update({ teamPalette: p.id }) },
+            h('span', { class: 'palette-sw' }, p.preview.map((c) => h('i', { style: { background: c } }))),
+            h('b', null, p.label),
+            h('span', null, p.detail),
+          ),
+        ),
+      ),
+      h('p', { class: 'dim small' }, 'Only changes what you see (map, minimap, HUD). Applies from the next match.'),
+      h('div', { class: 'form-section' }, 'Interface'),
+      row('Interface scale', 'Size of the HUD, menus and tooltips.', slider(s.uiScale, 0.75, 1.5, 0.05, (v) => this.store.update({ uiScale: v }), (v) => `${Math.round(v * 100)}%`)),
+      row('Motion', 'Reduce animations, pulses and transitions.', segmented(s.motion, [['system', 'System'], ['full', 'Full'], ['reduced', 'Reduced']], (v) => this.store.update({ motion: v as Settings['motion'] }))),
+      row('Touch controls', 'On-screen controls for tablets and phones.', segmented(s.touch, [['auto', 'Auto'], ['on', 'On'], ['off', 'Off']], (v) => this.store.update({ touch: v as Settings['touch'] }))),
+      h('div', { class: 'form-section' }, 'Keys'),
+      h('p', { class: 'dim small' }, 'Every keyboard action, control groups included, can be rebound under Controls.'),
+    );
+  }
+
   private controls(s: Settings): HTMLElement {
-    const groups = new Map<string, typeof ACTIONS[number][]>();
+    const groups = new Map<string, (typeof ACTIONS)[number][]>();
+    const q = this.filter.trim().toLowerCase();
     for (const a of ACTIONS) {
+      if (q && !a.label.toLowerCase().includes(q) && !keyLabel(s.keybinds[a.id]).toLowerCase().includes(q)) continue;
       const g = groups.get(a.group) ?? [];
       g.push(a);
       groups.set(a.group, g);
     }
+    const clash = (id: ActionId) => ACTIONS.some((o) => o.id !== id && s.keybinds[o.id] === s.keybinds[id] && conflicts(id, o.id));
+    const search = h('input', {
+      class: 'input kb-filter',
+      placeholder: 'Search actions or keys…',
+      value: this.filter,
+      oninput: () => {
+        this.filter = search.value;
+        this.render();
+      },
+    });
     return h(
       'div',
       { class: 'form keybinds' },
+      h('div', { class: 'kb-search' }, search, h('span', { class: 'dim small' }, 'Click a key, then press the new one. Esc cancels.')),
       [...groups.entries()].map(([g, actions]) =>
         h(
           'section',
@@ -127,7 +174,7 @@ export class SettingsScreen implements Screen {
           actions.map((a) =>
             h(
               'div',
-              { class: 'kb-row' },
+              { class: `kb-row${clash(a.id) ? ' conflict' : ''}` },
               h('span', null, a.label),
               h(
                 'button',
@@ -145,19 +192,20 @@ export class SettingsScreen implements Screen {
           ),
         ),
       ),
-      h(
-        'section',
-        { class: 'kb-group' },
-        h('h4', null, 'Fixed'),
-        fixed('Select / box select', 'Left mouse'),
-        fixed('Move / attack / set rally', 'Right mouse'),
-        fixed('Formation facing', 'Right drag'),
-        fixed('Add to selection · queue orders', 'Shift'),
-        fixed('Select all of type', 'Ctrl+click · double-click'),
-        fixed('Set / recall control group', 'Ctrl+1–9 · 1–9'),
-        fixed('Pan camera', 'Arrows · screen edge'),
-        fixed('Rotate camera', 'Middle drag · PgUp/PgDn'),
-      ),
+      q
+        ? null
+        : h(
+            'section',
+            { class: 'kb-group' },
+            h('h4', null, 'Mouse and modifiers'),
+            fixed('Select / box select', 'Left mouse'),
+            fixed('Move / attack / set rally', 'Right mouse'),
+            fixed('Formation facing', 'Right drag'),
+            fixed('Add to selection · queue orders', 'Shift'),
+            fixed('Select all of type', 'Ctrl+click · double-click'),
+            fixed('Save group (with a group key)', 'Ctrl'),
+            fixed('Rotate camera', 'Middle drag · PgUp/PgDn'),
+          ),
       h('div', { class: 'form-foot' }, button('Reset to defaults', () => this.store.resetKeys(), 'btn-ghost')),
     );
   }
@@ -193,6 +241,10 @@ function row(label: string, detail: string, control: HTMLElement): HTMLElement {
 
 function fixed(label: string, keys: string): HTMLElement {
   return h('div', { class: 'kb-row fixed' }, h('span', null, label), h('span', { class: 'keycap static' }, keys));
+}
+
+function segmented(value: string, opts: [string, string][], onChange: (v: string) => void): HTMLElement {
+  return h('div', { class: 'segmented' }, opts.map(([v, label]) => h('button', { class: v === value ? 'on' : '', type: 'button', onclick: () => onChange(v) }, label)));
 }
 
 function slider(value: number, min: number, max: number, step: number, onChange: (v: number) => void, fmt: (v: number) => string): HTMLElement {

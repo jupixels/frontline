@@ -1,11 +1,11 @@
 import type { Command, Turn } from '../shared/commands';
-import type { MatchSetup, PlayerId, TeamId, VictoryMode } from '../shared/types';
+import type { CommandRole, MatchSetup, PlayerId, TeamId, VictoryMode } from '../shared/types';
 
 /**
  * Wire protocol. Every message is plain JSON with a `t` tag. Bump PROTOCOL_VERSION on any
  * incompatible change; peers with a different version are rejected at the lobby.
  */
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
 
 /** Transport-level peer id (random per page load). */
 export type PeerId = string;
@@ -35,6 +35,8 @@ export interface LobbySlot {
   secretHash?: string;
   /** Round trip between the host and this player, ms (host-measured; unset for the host itself). */
   pingMs?: number;
+  /** Shared-command co-op role (only used when settings.coop is on). */
+  role?: CommandRole;
 }
 
 export interface LobbySettings {
@@ -42,6 +44,8 @@ export interface LobbySettings {
   victory: VictoryMode;
   /** 2..8. Slots beyond this are hidden. */
   maxPlayers: number;
+  /** Shared command: the humans of each team run one army together (see PlayerSlot.army). */
+  coop?: boolean;
 }
 
 export interface LobbyState {
@@ -59,6 +63,8 @@ export interface SlotPatch {
   color?: string;
   faction?: string;
   ready?: boolean;
+  /** '' clears the role. */
+  role?: CommandRole | '';
 }
 
 export interface ChatMessage {

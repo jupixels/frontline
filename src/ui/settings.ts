@@ -1,3 +1,4 @@
+import type { TeamPalette } from './teamColors';
 import { ACTIONS, conflicts, defaultKeybinds, KEYBINDS_VERSION, rebind, type ActionId, type Keybinds } from './keybinds';
 
 export type QualityPreset = 'low' | 'medium' | 'high' | 'ultra';
@@ -17,8 +18,16 @@ export interface Settings {
   /** Multiplier for screen-edge and arrow-key panning. 0 turns edge-pan off. */
   edgePanSpeed: number;
   showFps: boolean;
-  /** 0.85..1.25, scales the HUD. */
+  /** 0.75..1.5, scales the HUD and menus. */
   uiScale: number;
+  /** Team colors used for display (accessibility). */
+  teamPalette: TeamPalette;
+  /** Interface animation: follow the OS setting, always full, or reduced. */
+  motion: 'system' | 'full' | 'reduced';
+  /** Hover tooltips with costs, counters and hotkeys. */
+  tooltips: boolean;
+  /** On-screen touch controls: auto-detect, always or never. */
+  touch: 'auto' | 'on' | 'off';
   keybinds: Keybinds;
   /** Layout version the keybinds were saved with (KEYBINDS_VERSION). */
   keybindsVersion: number;
@@ -41,6 +50,10 @@ export function defaultSettings(): Settings {
     edgePanSpeed: 1,
     showFps: false,
     uiScale: 1,
+    teamPalette: 'standard',
+    motion: 'system',
+    tooltips: true,
+    touch: 'auto',
     keybinds: defaultKeybinds(),
     keybindsVersion: KEYBINDS_VERSION,
   };
@@ -89,7 +102,11 @@ export function sanitizeSettings(raw: unknown): Settings {
     },
     edgePanSpeed: clamp(r.edgePanSpeed, 0, 2.5, d.edgePanSpeed),
     showFps: typeof r.showFps === 'boolean' ? r.showFps : d.showFps,
-    uiScale: clamp(r.uiScale, 0.85, 1.25, d.uiScale),
+    uiScale: clamp(r.uiScale, 0.75, 1.5, d.uiScale),
+    teamPalette: (['standard', 'colorblind', 'contrast', 'relative'] as const).includes(r.teamPalette as TeamPalette) ? (r.teamPalette as TeamPalette) : d.teamPalette,
+    motion: r.motion === 'full' || r.motion === 'reduced' || r.motion === 'system' ? r.motion : d.motion,
+    tooltips: typeof r.tooltips === 'boolean' ? r.tooltips : d.tooltips,
+    touch: r.touch === 'on' || r.touch === 'off' || r.touch === 'auto' ? r.touch : d.touch,
     keybinds: keys,
     keybindsVersion: KEYBINDS_VERSION,
   };

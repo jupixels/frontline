@@ -9,7 +9,7 @@ import { orderBuild, orderCancel, orderProduce } from './economy';
 import { advanceLine, disbandLine, leaveLine, orderHoldLine } from './lines';
 import { setPath } from './movement';
 import { pauseVote } from './pause';
-import { orderSuperweapon } from './superweapon';
+import { orderSuperweapon, superweaponSite } from './superweapon';
 import { defeat } from './victory';
 
 /**
@@ -178,9 +178,15 @@ export function applyCommands(world: World, commands: readonly AnyPlayerCommand[
       case 'disbandLine':
         if (typeof cmd.line === 'number') disbandLine(world, player, cmd.line);
         break;
-      case 'superweapon':
-        if (finite(cmd.at)) orderSuperweapon(world, player, cmd.at);
+      case 'superweapon': {
+        if (!finite(cmd.at)) break;
+        // Co-commanders fire their army's missile, if their role covers the launch site.
+        const army = world.armyOf.get(player) ?? player;
+        const site = superweaponSite(world, army);
+        if (site && !canCommand(world, player, site)) world.emit({ type: 'blocked', player, reason: 'requirements' });
+        else orderSuperweapon(world, army, cmd.at);
         break;
+      }
       case 'pauseVote':
         pauseVote(world, player, !!cmd.paused);
         break;

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frontline icon sheet</title>
+    <link rel="stylesheet" href="/src/ui/style.css" />
+    <style>
+      html, body { overflow: auto; height: auto; }
+      body { padding: 20px; background: #0d1112; }
+      .sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+      .cell { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid #ffffff14; border-radius: 4px; background: #151b1c; }
+      .cell .ic { color: #e9ece4; }
+      .cell .team { color: #4f8fe6; }
+      .cell span { font: 11px monospace; color: #8f9a95; }
+      h2 { font: 600 14px sans-serif; color: #ccc; letter-spacing: .1em; }
+    </style>
+  </head>
+  <body>
+    <h2>ENTITIES</h2><div class="sheet" id="e"></div>
+    <h2>GLYPHS</h2><div class="sheet" id="g"></div>
+    <script type="module">
+      import { entityIcon, icon, ICON_IDS, ENTITY_ICON_IDS } from '../icons.ts';
+      const size = (svg, px) => svg.replace('<svg ', `<svg style="width:${px}px;height:${px}px" `);
+      document.getElementById('e').innerHTML = ENTITY_ICON_IDS.map((id) => `<div class="cell">${size(entityIcon(id), 48)}<span class="team">${size(entityIcon(id), 24)}</span>${size(entityIcon(id), 16)}<span>${id}</span></div>`).join('');
+      document.getElementById('g').innerHTML = ICON_IDS.map((id) => `<div class="cell">${size(icon(id), 32)}${size(icon(id), 18)}<span>${id}</span></div>`).join('');
+    </script>
+  </body>
+</html>

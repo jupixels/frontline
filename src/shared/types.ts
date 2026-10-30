@@ -40,7 +40,22 @@ export interface PlayerSlot {
   aiDifficulty?: 'easy' | 'normal' | 'hard';
   /** Shared-command co-op: other players whose units, buildings and economy this player may also command. */
   commandsFor?: PlayerId[];
+  /**
+   * Shared-command co-op: this player has no army of its own and commands `army`'s instead (one
+   * base, one economy). `army` must be a teammate that is not itself a co-commander.
+   */
+  army?: PlayerId;
+  /** Optional co-op role. Limits which units and buildings of the shared army this player may order. */
+  role?: CommandRole;
 }
+
+/**
+ * Co-op roles. ground: infantry, vehicles, barracks and war factory; air: aircraft, helipad and
+ * airfield; navy: ships and the naval yard; logistics: engineers, supply trucks, HQ and every other
+ * building (construction, economy, superweapon). A role nobody on the army holds is open to all.
+ */
+export type CommandRole = 'ground' | 'air' | 'navy' | 'logistics';
+export const COMMAND_ROLES: readonly CommandRole[] = ['ground', 'air', 'navy', 'logistics'];
 
 export type VictoryMode = 'frontline' | 'annihilation';
 

@@ -6,7 +6,10 @@ import { SIM_HZ, type EntityId, type MatchSetup, type PlayerId, type TeamId, typ
 import type { Picker } from '../../shared/view';
 import { h } from '../dom';
 import { InputController, isTyping, type TargetMode } from '../input';
-import type { MatchMode } from '../lobbyApi';
+import { GROUP_ACTIONS, keyLabel } from '../keybinds';
+import { tooltip } from '../tooltip';
+import { TouchControls, touchByDefault } from '../touch';
+import { isLocalMode, type MatchMode } from '../lobbyApi';
 import type { MatchResult } from '../screens/results';
 import type { SettingsStore } from '../settings';
 import { SimAdapter, type StructureInfo } from '../simAdapter';
@@ -14,7 +17,9 @@ import { AlertFeed, type Alert } from './alerts';
 import { CommandCard } from './commandCard';
 import { GroupBar } from './groups';
 import { Minimap, type CameraControl } from './minimap';
-import { DesyncOverlay, GameMenu, PauseOverlay, StrikeWarning, WaitingOverlay, outcomeBanner } from './overlays';
+import { DesyncOverlay, FieldManual, GameMenu, PauseOverlay, StrikeWarning, WaitingOverlay, outcomeBanner } from './overlays';
+import { ProductionTray } from './production';
+import { ReplayBar, type ReplayControls } from './replayBar';
 import { SelectionPanel } from './selection';
 import { StatsTracker } from './stats';
 import { TopBar } from './topbar';
@@ -67,6 +72,10 @@ export interface MatchUiContext {
   openSettings?(): void;
   /** Desync report download, if net can produce one. */
   onDesyncReport?(): void;
+  /** Skirmish/replay game speed hotkeys: +1 faster, -1 slower. */
+  onSpeedStep?(dir: 1 | -1): void;
+  /** Replay transport (mode 'replay'). */
+  replay?: ReplayControls;
 }
 
 const ATTACK_ALERT_COOLDOWN_MS = 12000;
@@ -96,6 +105,11 @@ export class MatchUi {
   private readonly card: CommandCard;
   private readonly groups: GroupBar;
   private readonly alerts: AlertFeed;
+  private readonly production: ProductionTray;
+  private readonly manual: FieldManual;
+  private idleCursor = 0;
+  private readonly replayBar: ReplayBar | null = null;
+  private touch: TouchControls | null = null;
   private readonly waiting = new WaitingOverlay();
   private readonly pauseOverlay: PauseOverlay;
   private readonly strike = new StrikeWarning();
@@ -120,10 +134,14 @@ export class MatchUi {
   constructor(private readonly ctx: MatchUiContext) {
     const { sim, setup, localPlayer } = ctx;
     this.adapter = new SimAdapter(sim, setup, ctx.units, ctx.structures);
-    this.stats = new StatsTracker(sim, setup);
+    this.stats = new StatsTracker(sim, setup, this.adapter, localPlayer);
 
+    const a = this.adapter;
     this.input = new InputController(ctx.canvas, sim, ctx.picker, localPlayer, (cmd) => ctx.issue(cmd), (ids) => this.onSelection(ids), {
       keyboard: false,
+      owns: (e) => ctx.mode !== 'replay' && a.canOrder(localPlayer, e),
+      hostile: (e) => e.owner >= 0 && !a.isAlly(e.owner, localPlayer),
+      isArmy: (e) => !a.isBuilder(e) && !(a.unitDef(e.type) as { logistics?: boolean } | undefined)?.logistics && e.type !== 'supply_truck',
       keybinds: () => ctx.settings.get().keybinds,
       isFactory: (e) => this.adapter.producible(e).length > 0,
       canPlace: (s, at) => {
@@ -138,12 +156,35 @@ export class MatchUi {
       onOrderMarker: (s, kind) => this.marker(s, kind),
     });
 
-    this.topbar = new TopBar(this.adapter, localPlayer, () => this.openMenu());
+    const keys = () => ctx.settings.get().keybinds;
+    this.topbar = new TopBar(this.adapter, localPlayer, {
+      menu: () => this.openMenu(),
+      help: () => this.openManual(),
+      jump: (p) => ctx.camera.lookAt(p.x, p.z),
+      menuKey: () => keyLabel(keys().menu),
+    });
+    this.production = new ProductionTray(sim, this.adapter, localPlayer, {
+      select: (id, center) => {
+        this.input.select([id]);
+        if (center) this.centerOn([id]);
+      },
+      superweapon: () => {
+        const army = a.armyOf(localPlayer);
+        const site = [...sim.entities()].find((e) => e.owner === army && a.structures[e.type]?.superweapon);
+        if (site) this.input.select([site.id]);
+        if (a.superweapon(army)?.ready) this.input.setMode({ kind: 'superweapon' });
+      },
+    });
+    this.manual = new FieldManual(() => ({ keys: Object.fromEntries(Object.entries(keys()).map(([k2, v]) => [k2, keyLabel(v)])) }), () => this.closeManual());
     this.minimap = new Minimap(sim, this.adapter, ctx.picker, ctx.camera, ctx.map.size, localPlayer, (p, shift) => this.minimapOrder(p, shift), ctx.render?.minimapImage);
-    this.selection = new SelectionPanel(sim, this.adapter, this.input, ctx.issue);
-    this.card = new CommandCard(sim, this.adapter, this.input, localPlayer, ctx.issue, () => ctx.settings.get().keybinds, (msg) => this.alert({ kind: 'warn', text: msg }));
-    this.groups = new GroupBar(sim, this.adapter, this.input, (n, add, center) => this.recallGroup(n, add, center));
-    this.alerts = new AlertFeed((p) => ctx.camera.lookAt(p.x, p.z));
+    this.selection = new SelectionPanel(sim, this.adapter, this.input, ctx.issue, () => ({ select: keyLabel(keys().selectArmy), group: keyLabel(keys().idleEngineer) }));
+    this.card = new CommandCard(sim, this.adapter, this.input, localPlayer, ctx.issue, keys, (msg) => this.alert({ kind: 'warn', text: msg }));
+    this.groups = new GroupBar(sim, this.adapter, this.input, keys, () => this.quickCounts(), {
+      army: () => this.input.selectArmy(),
+      idle: () => this.nextIdleEngineer(),
+      recall: (n, add, center) => this.recallGroup(n, add, center),
+    });
+    this.alerts = new AlertFeed((p) => ctx.camera.lookAt(p.x, p.z), () => keyLabel(keys().jumpAlert));
     this.desync = new DesyncOverlay(() => ctx.onQuit?.(), ctx.onDesyncReport);
     this.pauseOverlay = new PauseOverlay((paused) => ctx.issue({ type: 'pauseVote', paused }));
     this.menu = new GameMenu(ctx.mode, {
@@ -164,6 +205,8 @@ export class MatchUi {
       },
     });
 
+    if (ctx.mode === 'replay' && ctx.replay) this.replayBar = new ReplayBar(ctx.replay, setup, keys);
+
     this.ghost = h('div', { class: 'place-ghost hidden' }, h('span', { class: 'ghost-label mono' }));
     this.arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     this.arrow.setAttribute('class', 'formation-arrow hidden');
@@ -179,14 +222,17 @@ export class MatchUi {
       { class: 'hud' },
       this.fx,
       this.topbar.el,
-      h('div', { class: 'hud-left' }, this.alerts.el),
-      h('div', { class: 'hud-bottom' }, this.minimap.el, h('div', { class: 'hud-center' }, this.groups.el, this.selection.el), this.card.el),
+      h('div', { class: 'hud-left' }, this.production.el),
+      h('div', { class: 'hud-alerts' }, this.alerts.el),
+      h('div', { class: 'hud-bottom' }, this.minimap.el, h('div', { class: 'hud-center' }, this.replayBar?.el, this.groups.el, this.selection.el), this.card.el),
       this.waiting.el,
       this.pauseOverlay.el,
       this.strike.el,
       this.menu.el,
+      this.manual.el,
       this.desync.el,
     );
+    this.el.classList.add(`mode-${ctx.mode}`);
     ctx.root.appendChild(this.el);
     this.applySettings();
     this.cleanup.push(ctx.settings.subscribe(() => this.applySettings()));
@@ -200,12 +246,20 @@ export class MatchUi {
 
     this.selection.update(performance.now(), true);
     this.card.update(performance.now(), true);
-    this.alert({ kind: 'info', text: `${ctx.map.name} — ${setup.victory === 'frontline' ? 'hold the strategic points' : 'destroy all enemy production'}` });
+    this.alert({ kind: 'info', text: ctx.mode === 'tutorial' ? 'Basic training: follow the card on the right' : ctx.mode === 'replay' ? `Replay: ${ctx.map.name}` : `${ctx.map.name}: ${setup.victory === 'frontline' ? 'hold the strategic points' : 'destroy all enemy production'}` });
   }
 
   private applySettings(): void {
     const s = this.ctx.settings.get();
-    this.el.style.setProperty('--ui-scale', String(s.uiScale));
+    const wantTouch = s.touch === 'on' || (s.touch === 'auto' && touchByDefault());
+    if (wantTouch && !this.touch) {
+      this.touch = new TouchControls(this.ctx.canvas, this.input, this.ctx.picker, this.ctx.camera);
+      this.el.appendChild(this.touch.el);
+    } else if (!wantTouch && this.touch) {
+      this.touch.dispose();
+      this.touch = null;
+    }
+    this.el.classList.toggle('touch', wantTouch);
     // TODO(render): RtsCamera has a fixed PAN_SPEED; expose `panSpeed` so this setting applies.
     const cam = this.ctx.camera as CameraControl & { panSpeed?: number };
     if ('panSpeed' in cam) cam.panSpeed = s.edgePanSpeed;
@@ -252,7 +306,7 @@ export class MatchUi {
     const units = this.input.units();
     if (units.length) {
       this.ctx.issue({ type: 'move', units, target: p, queue: shift });
-      this.minimap.ping(p, '#9dff7a');
+      this.minimap.ping(p, '#e8b450');
     }
   }
 
@@ -270,10 +324,17 @@ export class MatchUi {
       }
       return;
     }
+    if (this.manual.visible) {
+      if (code === 'Escape' || code === k.fieldManual) {
+        e.preventDefault();
+        this.closeManual();
+      }
+      return;
+    }
 
-    const digit = /^Digit([1-9])$/.exec(code)?.[1];
-    if (digit) {
-      const n = Number(digit);
+    const groupIdx = GROUP_ACTIONS.findIndex((g) => k[g] === code);
+    if (groupIdx >= 0 && !e.altKey) {
+      const n = groupIdx + 1;
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
         this.input.setGroup(n, e.shiftKey);
@@ -317,6 +378,21 @@ export class MatchUi {
     if (code === k.menu) {
       e.preventDefault();
       this.openMenu();
+    } else if (code === k.fieldManual) {
+      e.preventDefault();
+      this.openManual();
+    } else if (code === k.idleEngineer) {
+      e.preventDefault();
+      this.nextIdleEngineer();
+    } else if (code === k.jumpBase) {
+      e.preventDefault();
+      this.jumpBase();
+    } else if (code === k.gameSpeedUp || code === k.gameSpeedDown) {
+      e.preventDefault();
+      this.ctx.onSpeedStep?.(code === k.gameSpeedUp ? 1 : -1);
+    } else if (code === k.jumpAlert && this.replayBar) {
+      e.preventDefault();
+      this.replayBar.toggle();
     } else if (code === k.jumpAlert) {
       e.preventDefault();
       this.alerts.jump();
@@ -349,18 +425,85 @@ export class MatchUi {
     this.stroke.classList.remove('hidden');
   }
 
+  /** Add an element (tutorial panel, ...) to the HUD layer. */
+  mount(el: HTMLElement): void {
+    this.el.appendChild(el);
+  }
+
+  /** Flash a spot on the minimap. */
+  ping(pos: Vec2, color = '#e8b450'): void {
+    this.minimap.ping(pos, color);
+  }
+
+  /** The current keybinds as short labels, e.g. { attackMove: 'Q' }. */
+  keyLabels(): Record<string, string> {
+    return Object.fromEntries(Object.entries(this.ctx.settings.get().keybinds).map(([k, v]) => [k, keyLabel(v)]));
+  }
+
+  /** Brief note when the game speed changes. */
+  toastSpeed(speed: number): void {
+    this.alert({ kind: 'info', text: `Game speed ${speed}×` });
+  }
+
+  private quickCounts(): { army: number; idleEngineers: number } {
+    let army = 0;
+    let idle = 0;
+    const a = this.adapter;
+    const me = this.ctx.localPlayer;
+    for (const e of this.ctx.sim.entities()) {
+      if (e.kind !== 'unit' || e.inside || !a.canOrder(me, e)) continue;
+      if (a.isBuilder(e)) {
+        if (!e.moving && !this.busyEngineers.has(e.id)) idle++;
+      } else if (e.type !== 'supply_truck') army++;
+    }
+    return { army, idleEngineers: idle };
+  }
+
+  /** Engineers that were given a build order recently count as busy even while standing. */
+  private readonly busyEngineers = new Set<EntityId>();
+  private readonly buildSites = new Map<EntityId, EntityId>();
+
+  private nextIdleEngineer(): void {
+    const a = this.adapter;
+    const me = this.ctx.localPlayer;
+    const idle = [...this.ctx.sim.entities()].filter((e) => e.kind === 'unit' && !e.inside && a.canOrder(me, e) && a.isBuilder(e) && !e.moving && !this.busyEngineers.has(e.id));
+    if (!idle.length) return;
+    const e = idle[this.idleCursor++ % idle.length];
+    this.input.select([e.id]);
+    this.ctx.camera.lookAt(e.pos.x, e.pos.z);
+  }
+
+  private jumpBase(): void {
+    const army = this.adapter.armyOf(this.ctx.localPlayer);
+    const hq = [...this.ctx.sim.entities()].find((e) => e.owner === army && e.type === 'hq');
+    if (hq) this.ctx.camera.lookAt(hq.pos.x, hq.pos.z);
+  }
+
+  private openManual(): void {
+    if (this.ended) return;
+    tooltip.hide();
+    this.manual.show();
+    this.input.setEnabled(false);
+  }
+
+  private closeManual(): void {
+    this.manual.hide();
+    this.input.setEnabled(!this.blocked && !this.menu.visible);
+  }
+
   private openMenu(): void {
+    tooltip.hide();
     if (this.ended) return;
     this.input.cancelMode();
     this.menu.show();
     this.input.setEnabled(false);
-    if (this.ctx.mode === 'skirmish') this.ctx.onPauseChange?.(true);
+    if (isLocalMode(this.ctx.mode)) this.ctx.onPauseChange?.(true);
   }
 
   private closeMenu(): void {
     this.menu.hide();
     this.input.setEnabled(true);
-    if (this.ctx.mode === 'skirmish') this.ctx.onPauseChange?.(false);
+    if (isLocalMode(this.ctx.mode)) this.ctx.onPauseChange?.(false);
   }
 
   /** UiApp blocks HUD hotkeys while a screen (settings) is open on top of the match. */
@@ -431,8 +574,8 @@ export class MatchUi {
 
   private alert(a: Alert): void {
     this.alerts.push(a);
-    if (a.pos && (a.kind === 'attack' || a.kind === 'lost')) this.minimap.ping(a.pos, '#ff5a3c');
-    else if (a.pos && a.kind === 'capture') this.minimap.ping(a.pos, '#e3b23c');
+    if (a.pos && (a.kind === 'attack' || a.kind === 'lost')) this.minimap.ping(a.pos, '#ef5d48');
+    else if (a.pos && a.kind === 'capture') this.minimap.ping(a.pos, '#e8b450');
   }
 
   private attackAlert(at: Vec2, structure: boolean): void {
@@ -446,12 +589,14 @@ export class MatchUi {
   /** Feed each step's events (after `sim.step`). */
   handleEvents(events: SimEvent[]): void {
     this.stats.handle(events);
-    const me = this.ctx.localPlayer;
     const a = this.adapter;
+    // Alerts follow the army we play (ours, or the shared one in co-op).
+    const me = a.armyOf(this.ctx.localPlayer);
+    const isMe = (p: PlayerId) => p === me || p === this.ctx.localPlayer;
     for (const ev of events) {
       switch (ev.type) {
         case 'underAttack':
-          if (ev.player === me) this.attackAlert(ev.at, true);
+          if (isMe(ev.player)) this.attackAlert(ev.at, true);
           break;
         case 'hit': {
           const v = this.stats.info(ev.id);
@@ -466,7 +611,24 @@ export class MatchUi {
           else this.alert({ kind: 'lost', text: 'Enemy captured a point', pos });
           break;
         }
+        case 'placed':
+          this.buildSites.set(ev.id, ev.builder);
+          this.busyEngineers.add(ev.builder);
+          break;
+        case 'ordered':
+          if (ev.order === 'build') for (const u of ev.units) this.busyEngineers.add(u);
+          else for (const u of ev.units) this.busyEngineers.delete(u);
+          break;
+        case 'removed': {
+          const b = this.buildSites.get(ev.id);
+          if (b !== undefined) this.busyEngineers.delete(b);
+          this.buildSites.delete(ev.id);
+          break;
+        }
         case 'built': {
+          const b = this.buildSites.get(ev.id);
+          if (b !== undefined) this.busyEngineers.delete(b);
+          this.buildSites.delete(ev.id);
           const e = this.ctx.sim.get(ev.id);
           if (e?.owner === me) this.alert({ kind: 'ready', text: `Construction complete: ${a.displayName(e.type)}`, pos: e.pos });
           break;
@@ -514,7 +676,7 @@ export class MatchUi {
           break;
         }
         case 'superweaponReady':
-          if (ev.player === me) this.alert({ kind: 'ready', text: 'Cruise missile ready (Strategic Command)' });
+          if (isMe(ev.player)) this.alert({ kind: 'ready', text: 'Cruise missile ready (Strategic Command)' });
           break;
         case 'paused': {
           const by = a.slot(ev.by)?.name;
@@ -522,11 +684,11 @@ export class MatchUi {
           break;
         }
         case 'pauseVote':
-          if (ev.paused && ev.player !== me) this.alert({ kind: 'info', text: `${a.slot(ev.player)?.name ?? 'A player'} wants to pause (${ev.votes}/${ev.needed})` });
+          if (ev.paused && !isMe(ev.player)) this.alert({ kind: 'info', text: `${a.slot(ev.player)?.name ?? 'A player'} wants to pause (${ev.votes}/${ev.needed})` });
           break;
         case 'blocked': {
           const now = performance.now();
-          if (ev.player === me && now - (this.lastBlock.get(ev.reason) ?? -1e9) > 6000) {
+          if (isMe(ev.player) && now - (this.lastBlock.get(ev.reason) ?? -1e9) > 6000) {
             this.lastBlock.set(ev.reason, now);
             this.alert({ kind: 'warn', text: BLOCK_TEXT[ev.reason] });
           }
@@ -534,7 +696,7 @@ export class MatchUi {
         }
         case 'defeated': {
           const name = a.slot(ev.player)?.name ?? `Player ${ev.player + 1}`;
-          this.alert({ kind: ev.player === me ? 'lost' : 'info', text: ev.player === me ? 'You have been defeated' : `${name} has been defeated` });
+          this.alert({ kind: isMe(ev.player) ? 'lost' : 'info', text: isMe(ev.player) ? 'You have been defeated' : `${name} has been defeated` });
           break;
         }
         case 'victory':
@@ -552,6 +714,11 @@ export class MatchUi {
     const myTeam = this.adapter.teamOf(this.ctx.localPlayer);
     const text = team === null ? 'DRAW' : team === myTeam ? 'VICTORY' : 'DEFEAT';
     this.el.appendChild(outcomeBanner(text, team === null ? 'draw' : team === myTeam ? 'win' : 'loss'));
+    this.stats.finish(tick);
+    const facts = this.stats.facts;
+    facts.won = team === null ? null : team === myTeam;
+    facts.durationSec = tick / SIM_HZ;
+    facts.mode = this.ctx.mode;
     const result: MatchResult = {
       setup: this.ctx.setup,
       localPlayer: this.ctx.localPlayer,
@@ -559,6 +726,10 @@ export class MatchUi {
       durationSec: tick / SIM_HZ,
       stats: this.stats.all(),
       reason: reason ?? this.reasonFor(team),
+      timeline: this.stats.timeline,
+      facts,
+      mode: this.ctx.mode,
+      mapName: this.ctx.map.name,
     };
     setTimeout(() => this.ctx.onMatchEnd?.(result), 2600);
   }
@@ -599,6 +770,8 @@ export class MatchUi {
     this.selection.update(now);
     this.card.update(now);
     this.groups.update(now);
+    this.production.update(now);
+    this.replayBar?.update(now);
     this.alerts.update(now);
     this.waiting.update(now);
     this.strike.update(now);
@@ -621,6 +794,7 @@ export class MatchUi {
 
   dispose(): void {
     for (const c of this.cleanup) c();
+    this.touch?.dispose();
     this.input.dispose();
     this.el.remove();
   }

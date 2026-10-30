@@ -1,5 +1,5 @@
 import type { MatchSetup, PlayerId, PlayerSlot } from '../shared/types';
-import { MAX_PLAYERS } from '../shared/types';
+import { COMMAND_ROLES, MAX_PLAYERS } from '../shared/types';
 import { Emitter } from './emitter';
 import { randomHex, randomU32, realEnv, sha256Hex, type NetEnv } from './env';
 import { LockstepSession } from './lockstep';
@@ -315,7 +315,8 @@ export class Lobby {
   setAiSlot(index: number, patch: SlotPatch & { aiDifficulty?: AiDifficulty }): void {
     const slot = this.state.slots[index];
     if (!this.isHost || slot?.state !== 'ai') return;
-    const next = { ...slot, ...sanitizePatch(patch) };
+    const { role: _role, ...clean } = sanitizePatch(patch);
+    const next: LobbySlot = { ...slot, ...clean };
     if (patch.aiDifficulty) {
       next.aiDifficulty = patch.aiDifficulty;
       next.name = patch.name ? next.name : `AI (${patch.aiDifficulty})`;
@@ -325,10 +326,10 @@ export class Lobby {
   }
 
   /** Host: change another human's team / color / faction (not their name or ready flag). */
-  setPlayerSlot(index: number, patch: Pick<SlotPatch, 'team' | 'color' | 'faction'>): void {
+  setPlayerSlot(index: number, patch: Pick<SlotPatch, 'team' | 'color' | 'faction' | 'role'>): void {
     const slot = this.state.slots[index];
     if (!this.isHost || slot?.state !== 'human' || !slot.peer) return;
-    this.applySlotPatch(slot.peer, { team: patch.team, color: patch.color, faction: patch.faction });
+    this.applySlotPatch(slot.peer, { team: patch.team, color: patch.color, faction: patch.faction, role: patch.role });
   }
 
   /** Open or close an empty / AI slot. */
@@ -367,14 +368,17 @@ export class Lobby {
     const check = this.canStart();
     if (!check.ok) throw new Error(`Cannot start: ${check.reason}`);
     const filled = this.slots.filter((s) => s.state === 'human' || s.state === 'ai');
-    const players: PlayerSlot[] = filled.map((s, id) => ({
+    const coop = !!this.state.settings.coop;
+    let players: PlayerSlot[] = filled.map((s, id) => ({
       id,
       team: s.team,
       name: s.name,
       color: s.color,
       kind: s.state === 'ai' ? 'ai' : 'human',
       ...(s.state === 'ai' ? { aiDifficulty: s.aiDifficulty ?? 'normal' } : {}),
+      ...(coop && s.state === 'human' && s.role ? { role: s.role } : {}),
     }));
+    if (coop) players = applySharedCommand(players);
     const setup: MatchSetup = {
       seed: randomU32(this.env),
       mapId: this.state.settings.mapId,
@@ -637,7 +641,10 @@ export class Lobby {
     if (clean.color && this.state.slots.some((s) => s.index !== slot.index && s.state !== 'open' && s.state !== 'closed' && s.color === clean.color)) {
       delete clean.color; // taken
     }
-    const next = { ...slot, ...clean };
+    const { role, ...rest } = clean;
+    const next: LobbySlot = { ...slot, ...rest };
+    if (role === '') delete next.role;
+    else if (role) next.role = role;
     if (peer === this.state.hostPeer) next.ready = true;
     this.replaceSlot(next);
   }
@@ -769,5 +776,23 @@ function sanitizePatch(patch: SlotPatch): SlotPatch {
   if (typeof patch.color === 'string' && /^#[0-9a-f]{6}$/i.test(patch.color)) out.color = patch.color.toLowerCase();
   if (typeof patch.faction === 'string' && patch.faction.length <= 24) out.faction = patch.faction;
   if (typeof patch.ready === 'boolean') out.ready = patch.ready;
+  if (patch.role === '' || (typeof patch.role === 'string' && (COMMAND_ROLES as readonly string[]).includes(patch.role))) out.role = patch.role;
   return out;
+}
+
+/**
+ * Shared command: the first human on each team leads the team's army; every other human on that
+ * team joins it (`army`) and keeps their role. AIs always lead their own army.
+ */
+export function applySharedCommand(players: PlayerSlot[]): PlayerSlot[] {
+  const leader = new Map<number, PlayerId>();
+  return players.map((p) => {
+    if (p.kind !== 'human') return p;
+    const lead = leader.get(p.team);
+    if (lead === undefined) {
+      leader.set(p.team, p.id);
+      return p;
+    }
+    return { ...p, army: lead };
+  });
 }

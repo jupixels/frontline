@@ -1,6 +1,14 @@
 import type { MapDef } from '../shared/data';
-import type { MatchSetup, PlayerSlot, TeamId, VictoryMode } from '../shared/types';
+import type { CommandRole, MatchSetup, PlayerSlot, TeamId, VictoryMode } from '../shared/types';
 import { MAX_PLAYERS } from '../shared/types';
+
+/** What a slot edit may change. `role: ''` clears the co-op role. */
+export interface SlotPatchUi {
+  team?: TeamId;
+  color?: string;
+  ready?: boolean;
+  role?: CommandRole | '';
+}
 
 /**
  * What the lobby screen needs from a P2P room. The networking workstream's `src/net/lobby.ts`
@@ -11,7 +19,12 @@ import { MAX_PLAYERS } from '../shared/types';
  * every peer edits its own team/color/ready. State changes arrive as whole snapshots.
  */
 
-export type MatchMode = 'online' | 'skirmish';
+export type MatchMode = 'online' | 'skirmish' | 'tutorial' | 'replay';
+
+/** Matches that run on this machine only: they can pause and change speed. */
+export function isLocalMode(mode: MatchMode): boolean {
+  return mode !== 'online';
+}
 export type AiDifficulty = NonNullable<PlayerSlot['aiDifficulty']>;
 
 /** Lobby-facing summary of a map (built from `data/maps/*.json` via `mapInfoFromDef`). */
@@ -42,6 +55,8 @@ export interface LobbySlot {
   ready: boolean;
   /** Round-trip time to that peer, if known. */
   pingMs?: number;
+  /** Co-op role (shared command). */
+  role?: CommandRole;
 }
 
 export type LobbyStatus = 'connecting' | 'open' | 'starting' | 'closed';
@@ -53,6 +68,8 @@ export interface LobbyState {
   hostId: string;
   mapId: string;
   victory: VictoryMode;
+  /** Shared-command co-op: the humans of each team run one army together. */
+  coop?: boolean;
   slots: LobbySlot[];
   status: LobbyStatus;
   /** Set when status is 'closed' because of an error (host left, kicked, network). */
@@ -80,7 +97,7 @@ export interface LobbyApi {
 
   setName(name: string): void;
   /** Team/color/ready of a slot. Peers may edit their own slot; the host may edit any slot's team/color. */
-  updateSlot(index: number, patch: { team?: TeamId; color?: string; ready?: boolean }): void;
+  updateSlot(index: number, patch: SlotPatchUi): void;
   /** Move yourself to an open slot. */
   moveToSlot(index: number): void;
   sendChat(text: string): void;
@@ -88,6 +105,8 @@ export interface LobbyApi {
   // Host only. Calls from non-hosts are ignored.
   setMap(mapId: string): void;
   setVictory(mode: VictoryMode): void;
+  /** Host: turn shared-command co-op on or off. Optional for connectors that don't support it. */
+  setCoop?(on: boolean): void;
   setOccupancy(index: number, occupancy: SlotOccupancy): void;
   kick(peerId: string): void;
   start(): void;
@@ -171,13 +190,28 @@ export function startBlocker(state: LobbyState): string | null {
 
 /** Player ids are assigned in slot order over taken slots (0..n-1), so they index map spawns. */
 export function buildMatchSetup(state: LobbyState, seed: number): MatchSetup {
-  const players: PlayerSlot[] = takenSlots(state).map((s, i) => {
+  let players: PlayerSlot[] = takenSlots(state).map((s, i) => {
     const o = s.occupant!;
     return o.kind === 'human'
-      ? { id: i, team: s.team, name: o.name, color: s.color, kind: 'human' }
+      ? { id: i, team: s.team, name: o.name, color: s.color, kind: 'human', ...(state.coop && s.role ? { role: s.role } : {}) }
       : { id: i, team: s.team, name: `AI (${o.difficulty})`, color: s.color, kind: 'ai', aiDifficulty: o.difficulty };
   });
+  if (state.coop) players = sharedArmies(players);
   return { seed: seed >>> 0, mapId: state.mapId, players, victory: state.victory };
+}
+
+/** Shared command: each team's first human leads its army, the team's other humans join it. */
+export function sharedArmies(players: PlayerSlot[]): PlayerSlot[] {
+  const leader = new Map<TeamId, number>();
+  return players.map((p) => {
+    if (p.kind !== 'human') return p;
+    const lead = leader.get(p.team);
+    if (lead === undefined) {
+      leader.set(p.team, p.id);
+      return p;
+    }
+    return { ...p, army: lead };
+  });
 }
 
 /** The local player's id in the setup `buildMatchSetup` makes from this state (-1 = spectator). */
@@ -327,12 +361,12 @@ export class MemoryLobby implements LobbyApi {
     });
   }
 
-  updateSlot(index: number, patch: { team?: number; color?: string; ready?: boolean }): void {
+  updateSlot(index: number, patch: SlotPatchUi): void {
     this.updateSlotAs(this.state.selfId, index, patch);
   }
 
   /** Apply a slot edit on behalf of `peerId` (self or a simulated peer). */
-  updateSlotAs(peerId: string, index: number, patch: { team?: number; color?: string; ready?: boolean }): void {
+  updateSlotAs(peerId: string, index: number, patch: SlotPatchUi): void {
     const slot = this.state.slots[index];
     if (!slot || slot.state !== 'taken') return;
     const own = slot.occupant?.kind === 'human' && slot.occupant.peerId === peerId;
@@ -348,6 +382,8 @@ export class MemoryLobby implements LobbyApi {
         d.color = patch.color;
       }
       if (patch.ready !== undefined && own) d.ready = patch.ready;
+      if (patch.role === '') delete d.role;
+      else if (patch.role) d.role = patch.role;
       // Changing setup un-readies you, like most lobbies, so nobody gets surprised.
       if ((patch.team !== undefined || patch.color !== undefined) && own && patch.ready === undefined && d.occupant?.kind === 'human' && peerId !== s.hostId) d.ready = false;
     });
@@ -393,6 +429,13 @@ export class MemoryLobby implements LobbyApi {
       const kept = s.slots;
       s.slots = this.makeSlots(map.maxPlayers, kept);
       for (const slot of s.slots) if (slot.occupant?.kind === 'human' && slot.occupant.peerId !== s.hostId) slot.ready = false;
+    });
+  }
+
+  setCoop(on: boolean): void {
+    if (!this.hosting) return;
+    this.commit((s) => {
+      s.coop = on;
     });
   }
 
