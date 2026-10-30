@@ -47,6 +47,78 @@ const UP = new THREE.Vector3(0, 1, 0);
 const _q = new THREE.Quaternion();
 const _v = new THREE.Vector3();
 
+/** Stable 0..1 values per entity id, so each soldier keeps its own quirks. */
+function idRandom(id: number, k: number): number {
+  let h = Math.imul(id ^ Math.imul(k, 0x9e3779b1), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * See-through silhouette for own units hidden behind buildings, trees or hills: the same mesh again,
+ * drawn only where something else is in front of it (depth test inverted), as a soft team-colored
+ * rim. Works for skinned rigs and for the far-LOD instancers (instance color carries the team).
+ */
+export function xrayMaterial(color?: THREE.Color): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: color ?? new THREE.Color(1, 1, 1) } },
+    vertexShader: XRAY_VERT,
+    fragmentShader: XRAY_FRAG,
+    transparent: true,
+    depthWrite: false,
+    depthFunc: THREE.GreaterDepth,
+  });
+}
+
+const xrayCache = new Map<number, THREE.ShaderMaterial>();
+function xrayFor(color: THREE.Color): THREE.ShaderMaterial {
+  const key = color.getHex();
+  let m = xrayCache.get(key);
+  if (!m) xrayCache.set(key, (m = xrayMaterial(color.clone())));
+  return m;
+}
+
+const XRAY_VERT = /* glsl */ `
+#define XRAY_PULL 4.0
+#include <common>
+#include <skinning_pars_vertex>
+uniform vec3 uColor;
+varying vec3 vNormalV;
+varying vec3 vViewV;
+varying vec3 vTint;
+void main() {
+  #include <beginnormal_vertex>
+  #include <skinbase_vertex>
+  #include <skinnormal_vertex>
+  #include <defaultnormal_vertex>
+  #include <begin_vertex>
+  #include <skinning_vertex>
+  #include <project_vertex>
+  // Slid a few meters toward the camera along the view ray: the unit's own inner layers and the
+  // ground at its feet then never count as occluders, only a building, tree or hill in front does.
+  mvPosition.xyz *= max(0.0, 1.0 - XRAY_PULL / length(mvPosition.xyz));
+  gl_Position = projectionMatrix * mvPosition;
+  vNormalV = normalize(transformedNormal);
+  vViewV = -mvPosition.xyz;
+  vTint = uColor;
+  #ifdef USE_INSTANCING_COLOR
+  vTint = instanceColor;
+  #endif
+}
+`;
+
+const XRAY_FRAG = /* glsl */ `
+varying vec3 vNormalV;
+varying vec3 vViewV;
+varying vec3 vTint;
+void main() {
+  float facing = abs(dot(normalize(vNormalV), normalize(vViewV)));
+  float rim = pow(1.0 - facing, 1.6);
+  vec3 c = mix(vTint, vec3(1.0), 0.18) * 1.5;
+  gl_FragColor = vec4(c, 0.14 + 0.66 * rim);
+}
+`;
+
 /**
  * The visual for one sim entity: model clone with team materials, animation mixer, terrain/air/sea
  * motion, selection ring, and a death → wreck lifecycle that outlives the sim entity.
@@ -65,6 +137,12 @@ export class UnitView {
   private state?: AnimState;
   private turret?: THREE.Object3D;
   private turretBase?: THREE.Quaternion;
+  /** Drawn turret heading (world), eased toward the sim's so traverses start and stop smoothly. */
+  private turretShown?: number;
+  private turretVel = 0;
+  /** Team color for the see-through silhouette (own units only), and the silhouette meshes. */
+  private xrayColor: THREE.Color | null = null;
+  private readonly xrayMeshes: THREE.Mesh[] = [];
   private readonly ring: THREE.Mesh;
   private readonly meshes: THREE.Mesh[] = [];
   /** Model-space height (meters, after scale) once loaded. */
@@ -82,6 +160,18 @@ export class UnitView {
   private bank = 0;
   private altitude = 0;
   private bobPhase = Math.random() * 100;
+  /** Smoothed change in speed (m/s²): vehicles squat and dip, helicopters pitch with it. */
+  private accel = 0;
+  private lastSpeed = 0;
+  private nose = 0;
+  /** Vehicle suspension: slope alignment plus a sprung pitch/roll offset that rocks. */
+  private slope = { x: 0, z: 0 };
+  private sway = { x: 0, vx: 0, z: 0, vz: 0 };
+  /** Meters moved, for the bumps of rough ground and the soldiers' weave. */
+  private travel = 0;
+  /** Per-soldier quirks: stride speed and a small offset from the sim position (local frame). */
+  readonly gait: number;
+  private readonly offset = { x: 0, z: 0 };
   private animAcc = 0;
   /** Rigged model shown (vs the instanced far-LOD pose for infantry). */
   rigVisible = true;
@@ -103,6 +193,12 @@ export class UnitView {
   ) {
     this.cls = unitClass(def);
     this.scale = this.cls === 'infantry' ? INFANTRY_SCALE : 1;
+    // Soldiers of a squad don't march in lockstep: each has its own pace and keeps a little apart.
+    this.gait = this.cls === 'infantry' ? 0.88 + idRandom(id, 1) * 0.24 : 1;
+    if (this.cls === 'infantry') {
+      this.offset.x = (idRandom(id, 2) - 0.5) * 1.6;
+      this.offset.z = (idRandom(id, 3) - 0.5) * 1.2;
+    }
     this.height = this.cls === 'infantry' ? 1.8 * this.scale : def.radius;
     this.root.userData.entityId = id;
     this.root.add(this.body);
@@ -208,6 +304,7 @@ export class UnitView {
       mesh.material = this.materialFor(mesh.material as THREE.Material, prepared, false, band);
     });
     this.model = model;
+    this.buildXray();
     if (this.rigVisible) this.body.add(model);
     if (prepared.animations.length) {
       this.mixer = new THREE.AnimationMixer(model);
@@ -239,6 +336,31 @@ export class UnitView {
     if (this.wreckAge >= 0 || this.dying) this.setBurnt(this.cls !== 'infantry');
   }
 
+  /** Own units get a see-through silhouette (null removes it). */
+  setXray(color: THREE.Color | null): void {
+    if (this.cls === 'structure') return;
+    this.xrayColor = color;
+    this.buildXray();
+  }
+
+  private buildXray(): void {
+    for (const g of this.xrayMeshes) g.removeFromParent();
+    this.xrayMeshes.length = 0;
+    if (!this.xrayColor || !this.model || this.dying) return;
+    const mat = xrayFor(this.xrayColor);
+    for (const mesh of this.meshes) {
+      // A clone shares geometry (and, for rigs, the skeleton), so it follows every animated pose.
+      const g = mesh.clone(false);
+      g.material = mat;
+      g.castShadow = false;
+      g.receiveShadow = false;
+      g.renderOrder = 3;
+      g.raycast = () => {};
+      mesh.parent?.add(g);
+      this.xrayMeshes.push(g);
+    }
+  }
+
   private materialFor(src: THREE.Material, prepared: PreparedModel, burnt: boolean, band?: THREE.Vector2): THREE.Material {
     // Bright orange/red roofs on the base buildings are toned down to a weathered military paint.
     if (this.cls === 'structure' && !burnt && /orange|red/i.test(src.name) && (src as THREE.MeshStandardMaterial).color) {
@@ -268,7 +390,13 @@ export class UnitView {
     const prev = this.state && this.actions.get(this.state);
     this.state = state;
     if (!next) return;
-    next.reset().fadeIn(0.25).play();
+    next.reset();
+    if (this.cls === 'infantry') {
+      // Own stride speed and a random point in the cycle, so a squad doesn't step in unison.
+      next.timeScale = state === 'move' ? this.gait : 0.85 + idRandom(this.id, 4) * 0.3;
+      next.time = Math.random() * next.getClip().duration;
+    }
+    next.fadeIn(0.25).play();
     prev?.fadeOut(0.25);
   }
 
@@ -306,6 +434,7 @@ export class UnitView {
     if (this.dying) return;
     this.dying = true;
     this.ring.visible = false;
+    this.buildXray();
     this.setRigVisible(true); // a unit killed while drawn as a far-LOD instance needs its model back for the wreck
     if (this.cls === 'heli' || this.cls === 'jet') this.fall = { vy: this.cls === 'jet' ? -6 : 0, spin: this.cls === 'heli' ? 2.5 : 0.4 };
     if (this.cls !== 'infantry') this.setBurnt(true);
@@ -356,9 +485,27 @@ export class UnitView {
     if (!this.dying) this.play(e.moving ? 'move' : 'idle');
     this.tickMixer(dt, animate);
     if (this.turret && this.turretBase && e.turretHeading !== undefined) {
-      const local = lerpAngle(p.turret, e.turretHeading, alpha) - yaw;
-      this.turret.quaternion.copy(this.turretBase).premultiply(_q.setFromAxisAngle(UP, local));
+      this.easeTurret(lerpAngle(p.turret, e.turretHeading, alpha), dt);
+      this.turret.quaternion.copy(this.turretBase).premultiply(_q.setFromAxisAngle(UP, this.turretShown! - yaw));
     }
+  }
+
+  /**
+   * A critically damped spring toward the sim's turret heading: the turret accelerates into a
+   * traverse and settles onto the target instead of following each tick's step. Render only.
+   */
+  private easeTurret(target: number, dt: number): void {
+    const d = this.turretShown === undefined ? 0 : lerpAngle(this.turretShown, target, 1) - this.turretShown;
+    // First frame, or a long way off (hidden for a while): jump rather than spin around.
+    if (this.turretShown === undefined || Math.abs(d) > 2.6) {
+      this.turretShown = target;
+      this.turretVel = 0;
+      return;
+    }
+    const step = Math.min(dt, 0.05);
+    const k = 90;
+    this.turretVel += (d * k - this.turretVel * 2 * Math.sqrt(k)) * step;
+    this.turretShown += this.turretVel * step;
   }
 
   /** Advance a wreck (no sim entity any more). */
@@ -387,6 +534,10 @@ export class UnitView {
     if (dt > 0) {
       const inst = Math.hypot(x - this.lastPos.x, z - this.lastPos.z) / dt;
       this.speed += (Math.min(inst, 300) - this.speed) * Math.min(1, dt * 5);
+      const acc = THREE.MathUtils.clamp((this.speed - this.lastSpeed) / dt, -40, 40);
+      this.accel += (acc - this.accel) * Math.min(1, dt * 6);
+      this.lastSpeed = this.speed;
+      this.travel += this.speed * dt;
       let dy = yaw - this.lastYaw;
       if (dy > Math.PI) dy -= Math.PI * 2;
       if (dy < -Math.PI) dy += Math.PI * 2;
@@ -417,6 +568,10 @@ export class UnitView {
         const want = this.prone ? 1.35 : 0;
         this.body.rotation.x += (want - this.body.rotation.x) * Math.min(1, dt * 6);
         this.body.position.y = this.body.rotation.x * 0.12;
+        // Spread a little off the sim position, with a slight weave while on the move.
+        const weave = this.moving ? Math.sin(this.travel * 0.35 + this.gait * 40) * 0.25 : 0;
+        this.body.position.x = this.offset.x + weave;
+        this.body.position.z = this.offset.z;
         break;
       }
       case 'vehicle': {
@@ -432,8 +587,11 @@ export class UnitView {
         const pitch = Math.atan2(hf - hb, 2 * d);
         const roll = Math.atan2(hl - hr, 2 * d);
         const k = Math.min(1, dt * 8);
-        this.body.rotation.x += (-pitch - this.body.rotation.x) * k;
-        this.body.rotation.z += (roll - this.body.rotation.z) * k;
+        this.slope.x += (-pitch - this.slope.x) * k;
+        this.slope.z += (roll - this.slope.z) * k;
+        this.suspension(dt, (Math.abs(hf + hb - 2 * ground) + Math.abs(hl + hr - 2 * ground)) / d);
+        this.body.rotation.x = this.slope.x + this.sway.x;
+        this.body.rotation.z = this.slope.z + this.sway.z;
         break;
       }
       case 'heli':
@@ -443,10 +601,16 @@ export class UnitView {
         this.altitude += (cruise - this.altitude) * Math.min(1, dt * 0.8);
         const bob = this.cls === 'heli' ? Math.sin((this.bobPhase += dt * 1.3)) * 0.4 : 0;
         r.position.set(x, floor + this.altitude + bob, z);
-        const targetBank = THREE.MathUtils.clamp(-this.yawRate * (this.cls === 'jet' ? 0.9 : 0.35), -0.9, 0.9);
+        // Helicopters lean into turns harder the faster they go, dip the nose to speed up and flare
+        // to slow down. Jets bank on turn rate alone.
+        const heli = this.cls === 'heli';
+        const targetBank = heli
+          ? THREE.MathUtils.clamp(-this.yawRate * 0.25 - this.yawRate * this.speed * 0.022, -0.65, 0.65)
+          : THREE.MathUtils.clamp(-this.yawRate * 0.9, -0.9, 0.9);
         this.bank += (targetBank - this.bank) * Math.min(1, dt * 3);
-        const nose = this.cls === 'heli' ? Math.min(this.speed / 40, 0.25) : 0;
-        this.body.rotation.set(nose, 0, this.bank);
+        const targetNose = heli ? Math.min(this.speed / 40, 0.22) + THREE.MathUtils.clamp(this.accel * 0.03, -0.22, 0.2) : 0;
+        this.nose += (targetNose - this.nose) * Math.min(1, dt * 2.5);
+        this.body.rotation.set(this.nose, 0, this.bank);
         break;
       }
       case 'ship': {
@@ -459,6 +623,30 @@ export class UnitView {
       }
     }
     this.ring.position.y = this.cls === 'heli' || this.cls === 'jet' ? Math.max(ground, WATER_LEVEL) - r.position.y + 0.2 : 0.15;
+  }
+
+  /**
+   * Sprung pitch and roll on top of the slope: the hull squats when pulling away, dips when braking,
+   * leans out of turns and rocks over rough ground. `rough` is the local terrain curvature.
+   */
+  private suspension(dt: number, rough: number): void {
+    const moving = Math.min(this.speed / 8, 1);
+    const seed = this.id * 1.7;
+    const bumps = (Math.sin(this.travel * 1.3 + seed) * 0.6 + Math.sin(this.travel * 2.9 + seed * 2) * 0.4) * moving * (0.25 + Math.min(rough * 3, 1.25));
+    const heavy = this.def.armor === 'heavy' ? 0.6 : 1;
+    const wantX = (THREE.MathUtils.clamp(-this.accel * 0.012, -0.08, 0.08) + bumps * 0.014) * heavy;
+    const wantZ = (THREE.MathUtils.clamp(this.yawRate * this.speed * 0.006, -0.07, 0.07) + bumps * 0.008) * heavy;
+    // Underdamped spring: overshoots a little, so stops and starts rock the hull.
+    const k = 70;
+    const c = 8;
+    const s = this.sway;
+    for (let left = Math.min(dt, 0.1); left > 0; left -= 1 / 60) {
+      const h = Math.min(left, 1 / 60);
+      s.vx += ((wantX - s.x) * k - s.vx * c) * h;
+      s.vz += ((wantZ - s.z) * k - s.vz * c) * h;
+      s.x += s.vx * h;
+      s.z += s.vz * h;
+    }
   }
 
   private updateFalling(dt: number): void {
@@ -514,6 +702,8 @@ export class UnitView {
 
   dispose(): void {
     this.root.removeFromParent();
+    this.xrayColor = null;
+    this.buildXray();
     this.mixer?.stopAllAction();
     this.ring.geometry.dispose();
     (this.ring.material as THREE.Material).dispose();

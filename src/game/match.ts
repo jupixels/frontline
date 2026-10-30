@@ -76,6 +76,7 @@ export class Match {
     this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: shown.players, localPlayer, map });
     this.renderer.setQuality(app.settings.get().graphics);
     this.renderer.setPathLines(app.settings.get().allPaths ? 'all' : 'selected');
+    this.renderer.setTeamRings(app.settings.get().teamRings);
     const localSlot = setup.players.find((p) => p.id === localPlayer);
     // Co-commanders hear their shared army's voices.
     this.audio = new AudioManager(localSlot?.army ?? localPlayer, { team: localSlot?.team, units: UNITS });
