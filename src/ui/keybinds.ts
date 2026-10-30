@@ -7,6 +7,11 @@ export type ActionId =
   | 'hold'
   | 'patrol'
   | 'build'
+  | 'enter'
+  | 'unload'
+  | 'drawLine'
+  | 'advanceLine'
+  | 'disbandLine'
   | 'rotateStructure'
   | 'centerSelection'
   | 'selectArmy'
@@ -34,6 +39,11 @@ export const ACTIONS: readonly ActionInfo[] = [
   { id: 'hold', label: 'Hold position', group: 'Orders', key: 'KeyH' },
   { id: 'patrol', label: 'Patrol', group: 'Orders', key: 'KeyP' },
   { id: 'build', label: 'Build menu', group: 'Orders', key: 'KeyB' },
+  { id: 'enter', label: 'Board / garrison', group: 'Orders', key: 'KeyG' },
+  { id: 'unload', label: 'Unload', group: 'Orders', key: 'KeyD' },
+  { id: 'drawLine', label: 'Draw frontline (hold + drag)', group: 'Orders', key: 'KeyF' },
+  { id: 'advanceLine', label: 'Advance frontline', group: 'Orders', key: 'KeyV' },
+  { id: 'disbandLine', label: 'Disband frontline', group: 'Orders', key: 'KeyX' },
   { id: 'rotateStructure', label: 'Rotate structure', group: 'Orders', key: 'KeyR' },
   { id: 'slot1', label: 'Slot 1', group: 'Command card', key: 'KeyQ' },
   { id: 'slot2', label: 'Slot 2', group: 'Command card', key: 'KeyW' },
@@ -43,7 +53,7 @@ export const ACTIONS: readonly ActionInfo[] = [
   { id: 'slot6', label: 'Slot 6', group: 'Command card', key: 'KeyY' },
   { id: 'slot7', label: 'Slot 7', group: 'Command card', key: 'KeyU' },
   { id: 'slot8', label: 'Slot 8', group: 'Command card', key: 'KeyI' },
-  { id: 'centerSelection', label: 'Center on selection', group: 'Camera & selection', key: 'KeyF' },
+  { id: 'centerSelection', label: 'Center on selection', group: 'Camera & selection', key: 'KeyC' },
   { id: 'selectArmy', label: 'Select all army', group: 'Camera & selection', key: 'F2' },
   { id: 'jumpAlert', label: 'Jump to last alert', group: 'Camera & selection', key: 'Space' },
   { id: 'menu', label: 'Game menu', group: 'Interface', key: 'F10' },
@@ -67,7 +77,7 @@ export function defaultKeybinds(): Keybinds {
 function contextOf(id: ActionId): 'orders' | 'slots' | 'place' | 'global' {
   if (id.startsWith('slot')) return 'slots';
   if (id === 'rotateStructure') return 'place';
-  if (id === 'attackMove' || id === 'stop' || id === 'hold' || id === 'patrol' || id === 'build') return 'orders';
+  if (['attackMove', 'stop', 'hold', 'patrol', 'build', 'enter', 'unload', 'drawLine', 'advanceLine', 'disbandLine'].includes(id)) return 'orders';
   return 'global';
 }
 

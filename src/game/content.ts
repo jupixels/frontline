@@ -45,6 +45,8 @@ interface StructureJson {
   footprint: [number, number];
   power: number;
   produces?: string[];
+  garrison?: number;
+  superweapon?: boolean;
 }
 
 /** data/structures.json in the shape the HUD uses. */
@@ -59,6 +61,8 @@ export const STRUCTURES: Record<string, StructureInfo> = Object.fromEntries(
       footprint: Math.max(s.footprint[0], s.footprint[1]) / 2,
       power: s.power,
       produces: s.produces ?? [],
+      garrison: s.garrison,
+      superweapon: s.superweapon,
     },
   ]),
 );

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { SUPPRESS_PINNED } from '../shared/entities';
 import type { UnitDef } from '../shared/data';
 import type { EntityState } from '../shared/entities';
 import { materialRole, teamMaterial } from './materials';
@@ -194,10 +195,11 @@ export class UnitView {
   }
 
   private materialFor(src: THREE.Material, prepared: PreparedModel, burnt: boolean, band?: THREE.Vector2): THREE.Material {
-    // Buildings keep their paint; their colored trim (doors, roof bands, tanks) takes the team color.
+    // Buildings keep their paint (roofs too: a whole team-blue roof is far too loud); only explicit
+    // trim materials take the team color. Ownership also shows on the foundation's edge.
     const role =
       this.cls === 'structure'
-        ? /orange|red|color_|flag/i.test(src.name) ? 'accent' : 'keep'
+        ? /color_|flag|trim|stripe/i.test(src.name) ? 'accent' : 'keep'
         : materialRole(src, src === prepared.primaryMaterial || !prepared.primaryMaterial);
     return teamMaterial(src, role, this.teamColor, burnt, this.cls === 'infantry' ? 0.9 : 2.2, band);
   }
@@ -275,7 +277,11 @@ export class UnitView {
   }
 
   /** Place the view between the previous and current tick (alpha in [0,1]). */
+  /** Pinned by suppression (drawn lying down). */
+  prone = false;
+
   update(e: EntityState, alpha: number, dt: number, animate: boolean): void {
+    this.prone = (e.suppression ?? 0) >= SUPPRESS_PINNED;
     this.hp = e.hp;
     this.maxHp = e.maxHp;
     this.moving = e.moving;
@@ -342,9 +348,14 @@ export class UnitView {
         this.body.scale.set(this.scale, this.scale * k, this.scale);
         break;
       }
-      case 'infantry':
+      case 'infantry': {
         r.position.set(x, ground, z);
+        // Pinned infantry hit the dirt: the rig tips forward onto the ground.
+        const want = this.prone ? 1.35 : 0;
+        this.body.rotation.x += (want - this.body.rotation.x) * Math.min(1, dt * 6);
+        this.body.position.y = this.body.rotation.x * 0.12;
         break;
+      }
       case 'vehicle': {
         r.position.set(x, ground, z);
         // Align to the slope under the hull.

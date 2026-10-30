@@ -12,6 +12,7 @@ import { RtsCamera } from './camera';
 import { DecalKind, DecalMap } from './decals';
 import { atmosphereFor, Environment } from './environment';
 import { Scenery } from './scenery';
+import { MISSILE_ARC, TacticalLayer } from './tactical';
 import { FogOfWar, LocalVisionSource, SimFogSource, type VisibilitySource } from './fog';
 import { CommandMarkers, HealthBars } from './overlay';
 import { PostStack } from './post';
@@ -103,6 +104,7 @@ export class GameRenderer implements Picker {
   readonly vfx: Vfx;
   readonly fog: FogOfWar;
   readonly scenery: Scenery;
+  private readonly tactical: TacticalLayer;
   private readonly post: PostStack;
   private readonly overlay = new THREE.Scene();
   private readonly healthBars = new HealthBars();
@@ -179,6 +181,8 @@ export class GameRenderer implements Picker {
     this.overlay.add(this.healthBars.mesh);
 
     for (const p of setup.players) this.teamColors.set(p.id, new THREE.Color(p.color));
+    this.tactical = new TacticalLayer((x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL), (o) => this.teamColors.get(o) ?? new THREE.Color('#ffffff'));
+    this.overlay.add(this.tactical.group);
     this.localPlayer = setup.localPlayer ?? setup.players.find((p) => p.kind === 'human')?.id ?? 0;
     this.fog = new FogOfWar(this.makeVisionSource());
     if (this.localPlayer < 0) this.fog.enabled = false;
@@ -234,6 +238,7 @@ export class GameRenderer implements Picker {
     this.points.clear();
     this.decals.dispose();
     this.scenery.dispose();
+    this.tactical.dispose();
     this.vfx.dispose();
     this.post.dispose();
     this.renderer.dispose();
@@ -358,6 +363,29 @@ export class GameRenderer implements Picker {
         case 'smoke':
           this.vfx.smokeScreen(ev.at.x, ev.at.z, ev.radius, Math.max(1, (ev.until - (sim.gameTick ?? sim.tick)) * TICK_SECONDS));
           break;
+        case 'superweaponLaunched': {
+          // Early warning for everyone: a big marker with a countdown, and the missile itself.
+          const secs = Math.max(1, (ev.arrive - (sim.gameTick ?? sim.tick)) * TICK_SECONDS);
+          this.markers.incoming(ev.at.x, ev.at.z, ev.radius, secs);
+          const site = sim.get(ev.site);
+          const from = site ? new THREE.Vector3(site.pos.x, this.terrain.heightAt(site.pos.x, site.pos.z) + 14, site.pos.z) : new THREE.Vector3(ev.at.x, 200, ev.at.z + 900);
+          const to = new THREE.Vector3(ev.at.x, this.terrain.heightAt(ev.at.x, ev.at.z), ev.at.z);
+          this.tactical.launch(from, to, secs, this.time);
+          this.vfx.rocket(from, to, from.distanceTo(to) / secs, MISSILE_ARC);
+          break;
+        }
+        case 'superweaponImpact': {
+          const { x, z } = ev.at;
+          this.vfx.explosion(x, z, 3.5);
+          for (let i = 0; i < 7; i++) {
+            const a = (i / 7) * Math.PI * 2;
+            const r = ev.radius * (0.35 + Math.random() * 0.45);
+            this.vfx.explosion(x + Math.cos(a) * r, z + Math.sin(a) * r, 2 + Math.random());
+          }
+          this.vfx.smokeColumn(new THREE.Vector3(x, this.terrain.heightAt(x, z), z), 2.5, 60);
+          this.shake(2.5, x, z);
+          break;
+        }
         case 'placed':
         case 'built':
           this.ensureView(sim, ev.id);
@@ -375,7 +403,9 @@ export class GameRenderer implements Picker {
   }
 
   private onFired(sim: SimView, id: EntityId, weapon: string, at: Vec2, target?: EntityId): void {
-    const v = this.views.get(id);
+    // Garrisons fire out of their building.
+    const inside = sim.get(id)?.inside;
+    const v = this.views.get(inside || id);
     if (!v || !v.root.visible) return;
     v.playFire();
     const e = sim.get(id);
@@ -537,6 +567,7 @@ export class GameRenderer implements Picker {
     this.fog.update(sim, dt);
 
     this.updateUnits(sim, alpha, dt);
+    this.updateTactical(sim);
     this.updatePoints(sim);
     this.updateWrecks(dt);
     this.updateOverlays(dt);
@@ -550,6 +581,27 @@ export class GameRenderer implements Picker {
     this.renderer.autoClear = false;
     this.renderer.render(this.overlay, camera);
     this.renderer.autoClear = true;
+  }
+
+  /** Rank chevrons, garrison counts, frontline ribbons and missiles. */
+  private updateTactical(sim: SimView): void {
+    const t = this.tactical;
+    t.begin();
+    for (const e of sim.entities()) {
+      const v = this.views.get(e.id);
+      if (!v || !v.root.visible || !v.isAlive) continue;
+      const rank = e.rank ?? 0;
+      const garrison = e.kind === 'structure' ? (e.cargo?.length ?? 0) : 0;
+      if (!rank && !garrison) continue;
+      _v.copy(v.root.position);
+      _v.y += v.height + (v.cls === 'infantry' ? 1.6 : v.cls === 'structure' ? 4 : 3);
+      if (!_frustum.containsPoint(_v)) continue;
+      if (garrison) t.badge(e.id, `g${garrison}`, _v, 4.5);
+      else t.badge(e.id, `r${rank}`, _v, v.cls === 'infantry' ? 1.3 : 2.4);
+    }
+    t.end();
+    if (this.ext && this.frameNo % 10 === 0) t.setLines(this.localPlayer >= 0 ? this.ext.lines(this.localPlayer) : []);
+    t.update(this.time);
   }
 
   /** Use the sim's own fog of war once we see a sim that has one. */
@@ -599,7 +651,8 @@ export class GameRenderer implements Picker {
     for (const e of sim.entities()) {
       const v = this.ensureView(sim, e.id);
       if (!v) continue;
-      let visible = v.dying || this.canSee(e.id, e.owner, e.pos.x, e.pos.z);
+      // Passengers and garrisons are hidden inside their transport or building.
+      let visible = !e.inside && (v.dying || this.canSee(e.id, e.owner, e.pos.x, e.pos.z));
       if (v.cls === 'structure') {
         // Buildings stay on the map (as last seen) once discovered.
         if (visible) v.seenOnce = true;

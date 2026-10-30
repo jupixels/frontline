@@ -1,6 +1,16 @@
+import abilitiesJson from '../../data/abilities.json';
 import type { UnitDef } from '../shared/data';
-import type { EntityState, PlayerState, SimView, SimViewExt } from '../shared/entities';
-import type { MatchSetup, PlayerId, PlayerSlot, TeamId, Vec2 } from '../shared/types';
+import type { EntityState, FrontlineView, PauseView, PlayerState, SimView, SimViewExt, SuperweaponView } from '../shared/entities';
+import type { EntityId, MatchSetup, PlayerId, PlayerSlot, TeamId, Vec2 } from '../shared/types';
+
+/** What the HUD shows for an ability (data/abilities.json). */
+export interface AbilityInfo {
+  name: string;
+  target: 'self' | 'point' | 'unit';
+  cooldown: number;
+  cost: number;
+}
+const ABILITIES = abilitiesJson as Record<string, AbilityInfo>;
 
 /**
  * Everything the HUD reads beyond `SimView` (structures, production queues, power, command
@@ -20,6 +30,10 @@ export interface StructureInfo {
   /** Unit types this structure trains. */
   produces: string[];
   hotkeyHint?: string;
+  /** Infantry seats for garrisoning. */
+  garrison?: number;
+  /** Fires the superweapon. */
+  superweapon?: boolean;
 }
 
 // TODO(sim): replace with data/structures.json once it exists (shape proposed in the PR).
@@ -257,10 +271,49 @@ export class SimAdapter {
     return this.units[type]?.cost ?? this.structures[type]?.cost ?? 0;
   }
 
-  /** Overlap check for structure placement: map bounds + existing footprints. */
-  canPlace(structure: string, at: Vec2, mapSize: number): boolean {
+  /** Abilities of a unit with cooldown (0 = ready) and active state. */
+  abilities(e: EntityState): { ability: string; cooldown: number; active: boolean; info: AbilityInfo }[] {
+    if (!this.ext) return [];
+    return this.ext.abilities(e.id).flatMap((a) => (ABILITIES[a.ability] ? [{ ...a, info: ABILITIES[a.ability] }] : []));
+  }
+
+  unitDef(type: string): UnitDef | undefined {
+    return this.units[type];
+  }
+
+  abilityInfo(id: string): AbilityInfo | undefined {
+    return ABILITIES[id];
+  }
+
+  /** Seats a transport or garrisonable building offers (0 if it carries nobody). */
+  capacity(e: EntityState): number {
+    if (e.kind === 'structure') return this.structures[e.type]?.garrison ?? 0;
+    return (this.units[e.type] as (UnitDef & { transport?: { seats: number } }) | undefined)?.transport?.seats ?? 0;
+  }
+
+  /** Whether any of `units` can board/garrison `target`. */
+  canEnter(units: EntityId[], target: EntityState): boolean {
+    if (!this.ext || this.capacity(target) <= 0) return false;
+    return units.some((u) => this.ext!.canEnter(u, target.id));
+  }
+
+  superweapon(player: PlayerId): SuperweaponView | null {
+    return this.ext?.superweapon(player) ?? null;
+  }
+
+  lines(player: PlayerId): readonly FrontlineView[] {
+    return this.ext?.lines(player) ?? [];
+  }
+
+  pause(): PauseView | null {
+    return this.ext?.pause ?? null;
+  }
+
+  /** Overlap check for structure placement: the sim's rules when available, else bounds + footprints. */
+  canPlace(structure: string, at: Vec2, mapSize: number, player?: PlayerId, rotation = 0): boolean {
     const s = this.structures[structure];
     if (!s) return false;
+    if (this.ext && player !== undefined) return this.ext.canPlace(player, structure, at, rotation);
     const half = mapSize / 2 - s.footprint;
     if (Math.abs(at.x) > half || Math.abs(at.z) > half) return false;
     for (const e of this.sim.entities()) {

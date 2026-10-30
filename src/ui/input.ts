@@ -17,7 +17,17 @@ export type TargetMode =
   | { kind: 'attackMove' }
   | { kind: 'patrol' }
   | { kind: 'rally'; factories: EntityId[] }
-  | { kind: 'place'; structure: string; builder: EntityId; rotation: number };
+  | { kind: 'place'; structure: string; builder: EntityId; rotation: number }
+  /** Aimed ability: click the ground (point abilities) or a unit. */
+  | { kind: 'ability'; ability: string; target: 'point' | 'unit'; units: EntityId[] }
+  /** Click a transport or building to get in. */
+  | { kind: 'enter' }
+  /** Click where the selected transports should drop their passengers. */
+  | { kind: 'unload' }
+  /** Click the superweapon's target. */
+  | { kind: 'superweapon' }
+  /** Hold the line key and drag to draw a frontline. */
+  | { kind: 'line'; reinforce?: number };
 
 export interface InputOptions {
   /** Current key bindings (read on every key press, so rebinding applies live). */
@@ -38,6 +48,10 @@ export interface InputOptions {
   onPlacementHover?: (screen: { x: number; y: number } | null, world: Vec2 | null, valid: boolean) => void;
   /** Visible feedback for an issued order (click marker). */
   onOrderMarker?: (screen: { x: number; y: number }, kind: 'move' | 'attack' | 'rally' | 'build') => void;
+  /** Can these units board/garrison `target`? (Right-click on a transport or building enters it.) */
+  canEnter?: (units: EntityId[], target: EntityState) => boolean;
+  /** The frontline being drawn (screen points), or null when the stroke ends. */
+  onLineStroke?: (points: { x: number; y: number }[] | null) => void;
 }
 
 /**
@@ -53,6 +67,7 @@ export class InputController {
   readonly selection = new Set<EntityId>();
   readonly groups = new Map<number, EntityId[]>();
   private dragStart: { x: number; y: number } | null = null;
+  private stroke: { x: number; y: number }[] | null = null;
   private rightStart: { x: number; y: number; t: number } | null = null;
   private mode: TargetMode = { kind: 'none' };
   private readonly box: HTMLDivElement;
@@ -145,10 +160,13 @@ export class InputController {
     this.select(ids);
   }
 
-  /** Drop ids that no longer exist (died/removed). */
+  /** Drop ids that no longer exist (died/removed) or went inside a transport/building. */
   prune(): void {
     let changed = false;
-    for (const id of this.selection) if (!this.sim.get(id)) changed = this.selection.delete(id) || changed;
+    for (const id of this.selection) {
+      const e = this.sim.get(id);
+      if (!e || e.inside) changed = this.selection.delete(id) || changed;
+    }
     if (changed) this.onSelectionChange([...this.selection]);
     for (const [k, ids] of this.groups) {
       const alive = ids.filter((id) => this.sim.get(id));
@@ -229,6 +247,11 @@ export class InputController {
   private onDown(e: PointerEvent): void {
     if (!this.enabled) return;
     if (e.button === 0) {
+      if (this.mode.kind === 'line') {
+        this.stroke = [{ x: e.clientX, y: e.clientY }];
+        this.opts.onLineStroke?.(this.stroke);
+        return;
+      }
       if (this.mode.kind !== 'none') {
         this.completeMode(e);
         return;
@@ -245,13 +268,43 @@ export class InputController {
     const p = this.picker.pickGround(e.clientX, e.clientY);
     const at = { x: e.clientX, y: e.clientY };
     if (m.kind === 'attackMove' || m.kind === 'patrol') {
-      // TODO(shared): a real `patrol` order. Until then patrol issues an attack-move.
       const units = this.units();
       if (p && units.length) {
-        this.issue({ type: 'move', units, target: p, attackMove: true, queue: e.shiftKey });
+        if (m.kind === 'patrol') this.issue({ type: 'patrol', units, target: p, queue: e.shiftKey });
+        else this.issue({ type: 'move', units, target: p, attackMove: true, queue: e.shiftKey });
         this.opts.onOrderMarker?.(at, 'attack');
       }
       if (!e.shiftKey) this.setMode({ kind: 'none' });
+    } else if (m.kind === 'ability') {
+      const units = m.units.filter((id) => this.sim.get(id));
+      if (m.target === 'unit') {
+        const id = this.picker.pickEntity(e.clientX, e.clientY);
+        if (id === null) return;
+        this.issue({ type: 'useAbility', units, ability: m.ability, targetId: id, queue: e.shiftKey });
+      } else if (p) this.issue({ type: 'useAbility', units, ability: m.ability, at: p, queue: e.shiftKey });
+      this.opts.onOrderMarker?.(at, 'attack');
+      this.setMode({ kind: 'none' });
+    } else if (m.kind === 'enter') {
+      const id = this.picker.pickEntity(e.clientX, e.clientY);
+      const target = id !== null ? this.sim.get(id) : undefined;
+      const units = this.units();
+      if (target && units.length) {
+        this.issue({ type: 'enter', units, target: target.id, queue: e.shiftKey });
+        this.opts.onOrderMarker?.(at, 'move');
+      }
+      this.setMode({ kind: 'none' });
+    } else if (m.kind === 'unload') {
+      if (p) {
+        this.issue({ type: 'unload', units: [...this.selection], at: p, queue: e.shiftKey });
+        this.opts.onOrderMarker?.(at, 'move');
+      }
+      this.setMode({ kind: 'none' });
+    } else if (m.kind === 'superweapon') {
+      if (p) {
+        this.issue({ type: 'superweapon', at: p });
+        this.opts.onOrderMarker?.(at, 'attack');
+      }
+      this.setMode({ kind: 'none' });
     } else if (m.kind === 'rally') {
       if (p) {
         for (const f of m.factories) this.issue({ type: 'setRally', factory: f, at: p });
@@ -271,6 +324,14 @@ export class InputController {
 
   private onMove(e: PointerEvent): void {
     if (!this.enabled) return;
+    if (this.stroke) {
+      const last = this.stroke[this.stroke.length - 1];
+      if (Math.hypot(e.clientX - last.x, e.clientY - last.y) >= 12) {
+        this.stroke.push({ x: e.clientX, y: e.clientY });
+        this.opts.onLineStroke?.(this.stroke);
+      }
+      return;
+    }
     const s = this.dragStart;
     if (s) {
       const w = Math.abs(e.clientX - s.x);
@@ -309,7 +370,8 @@ export class InputController {
 
   private refreshCursor(sx?: number, sy?: number): void {
     const m = this.mode;
-    if (m.kind === 'attackMove' || m.kind === 'patrol') return this.setCursor('target');
+    if (m.kind === 'attackMove' || m.kind === 'patrol' || m.kind === 'ability' || m.kind === 'superweapon' || m.kind === 'line') return this.setCursor('target');
+    if (m.kind === 'enter' || m.kind === 'unload') return this.setCursor('move');
     if (m.kind === 'rally') return this.setCursor('rally');
     if (m.kind === 'place') return this.setCursor('place');
     if (sx === undefined || sy === undefined) return this.setCursor('default');
@@ -329,7 +391,38 @@ export class InputController {
     this.dom.classList.add(`cursor-${c}`);
   }
 
+  /** Finish a frontline stroke: ground points, thinned, sent as holdLine. */
+  private finishStroke(): void {
+    const pts = this.stroke;
+    this.stroke = null;
+    this.opts.onLineStroke?.(null);
+    const m = this.mode;
+    if (!pts || pts.length < 2 || m.kind !== 'line') return;
+    const ground: Vec2[] = [];
+    for (const p of pts) {
+      const g = this.picker.pickGround(p.x, p.y);
+      if (g) ground.push(g);
+    }
+    const units = this.units();
+    if (ground.length >= 2 && units.length) this.issue({ type: 'holdLine', units, points: ground, line: m.reinforce });
+  }
+
+  /** Line key released: drop the line mode (finishing any stroke in progress). */
+  endLineMode(): void {
+    if (this.stroke) this.finishStroke();
+    if (this.mode.kind === 'line') this.setMode({ kind: 'none' });
+  }
+
+  /** True while a frontline stroke is being drawn. */
+  get drawing(): boolean {
+    return this.stroke !== null;
+  }
+
   private onUp(e: PointerEvent): void {
+    if (e.button === 0 && this.stroke) {
+      this.finishStroke();
+      return;
+    }
     if (e.button === 2) {
       const r = this.rightStart;
       this.rightStart = null;
@@ -382,6 +475,12 @@ export class InputController {
     }
     const targetId = this.picker.pickEntity(sx, sy);
     const target = targetId !== null ? this.sim.get(targetId) : undefined;
+    // Right-click on a transport or building that can take the selection: get in.
+    if (target && target.kind !== 'point' && !units.includes(target.id) && this.opts.canEnter?.(units, target)) {
+      this.issue({ type: 'enter', units, target: target.id, queue });
+      this.opts.onOrderMarker?.({ x: sx, y: sy }, 'move');
+      return;
+    }
     if (target && target.owner !== this.localPlayer && target.owner >= 0 && target.kind !== 'point') {
       this.issue({ type: 'attack', units, targetId: target.id, queue });
       this.opts.onOrderMarker?.({ x: sx, y: sy }, 'attack');
@@ -399,11 +498,8 @@ export class InputController {
     }
   }
 
-  /**
-   * Right-drag: move to the drag start, facing along the drag. The facing is not in the shared
-   * Command yet (TODO(shared): `facing?: Heading` on `move`), so the units get the move and the
-   * facing is dropped until the contract has it.
-   */
+  /** Right-drag: move to the drag start, lined up facing along the drag. */
+
   private orderFormation(from: { x: number; y: number }, e: PointerEvent): void {
     const units = this.units();
     const a = this.picker.pickGround(from.x, from.y);

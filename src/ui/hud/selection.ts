@@ -1,5 +1,5 @@
 import type { Command } from '../../shared/commands';
-import type { EntityState, SimView } from '../../shared/entities';
+import { SUPPRESS_PINNED, type EntityState, type SimView } from '../../shared/entities';
 import type { EntityId } from '../../shared/types';
 import { fmtInt, h, setChildren } from '../dom';
 import { glyphFor } from '../glyphs';
@@ -39,7 +39,9 @@ export class SelectionPanel {
       const e = this.sim.get(id);
       if (e) ents.push(e);
     }
-    const key = ents.map((e) => `${e.id}:${Math.ceil(e.hp)}:${JSON.stringify(this.adapter.queue(e))}:${this.adapter.buildProgress(e) ?? ''}`).join('|');
+    const key = ents
+      .map((e) => `${e.id}:${Math.ceil(e.hp)}:${JSON.stringify(this.adapter.queue(e))}:${this.adapter.buildProgress(e) ?? ''}:${e.rank ?? 0}:${(e.suppression ?? 0) >= SUPPRESS_PINNED}:${e.cargo?.length ?? 0}:${e.line ?? 0}:${e.owner}`)
+      .join('|');
     if (key === this.key && !force) return;
     this.key = key;
     if (ents.length === 0) this.renderEmpty();
@@ -73,6 +75,15 @@ export class SelectionPanel {
     }
     const progress = a.buildProgress(e);
     const queue = a.queue(e);
+    // Phase 2 state: veterancy, suppression, passengers/garrison, frontline.
+    const tags: HTMLElement[] = [];
+    const rank = e.rank ?? 0;
+    if (rank > 0) tags.push(h('span', { class: 'sel-tag vet' }, `VETERAN ${'▲'.repeat(rank)}${rank >= 3 ? ' · SELF-HEAL' : ''}`));
+    if ((e.suppression ?? 0) >= SUPPRESS_PINNED) tags.push(h('span', { class: 'sel-tag warn' }, 'PINNED · PRONE'));
+    else if ((e.suppression ?? 0) > 0.15) tags.push(h('span', { class: 'sel-tag warn' }, `SUPPRESSED ${Math.round((e.suppression ?? 0) * 100)}%`));
+    const cap = a.capacity(e);
+    if (cap > 0) tags.push(h('span', { class: 'sel-tag ok' }, `${e.kind === 'structure' ? 'GARRISON' : 'ABOARD'} ${e.cargo?.length ?? 0} / ${cap} SEATS`));
+    if (e.line) tags.push(h('span', { class: 'sel-tag ok' }, `HOLDING LINE ${e.line}`));
 
     setChildren(
       this.el,
@@ -93,6 +104,7 @@ export class SelectionPanel {
           progress !== undefined && progress < 1
             ? h('div', { class: 'build-progress' }, h('span', { class: 'dim mono small' }, `CONSTRUCTING ${Math.round(progress * 100)}%`), h('div', { class: 'progress thin' }, h('div', { class: 'progress-fill', style: { width: `${progress * 100}%` } })))
             : null,
+          tags.length ? h('div', { class: 'sel-tags' }, ...tags) : null,
           h('dl', { class: 'sel-stats mono' }, stats.flatMap(([k, v]) => [h('dt', null, k), h('dd', null, v)])),
         ),
         queue.length ? this.queueStrip(e, queue) : null,

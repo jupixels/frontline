@@ -14,7 +14,7 @@ import { AlertFeed, type Alert } from './alerts';
 import { CommandCard } from './commandCard';
 import { GroupBar } from './groups';
 import { Minimap, type CameraControl } from './minimap';
-import { DesyncOverlay, GameMenu, WaitingOverlay, outcomeBanner } from './overlays';
+import { DesyncOverlay, GameMenu, PauseOverlay, StrikeWarning, WaitingOverlay, outcomeBanner } from './overlays';
 import { SelectionPanel } from './selection';
 import { StatsTracker } from './stats';
 import { TopBar } from './topbar';
@@ -70,6 +70,14 @@ export interface MatchUiContext {
 }
 
 const ATTACK_ALERT_COOLDOWN_MS = 12000;
+
+const BLOCK_TEXT: Record<'supply' | 'cp' | 'requirements' | 'placement' | 'queueFull', string> = {
+  supply: 'Not enough supply',
+  cp: 'Command point cap reached: hold more points to field more units',
+  requirements: 'Requirements not met',
+  placement: "Can't build there",
+  queueFull: 'Production queue is full',
+};
 const ATTACK_ALERT_CELL = 80;
 
 /**
@@ -89,6 +97,13 @@ export class MatchUi {
   private readonly groups: GroupBar;
   private readonly alerts: AlertFeed;
   private readonly waiting = new WaitingOverlay();
+  private readonly pauseOverlay: PauseOverlay;
+  private readonly strike = new StrikeWarning();
+  private readonly stroke: SVGSVGElement;
+  /** The frontline key is held; released without drawing it recenters (old binding). */
+  private lineKeyDown = false;
+  private readonly lastBlock = new Map<string, number>();
+  private lineDrawn = false;
   private readonly desync: DesyncOverlay;
   private readonly menu: GameMenu;
   private readonly stats: StatsTracker;
@@ -110,7 +125,12 @@ export class MatchUi {
       keyboard: false,
       keybinds: () => ctx.settings.get().keybinds,
       isFactory: (e) => this.adapter.producible(e).length > 0,
-      canPlace: (s, at) => this.adapter.canPlace(s, at, ctx.map.size),
+      canPlace: (s, at) => {
+        const m = this.input?.getMode();
+        return this.adapter.canPlace(s, at, ctx.map.size, localPlayer, m?.kind === 'place' ? m.rotation : 0);
+      },
+      canEnter: (units, target) => this.adapter.canEnter(units, target),
+      onLineStroke: (pts) => this.drawStroke(pts),
       onModeChange: (m) => this.onMode(m),
       onFormationDrag: (a, b) => this.drawArrow(a, b),
       onPlacementHover: (s, w, valid) => this.drawGhost(s, w, valid),
@@ -124,6 +144,7 @@ export class MatchUi {
     this.groups = new GroupBar(sim, this.adapter, this.input, (n, add, center) => this.recallGroup(n, add, center));
     this.alerts = new AlertFeed((p) => ctx.camera.lookAt(p.x, p.z));
     this.desync = new DesyncOverlay(() => ctx.onQuit?.(), ctx.onDesyncReport);
+    this.pauseOverlay = new PauseOverlay((paused) => ctx.issue({ type: 'pauseVote', paused }));
     this.menu = new GameMenu(ctx.mode, {
       resume: () => this.closeMenu(),
       settings: () => ctx.openSettings?.(),
@@ -136,6 +157,10 @@ export class MatchUi {
         this.closeMenu();
         ctx.onQuit?.();
       },
+      pauseVote: () => {
+        ctx.issue({ type: 'pauseVote', paused: true });
+        this.closeMenu();
+      },
     });
 
     this.ghost = h('div', { class: 'place-ghost hidden' }, h('span', { class: 'ghost-label mono' }));
@@ -143,7 +168,10 @@ export class MatchUi {
     this.arrow.setAttribute('class', 'formation-arrow hidden');
     this.arrow.innerHTML =
       '<defs><marker id="fl-arrowhead" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z"/></marker></defs><line marker-end="url(#fl-arrowhead)"/><circle r="5"/>';
-    this.fx = h('div', { class: 'hud-fx' }, this.ghost, this.arrow);
+    this.stroke = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    this.stroke.setAttribute('class', 'line-stroke hidden');
+    this.stroke.innerHTML = '<polyline points=""/>';
+    this.fx = h('div', { class: 'hud-fx' }, this.ghost, this.arrow, this.stroke);
 
     this.el = h(
       'div',
@@ -153,6 +181,8 @@ export class MatchUi {
       h('div', { class: 'hud-left' }, this.alerts.el),
       h('div', { class: 'hud-bottom' }, this.minimap.el, h('div', { class: 'hud-center' }, this.groups.el, this.selection.el), this.card.el),
       this.waiting.el,
+      this.pauseOverlay.el,
+      this.strike.el,
       this.menu.el,
       this.desync.el,
     );
@@ -163,6 +193,9 @@ export class MatchUi {
     const onKey = (e: KeyboardEvent) => this.onKey(e);
     addEventListener('keydown', onKey);
     this.cleanup.push(() => removeEventListener('keydown', onKey));
+    const onKeyUp = (e: KeyboardEvent) => this.onKeyUp(e);
+    addEventListener('keyup', onKeyUp);
+    this.cleanup.push(() => removeEventListener('keyup', onKeyUp));
 
     this.selection.update(performance.now(), true);
     this.card.update(performance.now(), true);
@@ -258,6 +291,17 @@ export class MatchUi {
       this.input.rotatePlacement();
       return;
     }
+    // Hold the frontline key and drag to draw a line for the selected units.
+    if (code === k.drawLine && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      this.lineKeyDown = true;
+      this.lineDrawn = false;
+      if (this.input.units().length) {
+        const lines = [...new Set(this.input.units().map((id) => this.ctx.sim.get(id)?.line ?? 0))];
+        this.input.setMode({ kind: 'line', reinforce: e.shiftKey && lines.length === 1 && lines[0] ? lines[0] : undefined });
+      }
+      return;
+    }
     if (code === 'Escape') {
       e.preventDefault();
       if (this.input.cancelMode() || this.card.back()) return;
@@ -281,6 +325,27 @@ export class MatchUi {
       e.preventDefault();
       this.input.selectArmy();
     }
+  }
+
+  private onKeyUp(e: KeyboardEvent): void {
+    const k = this.ctx.settings.get().keybinds;
+    if (e.code !== k.drawLine || !this.lineKeyDown) return;
+    this.lineKeyDown = false;
+    const drew = this.lineDrawn || this.input.drawing;
+    this.input.endLineMode();
+    // Tapped without drawing: the old "center on selection" binding still works.
+    if (!drew && k.centerSelection === k.drawLine) this.centerOn(this.input.selection);
+  }
+
+  private drawStroke(pts: { x: number; y: number }[] | null): void {
+    const poly = this.stroke.querySelector('polyline')!;
+    if (!pts) {
+      this.stroke.classList.add('hidden');
+      return;
+    }
+    this.lineDrawn = true;
+    poly.setAttribute('points', pts.map((p) => `${p.x},${p.y}`).join(' '));
+    this.stroke.classList.remove('hidden');
   }
 
   private openMenu(): void {
@@ -416,6 +481,44 @@ export class MatchUi {
           if (v?.owner === me && v.kind === 'structure') this.alert({ kind: 'lost', text: `${a.displayName(v.type)} destroyed`, pos: this.ctx.sim.get(ev.id)?.pos });
           break;
         }
+        case 'promoted': {
+          const u = this.ctx.sim.get(ev.id);
+          if (u?.owner === me) this.alert({ kind: 'ready', text: `${a.displayName(u.type)} promoted to ${['', 'Veteran', 'Elite', 'Hero'][ev.rank]} (rank ${ev.rank})`, pos: u.pos });
+          break;
+        }
+        case 'suppressed': {
+          const u = this.ctx.sim.get(ev.id);
+          if (ev.pinned && u?.owner === me) this.attackAlert(u.pos, false);
+          break;
+        }
+        case 'superweaponLaunched': {
+          const own = a.isAlly(ev.player, me);
+          const arriveMs = performance.now() + Math.max(0, ev.arrive - (this.ctx.sim.gameTick ?? this.ctx.sim.tick)) * (1000 / SIM_HZ);
+          this.strike.add(arriveMs, own, () => this.ctx.camera.lookAt(ev.at.x, ev.at.z));
+          this.alert({ kind: own ? 'info' : 'attack', text: own ? 'Cruise missile launched' : 'WARNING: enemy cruise missile inbound — clear the marked area', pos: ev.at });
+          this.minimap.ping(ev.at, '#ff2a1a');
+          this.minimap.mark(ev.at, ev.radius, arriveMs);
+          break;
+        }
+        case 'superweaponReady':
+          if (ev.player === me) this.alert({ kind: 'ready', text: 'Cruise missile ready (Strategic Command)' });
+          break;
+        case 'paused': {
+          const by = a.slot(ev.by)?.name;
+          this.alert({ kind: 'info', text: ev.paused ? `Game paused${by ? ` by ${by}` : ''}` : `Game resumed${by ? ` by ${by}` : ''}` });
+          break;
+        }
+        case 'pauseVote':
+          if (ev.paused && ev.player !== me) this.alert({ kind: 'info', text: `${a.slot(ev.player)?.name ?? 'A player'} wants to pause (${ev.votes}/${ev.needed})` });
+          break;
+        case 'blocked': {
+          const now = performance.now();
+          if (ev.player === me && now - (this.lastBlock.get(ev.reason) ?? -1e9) > 6000) {
+            this.lastBlock.set(ev.reason, now);
+            this.alert({ kind: 'warn', text: BLOCK_TEXT[ev.reason] });
+          }
+          break;
+        }
         case 'defeated': {
           const name = a.slot(ev.player)?.name ?? `Player ${ev.player + 1}`;
           this.alert({ kind: ev.player === me ? 'lost' : 'info', text: ev.player === me ? 'You have been defeated' : `${name} has been defeated` });
@@ -478,7 +581,23 @@ export class MatchUi {
     this.groups.update(now);
     this.alerts.update(now);
     this.waiting.update(now);
+    this.strike.update(now);
+    this.updatePause();
   }
+
+  private updatePause(): void {
+    const p = this.adapter.pause();
+    if (!p || this.ctx.mode !== 'online') return this.pauseOverlay.set(null);
+    const me = this.ctx.localPlayer;
+    this.pauseOverlay.set({
+      paused: p.paused,
+      votes: p.votes.length,
+      needed: p.needed,
+      mine: p.votes.includes(me),
+      left: p.left[me] ?? 0,
+    });
+  }
+
 
   dispose(): void {
     for (const c of this.cleanup) c();
