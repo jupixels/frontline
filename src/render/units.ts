@@ -153,6 +153,17 @@ export class UnitView {
     const model = cloneModel(prepared);
     const size = prepared.bounds.getSize(_v);
     this.height = size.y * this.scale;
+    // Big warships come in at real-world length (140-170 m); draw them at a length that matches their
+    // footprint in the game, or they cover half a strait.
+    if (this.cls === 'ship') {
+      const len = Math.max(size.x, size.z);
+      const target = this.def.radius * 5.2;
+      if (len > target * 1.25) {
+        const k = target / len;
+        this.body.scale.multiplyScalar(k);
+        this.height = size.y * k;
+      }
+    }
     const band = new THREE.Vector2(prepared.bounds.min.y + size.y * 0.45, prepared.bounds.min.y + size.y * 0.55);
     model.traverse((o) => {
       o.userData.entityId = this.id;

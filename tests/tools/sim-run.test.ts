@@ -11,7 +11,9 @@ import { runHeadless } from '../../src/ai/headless';
 const MAPS: Record<string, MapDef> = { valley_pass: valley as unknown as MapDef, coastal_strait: coastal as unknown as MapDef, desert_oilfields: desert as unknown as MapDef };
 
 it.skipIf(!process.env.SIMRUN)('headless match', () => {
-  const map = MAPS[process.env.MAP ?? 'valley_pass'];
+  const base = MAPS[process.env.MAP ?? 'valley_pass'];
+  // SWAP=1: player 0 starts where player 1 normally does (to tell side bias from player-order bias).
+  const map = process.env.SWAP ? { ...base, spawns: [...base.spawns].reverse() } : base;
   const diffs = (process.env.AIS ?? 'normal,normal').split(',') as ('easy' | 'normal' | 'hard')[];
   const teams = process.env.TEAMS?.split(',').map(Number) ?? diffs.map((_, i) => i);
   const setup: MatchSetup = { seed: Number(process.env.SEED ?? 1), mapId: map.id, victory: 'frontline', players: diffs.map((d, id) => ({ id, team: teams[id], name: `AI${id}`, color: '#888', kind: 'ai' as const, aiDifficulty: d })) };

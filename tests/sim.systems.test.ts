@@ -283,7 +283,9 @@ describe('capture points & victory', () => {
     }
     run(sim, 10 * SIM_HZ);
     expect(w.teams.get(0)!.tickets).toBe(1000);
-    expect(w.teams.get(1)!.tickets).toBeCloseTo(1000 - 0.12 * 3 * 10, 3);
+    // Holding every point also triggers the sweep multiplier.
+    const sweep = pts.length === 3 ? rules.sweepBleedMult : 1;
+    expect(w.teams.get(1)!.tickets).toBeCloseTo(1000 - rules.bleedPerPointDiff * 3 * 10 * sweep, 3);
     expect(sim.player(1)!.tickets).toBeCloseTo(w.teams.get(1)!.tickets, 6);
     w.teams.get(1)!.tickets = 0.01;
     const ev = run(sim, 5);
@@ -329,7 +331,8 @@ describe('capture points & victory', () => {
     expect(sim.proposedEvents.some((e) => e.type === 'suddenDeath')).toBe(true);
     const t0 = w.teams.get(0)!.tickets;
     run(sim, SIM_HZ);
-    expect(w.teams.get(0)!.tickets).toBeCloseTo(t0 - 0.5, 3);
+    // One second in: the base sudden-death bleed plus a second of the ramp (averaged over the second).
+    expect(w.teams.get(0)!.tickets).toBeCloseTo(t0 - rules.suddenDeathBleed - rules.suddenDeathRamp * 0.5, 2);
   });
 });
 

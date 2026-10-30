@@ -360,7 +360,7 @@ export class LobbyScreen implements Screen {
           const sel = h(
             'select',
             { class: 'select', onchange: () => this.opts.lobby.setMap(sel.value) },
-            this.opts.maps.map((m) => h('option', { value: m.id }, `${m.name}  ·  ${m.maxPlayers}P`)),
+            this.opts.maps.map((m) => h('option', { value: m.id }, `${m.name}  ·  ${m.modes?.map(modeLabel).join(' / ') ?? `${m.maxPlayers}P`}`)),
           );
           sel.value = map.id;
           return sel;
@@ -381,7 +381,7 @@ export class LobbyScreen implements Screen {
 
     setChildren(
       this.mapPanel,
-      h('div', { class: 'panel-title' }, h('span', null, 'OPERATION'), h('span', { class: 'dim mono' }, `${(map.size / 1000).toFixed(1)} km · ${map.maxPlayers} spawns`)),
+      h('div', { class: 'panel-title' }, h('span', null, 'OPERATION'), h('span', { class: 'dim mono' }, `${(map.size / 1000).toFixed(1)} km · ${map.modes?.map(modeLabel).join(' / ') ?? `${map.maxPlayers} spawns`}`)),
       h(
         'div',
         { class: 'map-body' },
@@ -504,4 +504,10 @@ export function drawMapPreview(canvas: HTMLCanvasElement, map: MapInfo, players:
     g.textBaseline = 'middle';
     g.fillText(String(i + 1), px, py + 1);
   });
+}
+
+/** '1v1' → '1v1', 'ffa4' → '4-player FFA'. */
+function modeLabel(m: string): string {
+  const ffa = /^ffa(\d)$/.exec(m);
+  return ffa ? `${ffa[1]}-player FFA` : m;
 }

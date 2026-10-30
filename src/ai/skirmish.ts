@@ -501,9 +501,18 @@ export class SkirmishAi {
     const pool = army.filter((e) => !this.assigned.has(e.id) && !this.raiders.has(e.id) && e.id !== this.scoutId);
     if (this.turtling) return;
     const objectives = this.objectives();
+    // Small armies concentrate: one force per ~900 supply of army, up to the difficulty's limit.
+    let armyValue = 0;
+    for (const u of army) armyValue += valueOf(u.type);
+    const maxForces = Math.max(1, Math.min(this.p.forces, 1 + Math.floor(armyValue / 900)));
+    if (this.forces.length > maxForces) {
+      // Fold the weakest forces into the others.
+      this.forces.sort((a, b) => this.forceValue(b) - this.forceValue(a));
+      for (const f of this.forces.splice(maxForces)) for (const id of f.units) this.assigned.delete(id);
+    }
     // Re-target: a force chasing a point that dropped out of the top choices switches to the best one
     // nobody is handling (a threatened home point outranks a raid on the enemy's backyard).
-    const top = objectives.slice(0, this.p.forces + 1).map((o) => o.id);
+    const top = objectives.slice(0, maxForces + 1).map((o) => o.id);
     for (const f of this.forces) {
       if (f.state === 'board' || f.state === 'ferry' || top.includes(f.point)) continue;
       if (f.state === 'hold' && this.k.enemyStrength(this.sim.get(f.point)?.pos ?? this.base(), 160) > 0) continue;
@@ -517,7 +526,7 @@ export class SkirmishAi {
     }
     // Start new forces on the best unhandled objectives.
     for (const obj of objectives) {
-      if (this.forces.length >= this.p.forces || !pool.length) break;
+      if (this.forces.length >= maxForces || !pool.length) break;
       if (this.forces.some((f) => f.point === obj.id)) continue;
       const f: TaskForce = { id: this.nextForceId++, units: new Set(), point: obj.id, state: 'gather', since: now, ordersAt: -999, transport: 0, lined: false };
       this.forces.push(f);
@@ -638,6 +647,11 @@ export class SkirmishAi {
           set('retreat');
           break;
         }
+        // Whittled down far below what the objective needs: regroup instead of trickling in.
+        if (!ours && value < this.required(f) * 0.4 && since > 20) {
+          set('gather');
+          break;
+        }
         if (now - f.ordersAt > 20 && ids.length) {
           // Attack with the main body; stragglers and fresh reinforcements catch up with it first
           // instead of trickling into the enemy one by one.
@@ -700,7 +714,7 @@ export class SkirmishAi {
           }
         }
         // Once secure for a while, the force moves on to the next objective.
-        if (since > 70 && enemyNear === 0 && this.forces.length >= this.p.forces) {
+        if (since > 70 && enemyNear === 0) {
           const next = this.objectives().find((o) => !this.forces.some((x) => x.point === o.id) && !this.k.isFriend(o.owner));
           if (next) {
             f.point = next.id;

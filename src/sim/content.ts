@@ -188,6 +188,8 @@ export interface RulesDef {
   pauseMaxSeconds?: number;
   /** Ticket-bleed multiplier while a team holds every point (pushes a dominant side to finish). */
   sweepBleedMult?: number;
+  /** Extra sudden-death bleed per second for every second sudden death has lasted. */
+  suddenDeathRamp?: number;
   /** Comeback: +1 command point per this many tickets a team is behind the leader, up to cpComebackMax. */
   cpComebackPer?: number;
   cpComebackMax?: number;

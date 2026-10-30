@@ -2,6 +2,7 @@ import { hostLobby, joinLobby, NetError, type Lobby, type StartedMatch } from '.
 import type { LobbySlot as NetSlot } from '../net/protocol';
 import type { MatchSetup, TeamId, VictoryMode } from '../shared/types';
 import type { ChatMessage, LobbyApi, LobbyConnector, LobbySlot, LobbyState, SlotOccupancy } from '../ui';
+import { MAPS } from './content';
 
 const NET_ERRORS: Record<string, string> = {
   'signaling-unavailable': "Couldn't reach the matchmaking relays. Check your connection and try again.",
@@ -152,7 +153,7 @@ function toUiSlot(s: NetSlot): LobbySlot {
 export const netLobbyConnector: LobbyConnector = {
   async host(name) {
     try {
-      return new NetLobbyAdapter(await hostLobby({ name }));
+      return new NetLobbyAdapter(await hostLobby({ name, settings: { mapId: MAPS[0].id } }));
     } catch (err) {
       throw new Error(errorText(err));
     }

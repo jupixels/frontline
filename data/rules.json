@@ -9,12 +9,12 @@
   "supplyNodeMult": 2,
   "captureSeconds": 20,
   "pointRadius": 25,
-  "bleedPerPointDiff": 0.12,
-  "lateBleedSeconds": 3600,
+  "bleedPerPointDiff": 0.18,
+  "lateBleedSeconds": 3000,
   "lateBleedMult": 1.5,
   "unitLossTicketsPerCp": 0.5,
   "suddenDeathSeconds": 5400,
-  "suddenDeathBleed": 0.5,
+  "suddenDeathBleed": 1,
   "suddenDeathHqDamageMult": 3,
   "tier3UnlockSeconds": 1000000000,
   "buildRadius": 150,
@@ -39,5 +39,7 @@
   "cpComebackPer": 10,
   "cpComebackMax": 40,
   "incomeComebackPer100": 0.6,
-  "incomeComebackMax": 3
+  "incomeComebackMax": 3,
+  "suddenDeathRamp": 0.005,
+  "sweepBleedMult": 1.5
 }

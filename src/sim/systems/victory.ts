@@ -98,11 +98,16 @@ export function victorySystem(world: World): void {
     for (const e of world.entities.values()) if (e.kind === 'point' && e.team >= 0) held.set(e.team, (held.get(e.team) ?? 0) + 1);
     let lead = 0;
     for (const n of held.values()) if (n > lead) lead = n;
+    let total = 0;
+    for (const e of world.entities.values()) if (e.kind === 'point') total++;
     const late = secs >= rules.lateBleedSeconds ? rules.lateBleedMult : 1;
+    // A team holding every point pushes harder: the match closes out instead of dragging on.
+    const sweep = total > 0 && lead === total ? (rules.sweepBleedMult ?? 1) : 1;
+    // Sudden death escalates the longer it lasts.
+    const sd = world.suddenDeath ? rules.suddenDeathBleed + (rules.suddenDeathRamp ?? 0) * Math.max(0, secs - rules.suddenDeathSeconds) : 0;
     for (const t of world.teams.values()) {
       if (t.defeated) continue;
-      let bleed = rules.bleedPerPointDiff * (lead - (held.get(t.id) ?? 0)) * late;
-      if (world.suddenDeath) bleed += rules.suddenDeathBleed;
+      const bleed = rules.bleedPerPointDiff * (lead - (held.get(t.id) ?? 0)) * late * sweep + sd;
       t.tickets -= bleed / SIM_HZ;
     }
   }
