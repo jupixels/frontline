@@ -70,8 +70,9 @@ export function enterTick(world: World, e: Entity, targetId: EntityId): void {
   if (dist2(e.pos, c.pos) > reach * reach) {
     // Transports may be moving: refresh the path now and then.
     if (!e.path || (world.tick + e.id) % 20 === 0) setPath(world, e, c.pos);
-    followPath(world, e, reach * 0.8);
-    return;
+    // The center of a building (or a ship) can't be reached: arriving at the nearest open spot counts.
+    const arrived = followPath(world, e, reach * 0.8);
+    if (!arrived || dist2(e.pos, c.pos) > (reach + 10) * (reach + 10)) return;
   }
   board(world, e, c);
 }

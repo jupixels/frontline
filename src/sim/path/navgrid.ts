@@ -95,7 +95,7 @@ export class NavGrid {
       for (let cx = 0; cx < cols; cx++) {
         const i = cz * cols + cx;
         if (this.terrain[i] !== TERRAIN_LAND || this.flags[i] & FLAG_BRIDGE) continue;
-        if (m.cliffs.length && m.isCliff(this.centerX(cx), this.centerZ(cz))) {
+        if (m.hasCliffs && m.isCliff(this.centerX(cx), this.centerZ(cz))) {
           this.terrain[i] = TERRAIN_BLOCKED;
           continue;
         }

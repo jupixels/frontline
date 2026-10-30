@@ -214,7 +214,7 @@ export class Terrain {
       const j = Math.round((z - this.min) / this.step);
       const ny = nrm.getY(v);
       const inside = Math.abs(x) < half + 40 && Math.abs(z) < half + 40;
-      const cliff = inside && m.cliffs.length && m.isCliff(x, z) ? 1 : 0;
+      const cliff = inside && m.hasCliffs && m.isCliff(x, z) ? 1 : 0;
       const rock = Math.max(smoothstep(0.88, 0.7, ny), smoothstep(22, 45, h) * 0.85, cliff * 0.95);
       let sand = smoothstep(coastal ? 3.4 : 2.4, 1.0, h) * (1 - rock);
       const patches = fbm(x / 75, z / 75, seed + 21, 3);

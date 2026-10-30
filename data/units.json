@@ -159,7 +159,13 @@
     },
     "abilities": [
       "smoke"
-    ]
+    ],
+    "transport": {
+      "seats": 6,
+      "carries": [
+        "infantry"
+      ]
+    }
   },
   "tank_light": {
     "name": "Light Tank",
@@ -322,7 +328,13 @@
     "tier": 2,
     "weapons": [
       "door_gun"
-    ]
+    ],
+    "transport": {
+      "seats": 8,
+      "carries": [
+        "infantry"
+      ]
+    }
   },
   "jet_fighter": {
     "name": "Fighter Jet",
@@ -455,7 +467,15 @@
     "tier": 2,
     "weapons": [
       "ship_mg"
-    ]
+    ],
+    "transport": {
+      "seats": 24,
+      "carries": [
+        "infantry",
+        "light",
+        "heavy"
+      ]
+    }
   },
   "supply_truck": {
     "name": "Supply Truck",

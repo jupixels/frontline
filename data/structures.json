@@ -215,6 +215,58 @@
     "tier": 1,
     "weapons": [
       "tower_mg"
-    ]
+    ],
+    "garrison": 4
+  },
+  "trench": {
+    "name": "Trench",
+    "model": "models/buildings/props/sandbags.glb",
+    "hp": 900,
+    "footprint": [
+      10,
+      4
+    ],
+    "cost": 75,
+    "buildSeconds": 10,
+    "power": 0,
+    "sight": 50,
+    "tier": 1,
+    "garrison": 8
+  },
+  "ruin": {
+    "name": "Ruined Farmhouse",
+    "model": "models/buildings/props/gatehouse.glb",
+    "hp": 2200,
+    "footprint": [
+      10,
+      10
+    ],
+    "cost": 0,
+    "buildSeconds": 0,
+    "power": 0,
+    "sight": 70,
+    "tier": 1,
+    "buildable": false,
+    "neutral": true,
+    "garrison": 8
+  },
+  "strategic_command": {
+    "name": "Strategic Command",
+    "model": "models/buildings/radar.glb",
+    "hp": 3000,
+    "footprint": [
+      20,
+      20
+    ],
+    "cost": 1500,
+    "buildSeconds": 60,
+    "power": -60,
+    "sight": 120,
+    "tier": 2,
+    "requires": [
+      "radar"
+    ],
+    "grantsTier": 3,
+    "superweapon": true
   }
 }

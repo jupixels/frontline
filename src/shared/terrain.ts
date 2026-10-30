@@ -80,6 +80,8 @@ export interface TerrainDef {
   cliffs?: MapShape[];
   /** Sea and lakes. */
   water?: MapShape[];
+  /** Land inside the water shapes (islands rise out of the sea). */
+  islands?: MapShape[];
   rivers?: TerrainRiver[];
   /** Shallow crossings in rivers (circles), passable on foot and by vehicles. */
   fords?: { x: number; z: number; r: number }[];
@@ -270,6 +272,7 @@ export class TerrainModel {
   readonly style: 'temperate' | 'coastal' | 'desert';
   readonly def: Required<Pick<TerrainDef, 'seed' | 'base' | 'relief' | 'detail'>> & TerrainDef;
   readonly water: MapShape[];
+  readonly islands: MapShape[];
   readonly cliffs: MapShape[];
   readonly forests: MapShape[];
   readonly bridges: TerrainBridge[];
@@ -282,6 +285,7 @@ export class TerrainModel {
     this.def = { base: 5, relief: 7, detail: 1.2, ...(t ?? { seed: 1 }) };
     this.style = t?.style ?? 'temperate';
     this.water = [...(t?.water ?? []), ...(map.water ?? [])];
+    this.islands = t?.islands ?? [];
     this.cliffs = [...(t?.cliffs ?? []), ...(map.obstacles ?? [])];
     this.forests = t?.forests ?? [];
     this.bridges = t?.bridges ?? [];
@@ -344,17 +348,25 @@ export class TerrainModel {
     let sea = 0;
     let floor = 0;
     if (this.water.length || seaEdge) {
-      let wd = this.water.length ? minShapeDistance(this.water, x, z, half) : 1e9;
+      let wd = this.waterDistance(x, z);
       if (seaEdge) wd = Math.min(wd, -out + 40);
       sea = smoothstep(10, -16, wd);
       floor = -3 - smoothstep(0, -70, wd) * 6 + (fbm(x / 40, z / 40, seed + 12, 2) - 0.5) * 1.5;
     }
     if (!seaEdge) {
       let rim = smoothstep(-30, 180, out);
-      if (this.water.length) rim *= smoothstep(20, 120, minShapeDistance(this.water, x, z, half));
+      if (this.water.length) rim *= smoothstep(20, 120, this.waterDistance(x, z));
       if (rim > 0) h += rim * (10 + ridged(x / 160, z / 160, seed + 3, 4) * 70 + fbm(x / 70, z / 70, seed + 4, 3) * 12);
     }
     return sea > 0 ? lerp(h, floor, sea) : h;
+  }
+
+  /** Signed distance to open water (negative at sea); islands cut holes in the water shapes. */
+  waterDistance(x: number, z: number): number {
+    if (!this.water.length) return 1e9;
+    let wd = minShapeDistance(this.water, x, z, this.half);
+    if (this.islands.length) wd = Math.max(wd, -minShapeDistance(this.islands, x, z, 0));
+    return wd;
   }
 
   /** Flat map with legacy water/rock shapes (sandbox-style test maps). */
@@ -365,15 +377,22 @@ export class TerrainModel {
       if (cd < 6) h += smoothstep(6, -3, cd) * 9;
     }
     if (this.water.length) {
-      const wd = minShapeDistance(this.water, x, z, this.half);
+      const wd = this.waterDistance(x, z);
       h = lerp(h, -4 - smoothstep(0, -60, wd) * 5, smoothstep(8, -12, wd));
     }
     return h;
   }
 
-  /** True inside an impassable rock shape. */
+  /** True inside an impassable rock shape or on a sheer ridge. */
   isCliff(x: number, z: number): boolean {
-    return this.cliffs.length > 0 && minShapeDistance(this.cliffs, x, z, 0) < 0;
+    if (this.cliffs.length > 0 && minShapeDistance(this.cliffs, x, z, 0) < 0) return true;
+    for (const r of this.def.ridges ?? []) if (r.cliff && polylineDistance(r.points, x, z) < r.width / 2 - 2) return true;
+    return false;
+  }
+
+  /** Whether the map has any rock shapes or sheer ridges (cheap pre-check for isCliff). */
+  get hasCliffs(): boolean {
+    return this.cliffs.length > 0 || !!this.def.ridges?.some((r) => r.cliff);
   }
 
   isForest(x: number, z: number): boolean {

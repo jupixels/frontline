@@ -129,7 +129,8 @@ export function targetingSystem(world: World): void {
     const cur = e.order;
     const dug = e.entrench !== 'none';
     const engages = isUnit && !dug && (!cur || cur.kind === 'attack' || cur.kind === 'patrol' || (cur.kind === 'move' && cur.attackMove));
-    const mr = maxRange(e);
+    // High ground can stretch range by up to 25%, so look that far for targets.
+    const mr = maxRange(e) * (world.fog.traced && e.domain !== 'air' ? 1.25 : 1);
     const acqRange = engages ? Math.max(mr, e.sight) : mr;
 
     if (!forced) {

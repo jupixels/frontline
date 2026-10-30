@@ -16,7 +16,7 @@
   "suddenDeathSeconds": 5400,
   "suddenDeathBleed": 0.5,
   "suddenDeathHqDamageMult": 3,
-  "tier3UnlockSeconds": 1800,
+  "tier3UnlockSeconds": 1000000000,
   "buildRadius": 150,
   "lowPowerProductionMult": 0.5,
   "maxQueue": 10,
@@ -29,5 +29,11 @@
   "supplyRange": 120,
   "readinessMin": 0.5,
   "readinessDecayPerSecond": 0.005,
-  "readinessRecoverPerSecond": 0.02
+  "readinessRecoverPerSecond": 0.02,
+  "superweaponSeconds": 360,
+  "superweaponWarningSeconds": 12,
+  "superweaponRadius": 32,
+  "superweaponDamage": 1400,
+  "pausesPerPlayer": 3,
+  "pauseMaxSeconds": 90
 }
