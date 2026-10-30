@@ -8,6 +8,7 @@ import { h } from '../dom';
 import { InputController, isTyping, type TargetMode } from '../input';
 import { GROUP_ACTIONS, keyLabel } from '../keybinds';
 import { tooltip } from '../tooltip';
+import { TouchControls, touchByDefault } from '../touch';
 import { isLocalMode, type MatchMode } from '../lobbyApi';
 import type { MatchResult } from '../screens/results';
 import type { SettingsStore } from '../settings';
@@ -108,6 +109,7 @@ export class MatchUi {
   private readonly manual: FieldManual;
   private idleCursor = 0;
   private readonly replayBar: ReplayBar | null = null;
+  private touch: TouchControls | null = null;
   private readonly waiting = new WaitingOverlay();
   private readonly pauseOverlay: PauseOverlay;
   private readonly strike = new StrikeWarning();
@@ -249,6 +251,15 @@ export class MatchUi {
 
   private applySettings(): void {
     const s = this.ctx.settings.get();
+    const wantTouch = s.touch === 'on' || (s.touch === 'auto' && touchByDefault());
+    if (wantTouch && !this.touch) {
+      this.touch = new TouchControls(this.ctx.canvas, this.input, this.ctx.picker, this.ctx.camera);
+      this.el.appendChild(this.touch.el);
+    } else if (!wantTouch && this.touch) {
+      this.touch.dispose();
+      this.touch = null;
+    }
+    this.el.classList.toggle('touch', wantTouch);
     // TODO(render): RtsCamera has a fixed PAN_SPEED; expose `panSpeed` so this setting applies.
     const cam = this.ctx.camera as CameraControl & { panSpeed?: number };
     if ('panSpeed' in cam) cam.panSpeed = s.edgePanSpeed;
@@ -783,6 +794,7 @@ export class MatchUi {
 
   dispose(): void {
     for (const c of this.cleanup) c();
+    this.touch?.dispose();
     this.input.dispose();
     this.el.remove();
   }

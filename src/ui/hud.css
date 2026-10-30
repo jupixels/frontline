@@ -441,3 +441,15 @@
   .hud .res.tier, .hud .res.cp { display: none; }
   .hud .center-panel { top: 66px; }
 }
+
+/* Mid-width screens: keep the top bar clear of the Morale panel */
+@media (max-width: 1440px) {
+  .hud .meter { display: none; }
+  .hud .res { padding: 0 11px; }
+}
+@media (max-width: 1260px) {
+  .hud .res-label { display: none; }
+  .hud .res.tier { display: none; }
+  .hud .res-value { font-size: 19px; min-width: 0; }
+  .hud .morale { min-width: 136px; }
+}

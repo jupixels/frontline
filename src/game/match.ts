@@ -4,6 +4,7 @@ import type { CommandLog, ReplayFile } from '../net/replay';
 import type { NetSession } from '../net/session';
 import { GameRenderer } from '../render/renderer';
 import type { Turn } from '../shared/commands';
+import { assignSpawns } from '../shared/maps';
 import type { SimEvent } from '../shared/events';
 import type { MatchSetup, PlayerId, Tick } from '../shared/types';
 import { TICK_MS } from '../shared/types';
@@ -83,7 +84,10 @@ export class Match {
       const k = app.settings.get().keybinds;
       return { up: k.panUp, down: k.panDown, left: k.panLeft, right: k.panRight };
     };
-    const spawn = map.spawns[Math.max(0, localPlayer) % map.spawns.length];
+    // The spawn the sim gave our army (co-commanders look at the army they share).
+    const armyOwner = localSlot?.army ?? localPlayer;
+    const spawnIdx = assignSpawns(map, setup.players).get(armyOwner) ?? Math.max(0, armyOwner) % map.spawns.length;
+    const spawn = map.spawns[spawnIdx];
     r.cam.lookAt(spawn.x, spawn.z);
     this.refreshViews();
 

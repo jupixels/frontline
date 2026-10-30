@@ -1,7 +1,7 @@
 import { hostLobby, joinLobby, NetError, type Lobby, type StartedMatch } from '../net';
 import type { LobbySlot as NetSlot } from '../net/protocol';
-import type { MatchSetup, TeamId, VictoryMode } from '../shared/types';
-import type { ChatMessage, LobbyApi, LobbyConnector, LobbySlot, LobbyState, SlotOccupancy } from '../ui';
+import type { MatchSetup, VictoryMode } from '../shared/types';
+import type { ChatMessage, LobbyApi, LobbyConnector, LobbySlot, LobbyState, SlotOccupancy, SlotPatchUi } from '../ui';
 import { MAPS } from './content';
 
 const NET_ERRORS: Record<string, string> = {
@@ -46,6 +46,7 @@ export class NetLobbyAdapter implements LobbyApi {
       hostId: s.hostPeer,
       mapId: s.settings.mapId,
       victory: s.settings.victory,
+      coop: !!s.settings.coop,
       slots: l.slots.map(toUiSlot),
       status: this.closed ? 'closed' : s.phase === 'inGame' ? 'starting' : 'open',
       ...(this.closedError ? { error: this.closedError } : {}),
@@ -85,12 +86,12 @@ export class NetLobbyAdapter implements LobbyApi {
     this.lobby.updateSelf({ name });
   }
 
-  updateSlot(index: number, patch: { team?: TeamId; color?: string; ready?: boolean }): void {
+  updateSlot(index: number, patch: SlotPatchUi): void {
     const slot = this.lobby.snapshot.slots[index];
     if (!slot) return;
     if (slot.peer === this.lobby.selfId) this.lobby.updateSelf(patch);
     else if (slot.state === 'ai') this.lobby.setAiSlot(index, { team: patch.team, color: patch.color });
-    else if (slot.state === 'human') this.lobby.setPlayerSlot(index, { team: patch.team, color: patch.color });
+    else if (slot.state === 'human') this.lobby.setPlayerSlot(index, { team: patch.team, color: patch.color, role: patch.role });
   }
 
   moveToSlot(index: number): void {
@@ -107,6 +108,10 @@ export class NetLobbyAdapter implements LobbyApi {
 
   setVictory(victory: VictoryMode): void {
     this.lobby.setSettings({ victory });
+  }
+
+  setCoop(on: boolean): void {
+    this.lobby.setSettings({ coop: on });
   }
 
   setOccupancy(index: number, occ: SlotOccupancy): void {
@@ -145,6 +150,7 @@ function toUiSlot(s: NetSlot): LobbySlot {
     team: s.team,
     color: s.color,
     ready: s.state === 'ai' ? true : s.ready,
+    ...(s.role ? { role: s.role } : {}),
     ...(s.pingMs !== undefined ? { pingMs: s.pingMs } : {}),
   };
 }

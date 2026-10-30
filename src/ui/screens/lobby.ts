@@ -1,4 +1,4 @@
-import type { VictoryMode } from '../../shared/types';
+import { COMMAND_ROLES, type CommandRole, type VictoryMode } from '../../shared/types';
 import { button, h, setChildren } from '../dom';
 import { icon } from '../icons';
 import {
@@ -25,6 +25,8 @@ export const VICTORY_INFO: Record<VictoryMode, { label: string; detail: string }
   },
   annihilation: { label: 'Annihilation', detail: 'Destroy every enemy production building. No Morale race, no timer.' },
 };
+
+const ROLE_LABEL: Record<CommandRole, string> = { ground: 'Ground', air: 'Air', navy: 'Navy', logistics: 'Logistics' };
 
 const OCCUPANCY_OPTIONS: { value: string; label: string }[] = [
   { value: 'open', label: 'Open' },
@@ -201,7 +203,7 @@ export class LobbyScreen implements Screen {
     const keep = new Set<number>();
     s.slots.forEach((slot) => {
       keep.add(slot.index);
-      const key = JSON.stringify([slot, host, me?.index, s.hostId, s.status]);
+      const key = JSON.stringify([slot, host, me?.index, s.hostId, s.status, s.coop, takenSlots(s).map((x) => [x.index, x.team, x.occupant?.kind])]);
       const cached = this.rowCache.get(slot.index);
       if (cached && cached.key === key) return;
       const row = this.slotRow(s, slot, host, me);
@@ -291,6 +293,21 @@ export class LobbyScreen implements Screen {
     else status = h('span', { class: `status mono ${slot.ready ? 'ready' : 'waiting'}` }, slot.ready ? 'READY' : 'NOT READY');
 
     const tail = h('span', { class: 'slot-tail' });
+    if (s.coop && o?.kind === 'human') {
+      const mates = takenSlots(s).filter((x) => x.occupant?.kind === 'human' && x.team === slot.team);
+      const lead = mates[0]?.index === slot.index;
+      if ((isMe || host) && s.status === 'open') {
+        const sel = h(
+          'select',
+          { class: 'select select-sm role-select', title: 'Co-op role', onchange: () => lobby.updateSlot(slot.index, { role: sel.value as CommandRole | '' }) },
+          h('option', { value: '' }, 'Any role'),
+          COMMAND_ROLES.map((r) => h('option', { value: r }, ROLE_LABEL[r])),
+        );
+        sel.value = slot.role ?? '';
+        tail.append(sel);
+      } else if (slot.role) tail.append(h('span', { class: 'tag' }, ROLE_LABEL[slot.role]));
+      if (mates.length > 1) tail.append(h('span', { class: `tag ${lead ? 'tag-accent' : 'tag-info'}`, title: lead ? 'Leads the shared army' : 'Shares the army' }, lead ? 'Lead' : 'Co-op'));
+    }
     if (slot.pingMs !== undefined && o?.kind === 'human' && !isMe && mode === 'online') {
       const q = slot.pingMs < 80 ? 'good' : slot.pingMs < 160 ? 'ok' : 'bad';
       tail.append(h('span', { class: `ping mono ${q}` }, `${slot.pingMs} ms`));
@@ -347,7 +364,7 @@ export class LobbyScreen implements Screen {
   private renderMap(s: LobbyState): void {
     const host = isHost(s) && s.status === 'open';
     const players = takenSlots(s);
-    const key = JSON.stringify([s.mapId, s.victory, host, players.map((p) => [p.index, p.color])]);
+    const key = JSON.stringify([s.mapId, s.victory, s.coop, host, players.map((p) => [p.index, p.color])]);
     if (key === this.mapKey) return;
     this.mapKey = key;
     const map = this.opts.maps.find((m) => m.id === s.mapId) ?? this.opts.maps[0];
@@ -393,8 +410,23 @@ export class LobbyScreen implements Screen {
           map.description ? h('p', { class: 'dim small' }, map.description) : null,
           h('label', { class: 'field' }, h('span', { class: 'label' }, 'Victory'), vicSel),
           h('p', { class: 'dim small' }, VICTORY_INFO[s.victory].detail),
+          this.opts.mode === 'online' ? this.coopField(s, host) : null,
         ),
       ),
+    );
+  }
+
+  private coopField(s: LobbyState, host: boolean): HTMLElement {
+    const on = !!s.coop;
+    const control =
+      host && this.opts.lobby.setCoop
+        ? h('button', { class: `toggle${on ? ' on' : ''}`, type: 'button', role: 'switch', 'aria-checked': String(on), onclick: () => this.opts.lobby.setCoop?.(!on) }, h('span', { class: 'knob' }))
+        : h('span', { class: `tag ${on ? 'tag-accent' : ''}` }, on ? 'On' : 'Off');
+    return h(
+      'div',
+      { class: 'coop-field' },
+      h('div', null, h('span', { class: 'label' }, 'Shared command (co-op)'), h('span', { class: 'dim small' }, 'Players on the same team run one army: one base, one economy. Pick roles to split it up; a role nobody holds stays open to everyone.')),
+      control,
     );
   }
 
