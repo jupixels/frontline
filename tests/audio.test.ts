@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import unitsJson from '../data/units.json';
+import weaponsJson from '../data/weapons.json';
 import { ALL_SOUNDS, SOUNDS, UNITS, WEAPONS, filesOf, unitAudio, voiceLine, weaponAudio } from '../src/audio/bank';
 import { BATTLE_ENTER, BATTLE_EXIT, BATTLE_MIN_HOLD, Intensity, nextCombatState } from '../src/audio/music';
 import { getVolume, setVolume } from '../src/audio/settings';
@@ -27,12 +29,23 @@ describe('sound bank', () => {
     }
   });
 
+  it('maps every unit and weapon in data/', () => {
+    expect(Object.keys(unitsJson).filter((t) => !UNITS[t])).toEqual([]);
+    expect(Object.keys(weaponsJson).filter((w) => !WEAPONS[w])).toEqual([]);
+    for (const [t, u] of Object.entries(unitsJson) as [string, { weapons?: string[] }][]) {
+      if (u.weapons?.length) expect(u.weapons, t).toContain(UNITS[t].weapon);
+    }
+  });
+
   it('resolves unknown weapon ids by keyword, then by shooter', () => {
     expect(weaponAudio('120mm_tank_cannon').fire).toBe('cannon');
     expect(weaponAudio('m2_hmg').fire).toBe('mg');
     expect(weaponAudio('mk48_torpedo').impact).toBe('water_explosion');
     expect(weaponAudio('mystery', 'artillery').fire).toBe('howitzer');
     expect(weaponAudio('mystery').fire).toBe('rifle');
+    for (const w of ['x_torpedo', 'depth_x', 'snipe', 'bomb_x', 'mortar', 'rocket_x', 'missile_x', 'deck_x', 'flak_x', 'cannon_x', 'mg_x', 'carbine']) {
+      expect(weaponAudio(w), w).toBeDefined();
+    }
   });
 
   it('guesses unlisted unit types from their data', () => {

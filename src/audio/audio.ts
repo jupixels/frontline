@@ -1,4 +1,4 @@
-import type { EntityState, SimView } from '../shared/entities';
+import type { EntityState, FogView, SimView } from '../shared/entities';
 import type { SimEvent } from '../shared/events';
 import type { EntityId, PlayerId, TeamId, Vec2 } from '../shared/types';
 import {
@@ -15,7 +15,7 @@ import {
   type UnitAudioLookup,
 } from './bank';
 import { audioEngine, type Voice } from './engine';
-import { Intensity, MusicDirector, nextCombatState, type MusicState } from './music';
+import { BATTLE_ENTER, Intensity, MusicDirector, nextCombatState, type MusicState } from './music';
 import { spatialize, type Listener } from './spatial';
 
 export type { Bus, AudioSettings } from './settings';
@@ -131,6 +131,11 @@ function playSound(id: SoundId, listener?: Listener, at?: Vec2, x: PlayExtra = {
   return v;
 }
 
+/** The sim's fog of war, when the view offers one (Simulation implements SimViewExt). */
+function fogOf(view?: SimView): FogView | undefined {
+  return view && 'fog' in view ? (view as SimView & { fog: FogView }).fog : undefined;
+}
+
 function playFlat(id: SoundId, x?: PlayExtra): Voice | null {
   return playSound(id, undefined, undefined, x);
 }
@@ -207,13 +212,14 @@ export class AudioManager {
           const shooter = this.lookup(ev.id, view);
           const a = weaponAudio(ev.weapon, shooter?.type, this.units);
           const at = shooter ?? ev.at;
+          if (!this.audible(view, at, ev.id)) break;
           this.play(a.fire, at);
           this.intensity.add(0.3 * this.proximity(at));
           break;
         }
         case 'hit': {
           const target = this.lookup(ev.id, view);
-          if (!target || target.kind !== 'unit') break;
+          if (!target || target.kind !== 'unit' || !this.audible(view, ev.at, ev.id)) break;
           // Bullets pinging off armour; explosive rounds already sound through `impact`.
           const shooter = ev.by !== undefined ? this.lookup(ev.by, view) : undefined;
           const bullet = !shooter || !weaponAudio('', shooter.type, this.units).impact;
@@ -222,6 +228,7 @@ export class AudioManager {
           break;
         }
         case 'impact': {
+          if (!this.audible(view, ev.at)) break;
           const a = weaponAudio(ev.weapon);
           if (a.impact) this.play(a.impact, ev.at);
           this.intensity.add(0.8 * this.proximity(ev.at));
@@ -229,7 +236,10 @@ export class AudioManager {
         }
         case 'died': {
           const e = this.lookup(ev.id, view);
-          if (!e) break;
+          if (!e || !this.audible(view, e)) {
+            this.stopLoop(ev.id);
+            break;
+          }
           if (e.kind === 'unit') {
             const u = unitAudio(e.type, this.units);
             this.play(u.death, e);
@@ -278,7 +288,35 @@ export class AudioManager {
           this.endMatch(won);
           break;
         }
-        case 'spawned':
+        case 'incoming':
+          // Shells on the way to our side: tension builds before they land.
+          if (this.audible(view, ev.at)) this.intensity.add(1.5);
+          break;
+        case 'placed': {
+          const s = this.lookup(ev.id, view);
+          if (s?.owner === this.localPlayer) playFlat('ui_confirm', { gain: 0.7 });
+          break;
+        }
+        case 'neutralized':
+          if (ev.from === this.localPlayer) this.alert('captured', ['radio_morse']);
+          break;
+        case 'blocked':
+          if (ev.player === this.localPlayer) playFlat('ui_error');
+          break;
+        case 'suddenDeath':
+          this.intensity.add(BATTLE_ENTER);
+          playFlat('siren', { gain: 0.7 });
+          break;
+        case 'abilityUsed': {
+          const u = this.lookup(ev.id, view);
+          if (u?.owner === this.localPlayer) this.unitVoice([ev.id], 'action', view);
+          break;
+        }
+        case 'smoke':
+          if (this.audible(view, ev.at)) this.play('smoke_pop', ev.at);
+          break;
+        default:
+          // spawned, entrench, revealed, delivered: no sound.
           break;
       }
     }
@@ -309,6 +347,17 @@ export class AudioManager {
   /** 1 near the camera, falling to ~0.3 far away: combat you can see drives the music more. */
   private proximity(at: Vec2): number {
     return 0.3 + 0.7 * spatialize(this.listener, at.x, at.z, 300).gain;
+  }
+
+  /**
+   * Whether the local player may hear something at `at` (or entity `id`): with fog of war, only
+   * what they can see, so sound and music never give away hidden enemies.
+   */
+  private audible(view: SimView | undefined, at: Vec2, id?: EntityId): boolean {
+    const fog = fogOf(view);
+    if (!fog) return true;
+    if (id !== undefined && fog.canSee(this.localPlayer, id)) return true;
+    return fog.isVisible(this.localPlayer, at.x, at.z);
   }
 
   private lookup(id: EntityId, view?: SimView): Known | undefined {
@@ -378,8 +427,10 @@ export class AudioManager {
     const now = this.eng.now;
     // Score every vehicle with an engine by how loud it would be, keep the top MAX_LOOPS.
     const wanted: { e: EntityState; gain: number; pan: number; cutoff: number; rate: number; sound: SoundId }[] = [];
+    const fog = fogOf(view);
     for (const e of view.entities()) {
       if (e.kind !== 'unit') continue;
+      if (fog && !fog.canSee(this.localPlayer, e.id)) continue;
       const u = unitAudio(e.type, this.units);
       if (u.flyby) {
         this.flyby(e, now);
