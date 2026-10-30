@@ -1,50 +1,1491 @@
 {
   "$comment": "Source files are read from the asset zips (see tools/README.md). length = target longest horizontal extent in meters (or height = target height, or scale = explicit factor for skinned models). rotateY = extra yaw in degrees so the model faces +Z. clips = keep only these animation clips (omit to keep all).",
+  "sources": [
+    {
+      "file": "Grass004_1K-JPG.zip",
+      "url": "https://ambientcg.com/get?file=Grass004_1K-JPG.zip",
+      "license": "CC0",
+      "author": "ambientCG (Lennart Demes)",
+      "page": "https://ambientcg.com/view?id=Grass004",
+      "sha256": "4b63495f459db8481f4d5144e4e9069345c81cf898cc71f2216f5dd3bb344469"
+    },
+    {
+      "file": "Ground103_1K-JPG.zip",
+      "url": "https://ambientcg.com/get?file=Ground103_1K-JPG.zip",
+      "license": "CC0",
+      "author": "ambientCG (Lennart Demes)",
+      "page": "https://ambientcg.com/view?id=Ground103",
+      "sha256": "735471be048f8c41120c3777a22b1f417bf511897c06f6f473edf0a05254362d"
+    },
+    {
+      "file": "Rock030_1K-JPG.zip",
+      "url": "https://ambientcg.com/get?file=Rock030_1K-JPG.zip",
+      "license": "CC0",
+      "author": "ambientCG (Lennart Demes)",
+      "page": "https://ambientcg.com/view?id=Rock030",
+      "sha256": "2fd0bc2d214e2487c19062ed0798a85dd135b41cfc12bbaed42d5acae238f989"
+    },
+    {
+      "file": "Ground080_1K-JPG.zip",
+      "url": "https://ambientcg.com/get?file=Ground080_1K-JPG.zip",
+      "license": "CC0",
+      "author": "ambientCG (Lennart Demes)",
+      "page": "https://ambientcg.com/view?id=Ground080",
+      "sha256": "2a615944f0fe8ca943da459c362fff57f7065526f931d610b19026e49f0a7589"
+    },
+    {
+      "file": "Ground048_1K-JPG.zip",
+      "url": "https://ambientcg.com/get?file=Ground048_1K-JPG.zip",
+      "license": "CC0",
+      "author": "ambientCG (Lennart Demes)",
+      "page": "https://ambientcg.com/view?id=Ground048",
+      "sha256": "3decfdd20e6c8f8c1ff02840cbd336922fca678e23987111af4bebb0a7a89c96"
+    },
+    {
+      "file": "kloppenheim_06_puresky_1k.hdr",
+      "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/kloppenheim_06_puresky_1k.hdr",
+      "license": "CC0",
+      "author": "Greg Zaal, Jarod Guest (Poly Haven)",
+      "page": "https://polyhaven.com/a/kloppenheim_06_puresky",
+      "sha256": "206c67e3a1b992282821cf06662bdd69bbb4915c1c4444a66338a40d6a7d4e34"
+    },
+    {
+      "file": "kenney_nature-kit.zip",
+      "kenney": "nature-kit",
+      "license": "CC0",
+      "author": "Kenney",
+      "page": "https://kenney.nl/assets/nature-kit",
+      "sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d"
+    },
+    {
+      "file": "kenney_city-kit-industrial.zip",
+      "kenney": "city-kit-industrial",
+      "license": "CC0",
+      "author": "Kenney",
+      "page": "https://kenney.nl/assets/city-kit-industrial",
+      "sha256": "5b381164e5760f3830a2dbee43b972deee38b2a695d091b56e238ab2910c96d2"
+    }
+  ],
+  "credits": {
+    "zsky": {
+      "author": "Zsky (zsky2000.itch.io)",
+      "license": "CC-BY-4.0"
+    },
+    "kevin-iglesias": {
+      "author": "Kevin Iglesias (Human Soldier Animations FREE)",
+      "license": "royalty-free, no resale"
+    },
+    "freeciv-yd": {
+      "author": "yd (Freeciv units, OpenGameArt)",
+      "license": "CC0"
+    },
+    "cptdrunkbear": {
+      "author": "CptDrunkBear (OpenGameArt)",
+      "license": "CC0"
+    },
+    "nikke": {
+      "author": "Nikke / Nickotopia (nickotopia.com)",
+      "license": "CC-BY-SA-3.0"
+    },
+    "kenney_nature-kit.zip": {
+      "author": "Kenney (kenney.nl)",
+      "license": "CC0"
+    },
+    "kenney_city-kit-industrial.zip": {
+      "author": "Kenney (kenney.nl)",
+      "license": "CC0"
+    }
+  },
+  "palettes": {
+    "nature": {
+      "leafsGreen": "#556f34",
+      "leafsDark": "#3e5a2c",
+      "leafsFall": "#7d6a2e",
+      "woodBark": "#5c4632",
+      "woodBarkDark": "#4a3a2c",
+      "grass": "#5f7a3a",
+      "dirt": "#6e5e48",
+      "stone": "#7d7b74",
+      "stoneDark": "#5f5d57",
+      "rock": "#7a766c"
+    }
+  },
   "models": [
     {
       "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Tank_MBT.glb",
-      "out": "models/tank_mbt.glb",
-      "length": 9.5
+      "path": "Modern-RTS-Animations/soldiers/Rifleman.glb",
+      "out": "models/rifleman.glb",
+      "kind": "unit",
+      "credit": "kevin-iglesias",
+      "scale": 1,
+      "center": false,
+      "clips": [
+        "MilitaryIdle01",
+        "Idle01",
+        "AssaultRifle_Aim01",
+        "AssaultRifle_Aim01_Shoot01",
+        "AssaultRifle_Reload01",
+        "Run01_Forward",
+        "Walk01_Forward",
+        "Damage01",
+        "Death01",
+        "Death02"
+      ],
+      "meshMaterials": {
+        "HumanM_BodyMesh": {
+          "name": "Uniform",
+          "color": "#5b6347"
+        },
+        "Human_SoldierHelmet": {
+          "name": "Helmet",
+          "color": "#4a5238"
+        },
+        "Human_AssaultRifle": {
+          "name": "Weapon",
+          "color": "#2e2e2c",
+          "metallic": 0.4,
+          "roughness": 0.5
+        }
+      },
+      "materials": {
+        "team": "Uniform"
+      },
+      "animTolerance": 0.0005,
+      "animPrune": {
+        "dropBones": "jaw"
+      }
     },
     {
       "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/IFV_MechInfantry.glb",
-      "out": "models/ifv.glb",
-      "length": 7.5
+      "path": "Modern-RTS-Animations/soldiers/Sniper.glb",
+      "out": "models/sniper.glb",
+      "kind": "unit",
+      "credit": "kevin-iglesias",
+      "scale": 1,
+      "center": false,
+      "clips": [
+        "MilitaryIdle01",
+        "Idle01",
+        "Rifle_Aim01",
+        "Rifle_Aim01_Shoot01",
+        "Rifle_Reload01",
+        "Run01_Forward",
+        "Walk01_Forward",
+        "Damage01",
+        "Death01",
+        "Death02"
+      ],
+      "meshMaterials": {
+        "HumanM_BodyMesh": {
+          "name": "Uniform",
+          "color": "#5b6347"
+        },
+        "Human_SoldierHelmet": {
+          "name": "Helmet",
+          "color": "#4a5238"
+        },
+        "Human_Rifle": {
+          "name": "Weapon",
+          "color": "#2e2e2c",
+          "metallic": 0.4,
+          "roughness": 0.5
+        }
+      },
+      "materials": {
+        "team": "Uniform"
+      },
+      "animTolerance": 0.0005,
+      "animPrune": {
+        "dropBones": "jaw"
+      }
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/soldiers/AntiTank_Bazooka.glb",
+      "out": "models/at_soldier.glb",
+      "kind": "unit",
+      "credit": "kevin-iglesias",
+      "scale": 1,
+      "center": false,
+      "clips": [
+        "MilitaryIdle01",
+        "Idle01",
+        "Bazooka_Aim01",
+        "Bazooka_Aim01_Shoot01",
+        "Bazooka_Reload01",
+        "Run01_Forward",
+        "Walk01_Forward",
+        "Damage01",
+        "Death01",
+        "Death02"
+      ],
+      "meshMaterials": {
+        "HumanM_BodyMesh": {
+          "name": "Uniform",
+          "color": "#5b6347"
+        },
+        "Human_SoldierHelmet": {
+          "name": "Helmet",
+          "color": "#4a5238"
+        },
+        "Human_Bazooka": {
+          "name": "Weapon",
+          "color": "#2e2e2c",
+          "metallic": 0.4,
+          "roughness": 0.5
+        }
+      },
+      "materials": {
+        "team": "Uniform"
+      },
+      "animTolerance": 0.0005,
+      "animPrune": {
+        "dropBones": "jaw"
+      }
     },
     {
       "zip": "Modern-RTS-Animations.zip",
       "path": "Modern-RTS-Animations/vehicles/ground/Jeep_zsky_CC-BY.glb",
       "out": "models/jeep.glb",
+      "kind": "unit",
+      "credit": "zsky",
       "length": 4.6
     },
     {
       "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/soldiers/Rifleman.glb",
-      "out": "models/rifleman.glb",
-      "scale": 1,
-      "clips": ["MilitaryIdle01", "Idle01", "Run01_Forward", "Walk01_Forward", "AssaultRifle_Aim01", "AssaultRifle_Aim01_Shoot01", "AssaultRifle_Reload01", "Damage01", "Death01", "Death02"]
+      "path": "Modern-RTS-Animations/vehicles/ground/ScoutCar_zsky_CC-BY.glb",
+      "out": "models/scout_car.glb",
+      "kind": "unit",
+      "credit": "zsky",
+      "length": 5.6
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/IFV_MechInfantry.glb",
+      "out": "models/ifv.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 7.5
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/Tank_Light_zsky_CC-BY.glb",
+      "out": "models/tank_light.glb",
+      "kind": "unit",
+      "credit": "zsky",
+      "length": 6.8
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/Tank_MBT.glb",
+      "out": "models/tank_mbt.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 9.5
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/AntiAirTank1_abstract.glb",
+      "out": "models/aa_tank.glb",
+      "kind": "unit",
+      "credit": "nikke",
+      "colors": {
+        "*": "#6d7456"
+      },
+      "height": 4.0,
+      "rotateY": 180
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/Rocket_Artillery_Truck_toon.glb",
+      "out": "models/rocket_truck.glb",
+      "kind": "unit",
+      "credit": "cptdrunkbear",
+      "length": 10,
+      "colors": {
+        "*": "#9aa07e"
+      },
+      "rotateY": 90
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/ground/Artillery_Gun_toon.glb",
+      "out": "models/artillery.glb",
+      "kind": "unit",
+      "credit": "cptdrunkbear",
+      "length": 9,
+      "colors": {
+        "*": "#9aa07e"
+      },
+      "rotateY": 90
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/air/Helicopter_Gunship_zsky_CC-BY.glb",
+      "out": "models/heli_attack.glb",
+      "kind": "unit",
+      "credit": "zsky",
+      "length": 17
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/air/Helicopter_Transport.glb",
+      "out": "models/heli_transport.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 19
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/air/Jet_StealthFighter.glb",
+      "out": "models/jet_fighter.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 18
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/air/Jet_StealthBomber.glb",
+      "out": "models/bomber.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 52
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/air/Missile_Cruise.glb",
+      "out": "models/cruise_missile.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 6
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/naval/Patrol_Boat_zsky_CC-BY.glb",
+      "out": "models/patrol_boat.glb",
+      "kind": "unit",
+      "credit": "zsky",
+      "length": 20,
+      "draft": 1.2
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/naval/Destroyer.glb",
+      "out": "models/destroyer.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 155,
+      "draft": 8
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/naval/Cruiser_AEGIS.glb",
+      "out": "models/cruiser.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 173,
+      "draft": 9
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/naval/Submarine.glb",
+      "out": "models/submarine.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 110,
+      "draft": 13
+    },
+    {
+      "zip": "Modern-RTS-Animations.zip",
+      "path": "Modern-RTS-Animations/vehicles/naval/Transport_Ship.glb",
+      "out": "models/transport_ship.glb",
+      "kind": "unit",
+      "credit": "freeciv-yd",
+      "length": 140,
+      "draft": 9
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Quarter.obj",
+      "out": "models/buildings/hq.glb",
+      "kind": "building",
+      "credit": "zsky",
+      "scale": 1
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Refectory.obj",
+      "out": "models/buildings/barracks.glb",
+      "kind": "building",
+      "credit": "zsky",
+      "scale": 1
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/HelicopterBase.obj",
+      "out": "models/buildings/helipad.glb",
+      "kind": "building",
+      "credit": "zsky",
+      "scale": 1
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/RadioStation.obj",
+      "out": "models/buildings/radar.glb",
+      "kind": "building",
+      "credit": "zsky",
+      "scale": 1
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Storage.obj",
+      "out": "models/buildings/supply_depot.glb",
+      "kind": "building",
+      "credit": "zsky",
+      "scale": 1
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/MedicTent.obj",
+      "out": "models/buildings/hospital.glb",
+      "kind": "building",
+      "credit": "zsky",
+      "length": 10
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/SniperTower.obj",
+      "out": "models/buildings/watchtower.glb",
+      "kind": "building",
+      "credit": "zsky",
+      "scale": 1
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Wall_01.obj",
+      "out": "models/buildings/props/wall.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "height": 3
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Wall_02.obj",
+      "out": "models/buildings/props/wall_02.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "height": 3.4
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/SandsSack.obj",
+      "out": "models/buildings/props/sandbags.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "scale": 1
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_01.obj",
+      "out": "models/buildings/props/container_01.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "length": 12.2
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_02.obj",
+      "out": "models/buildings/props/container_02.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "length": 12.2
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_03.obj",
+      "out": "models/buildings/props/container_03.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "length": 12.2
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Barrel.obj",
+      "out": "models/buildings/props/barrel.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "height": 0.9
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Explosive_Barrel.obj",
+      "out": "models/buildings/props/explosive_barrel.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "height": 0.9
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/ConcreteBlock.obj",
+      "out": "models/buildings/props/concrete_block.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "height": 0.9
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/WoodenBox.obj",
+      "out": "models/buildings/props/wooden_box.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "height": 1.0
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/GasTank.obj",
+      "out": "models/buildings/props/gas_tank.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "length": 7
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/LightPole.obj",
+      "out": "models/buildings/props/light_pole.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "height": 8
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/BarrierParking.obj",
+      "out": "models/buildings/props/barrier.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "length": 5
+    },
+    {
+      "zip": "Modern-RTS-Models.zip",
+      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/GateKeeperStation.obj",
+      "out": "models/buildings/props/gatehouse.glb",
+      "kind": "prop",
+      "credit": "zsky",
+      "height": 3.5
+    },
+    {
+      "out": "models/buildings/war_factory.glb",
+      "kind": "building",
+      "kitbash": [
+        {
+          "box": [
+            28,
+            0.3,
+            22
+          ],
+          "color": "#85847b",
+          "name": "slab",
+          "center": false
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/building-k.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "length": 20,
+          "at": [
+            0,
+            0.3,
+            -2
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/chimney-medium.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "height": 14,
+          "at": [
+            10,
+            0.3,
+            -8
+          ]
+        },
+        {
+          "zip": "Modern-RTS-Models.zip",
+          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_01.obj",
+          "credit": "zsky",
+          "rotateY": 90,
+          "at": [
+            -11.6,
+            0.3,
+            4
+          ],
+          "length": 12.2
+        },
+        {
+          "zip": "Modern-RTS-Models.zip",
+          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_02.obj",
+          "credit": "zsky",
+          "rotateY": 90,
+          "at": [
+            -7.2,
+            0.3,
+            4
+          ],
+          "length": 12.2
+        },
+        {
+          "zip": "Modern-RTS-Models.zip",
+          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/BarrierParking.obj",
+          "credit": "zsky",
+          "at": [
+            6,
+            0.3,
+            10
+          ],
+          "length": 5
+        }
+      ]
+    },
+    {
+      "out": "models/buildings/airfield.glb",
+      "kind": "building",
+      "kitbash": [
+        {
+          "box": [
+            44,
+            0.2,
+            30
+          ],
+          "color": "#55575a",
+          "name": "slab",
+          "center": false
+        },
+        {
+          "box": [
+            1,
+            0.04,
+            7
+          ],
+          "color": "#d6d3c4",
+          "name": "marking",
+          "center": false,
+          "at": [
+            8,
+            0.2,
+            -9
+          ]
+        },
+        {
+          "box": [
+            1,
+            0.04,
+            7
+          ],
+          "color": "#d6d3c4",
+          "name": "marking",
+          "center": false,
+          "at": [
+            8,
+            0.2,
+            0
+          ]
+        },
+        {
+          "box": [
+            1,
+            0.04,
+            7
+          ],
+          "color": "#d6d3c4",
+          "name": "marking",
+          "center": false,
+          "at": [
+            8,
+            0.2,
+            9
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/building-j.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "length": 18,
+          "at": [
+            -11,
+            0.2,
+            -3
+          ]
+        },
+        {
+          "cylinder": [
+            1.4,
+            1.2,
+            10
+          ],
+          "color": "#8d8b80",
+          "name": "tower",
+          "center": false,
+          "at": [
+            18,
+            0.2,
+            -11
+          ]
+        },
+        {
+          "box": [
+            5,
+            3,
+            5
+          ],
+          "color": "#3a4a52",
+          "name": "tower_cab",
+          "center": false,
+          "at": [
+            18,
+            10.2,
+            -11
+          ]
+        },
+        {
+          "zip": "Modern-RTS-Models.zip",
+          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/GasTank.obj",
+          "credit": "zsky",
+          "at": [
+            -18,
+            0.2,
+            11
+          ],
+          "length": 7
+        }
+      ]
+    },
+    {
+      "out": "models/buildings/power_plant.glb",
+      "kind": "building",
+      "kitbash": [
+        {
+          "box": [
+            24,
+            0.3,
+            24
+          ],
+          "color": "#85847b",
+          "name": "slab",
+          "center": false
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/chimney-large.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "height": 16,
+          "at": [
+            -5,
+            0.3,
+            -5
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/chimney-large.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "height": 13,
+          "at": [
+            6,
+            0.3,
+            -6
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/building-c.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "length": 12,
+          "at": [
+            3,
+            0.3,
+            6
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/detail-tank-large.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "length": 6,
+          "at": [
+            -7,
+            0.3,
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "out": "models/buildings/naval_yard.glb",
+      "kind": "building",
+      "kitbash": [
+        {
+          "box": [
+            36,
+            1.2,
+            16
+          ],
+          "color": "#85847b",
+          "name": "slab",
+          "center": false,
+          "at": [
+            0,
+            0,
+            -6
+          ]
+        },
+        {
+          "box": [
+            6,
+            1.2,
+            16
+          ],
+          "color": "#85847b",
+          "name": "slab",
+          "center": false,
+          "at": [
+            -12,
+            0,
+            10
+          ]
+        },
+        {
+          "box": [
+            6,
+            1.2,
+            16
+          ],
+          "color": "#85847b",
+          "name": "slab",
+          "center": false,
+          "at": [
+            12,
+            0,
+            10
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/building-s.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "length": 18,
+          "at": [
+            -4,
+            1.2,
+            -8
+          ]
+        },
+        {
+          "box": [
+            0.8,
+            14,
+            0.8
+          ],
+          "color": "#c9a227",
+          "name": "crane",
+          "center": false,
+          "at": [
+            -12,
+            1.2,
+            4
+          ]
+        },
+        {
+          "box": [
+            0.8,
+            14,
+            0.8
+          ],
+          "color": "#c9a227",
+          "name": "crane",
+          "center": false,
+          "at": [
+            -12,
+            1.2,
+            14
+          ]
+        },
+        {
+          "box": [
+            0.8,
+            14,
+            0.8
+          ],
+          "color": "#c9a227",
+          "name": "crane",
+          "center": false,
+          "at": [
+            12,
+            1.2,
+            4
+          ]
+        },
+        {
+          "box": [
+            0.8,
+            14,
+            0.8
+          ],
+          "color": "#c9a227",
+          "name": "crane",
+          "center": false,
+          "at": [
+            12,
+            1.2,
+            14
+          ]
+        },
+        {
+          "box": [
+            25,
+            1.2,
+            1.2
+          ],
+          "color": "#c9a227",
+          "name": "crane",
+          "center": false,
+          "at": [
+            0,
+            15.2,
+            4
+          ]
+        },
+        {
+          "box": [
+            25,
+            1.2,
+            1.2
+          ],
+          "color": "#c9a227",
+          "name": "crane",
+          "center": false,
+          "at": [
+            0,
+            15.2,
+            14
+          ]
+        },
+        {
+          "box": [
+            3,
+            2,
+            11
+          ],
+          "color": "#4b4b48",
+          "name": "crane_trolley",
+          "center": false,
+          "at": [
+            3,
+            13.2,
+            9
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/shipping-container-a.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "length": 6,
+          "at": [
+            10,
+            1.2,
+            -9
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/shipping-container-b.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "length": 6,
+          "at": [
+            10,
+            3.8,
+            -9
+          ]
+        },
+        {
+          "zip": "kenney_city-kit-industrial.zip",
+          "path": "Models/GLB format/shipping-container-c.glb",
+          "textureAdjust": {
+            "saturation": 0.25,
+            "brightness": 0.78
+          },
+          "length": 6,
+          "at": [
+            14,
+            1.2,
+            -4
+          ],
+          "rotateY": 90
+        }
+      ]
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/tree_oak.glb",
+      "out": "models/env/tree_oak.glb",
+      "kind": "env",
+      "height": 9,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/tree_default.glb",
+      "out": "models/env/tree_default.glb",
+      "kind": "env",
+      "height": 8,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/tree_detailed.glb",
+      "out": "models/env/tree_detailed.glb",
+      "kind": "env",
+      "height": 10,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/tree_fat.glb",
+      "out": "models/env/tree_fat.glb",
+      "kind": "env",
+      "height": 8,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/tree_pineTallA_detailed.glb",
+      "out": "models/env/tree_pine_tall.glb",
+      "kind": "env",
+      "height": 14,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/tree_pineRoundA.glb",
+      "out": "models/env/tree_pine_round.glb",
+      "kind": "env",
+      "height": 10,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/tree_pineSmallA.glb",
+      "out": "models/env/tree_pine_small.glb",
+      "kind": "env",
+      "height": 6,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/stump_oldTall.glb",
+      "out": "models/env/tree_stump.glb",
+      "kind": "env",
+      "height": 1.2,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/plant_bushLarge.glb",
+      "out": "models/env/bush_large.glb",
+      "kind": "env",
+      "height": 1.6,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/plant_bush.glb",
+      "out": "models/env/bush_small.glb",
+      "kind": "env",
+      "height": 1,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/plant_bushDetailed.glb",
+      "out": "models/env/bush_detailed.glb",
+      "kind": "env",
+      "height": 1.4,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/rock_largeA.glb",
+      "out": "models/env/rock_large_a.glb",
+      "kind": "env",
+      "height": 2.5,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/rock_largeB.glb",
+      "out": "models/env/rock_large_b.glb",
+      "kind": "env",
+      "height": 2.5,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/rock_tallA.glb",
+      "out": "models/env/rock_tall_a.glb",
+      "kind": "env",
+      "height": 5,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/rock_smallA.glb",
+      "out": "models/env/rock_small_a.glb",
+      "kind": "env",
+      "height": 1,
+      "palette": "nature"
+    },
+    {
+      "zip": "kenney_nature-kit.zip",
+      "path": "Models/GLTF format/stone_largeA.glb",
+      "out": "models/env/rock_stone_large.glb",
+      "kind": "env",
+      "height": 3,
+      "palette": "nature"
+    }
+  ],
+  "textures": [
+    {
+      "zip": "Grass004_1K-JPG.zip",
+      "out": "textures/terrain/grass",
+      "maps": {
+        "albedo": "_Color.jpg",
+        "normal": "_NormalGL.jpg",
+        "rough": "_Roughness.jpg"
+      }
+    },
+    {
+      "zip": "Ground103_1K-JPG.zip",
+      "out": "textures/terrain/dirt",
+      "maps": {
+        "albedo": "_Color.jpg",
+        "normal": "_NormalGL.jpg",
+        "rough": "_Roughness.jpg"
+      }
+    },
+    {
+      "zip": "Rock030_1K-JPG.zip",
+      "out": "textures/terrain/rock",
+      "maps": {
+        "albedo": "_Color.jpg",
+        "normal": "_NormalGL.jpg",
+        "rough": "_Roughness.jpg"
+      }
+    },
+    {
+      "zip": "Ground080_1K-JPG.zip",
+      "out": "textures/terrain/sand",
+      "maps": {
+        "albedo": "_Color.jpg",
+        "normal": "_NormalGL.jpg",
+        "rough": "_Roughness.jpg"
+      }
+    },
+    {
+      "zip": "Ground048_1K-JPG.zip",
+      "out": "textures/terrain/mud",
+      "maps": {
+        "albedo": "_Color.jpg",
+        "normal": "_NormalGL.jpg",
+        "rough": "_Roughness.jpg"
+      }
+    }
+  ],
+  "files": [
+    {
+      "file": "kloppenheim_06_puresky_1k.hdr",
+      "out": "textures/sky/sky.hdr"
     }
   ],
   "sounds": [
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/ui/", "out": "sounds/ui/" },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/engines/", "out": "sounds/engines/" },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/music/", "out": "sounds/music/" },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/02_weapons/", "out": "sounds/weapons/", "files": ["m4_ar15_single_near.mp3", "m4_ar15_single_far.mp3", "ak47_single_near.mp3", "ak47_single_far.mp3", "ak47_burst_short_near.mp3", "ak47_burst_short_far.mp3", "smg_burst_short_near.mp3", "smg_burst_long_far.mp3", "sniper_rifle_near.mp3", "sniper_rifle_far.mp3", "sniper_rifle2_near.mp3"], "encode": {"bitrate": "56k", "split": 3, "maxSeconds": 2.5} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/ww2/", "out": "sounds/ww2/", "files": ["rifle_shot_01.mp3", "rifle_shot_02.mp3", "rifle_shot_03.mp3", "rifle_shot_04.mp3", "mg_burst_01.mp3", "mg_burst_02.mp3", "artillery_01.mp3", "artillery_02.mp3", "artillery_03.mp3", "artillery_04.mp3", "artillery_05.mp3", "artillery_06.mp3", "howitzer_01.mp3", "howitzer_02.mp3", "battle_distant_01.mp3", "battle_distant_02.mp3", "battle_distant_03.mp3", "battle_distant_04.mp3", "radio_morse_02.mp3"], "encode": {"bitrate": "64k"} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/explosions/", "out": "sounds/explosions/" },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/impacts/", "out": "sounds/impacts/" },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/03_explosions/", "out": "sounds/explosions/", "files": ["explosion_chunky.mp3", "explosion_distant.mp3", "explosion_muffled_distant.mp3"], "encode": {"bitrate": "64k", "maxSeconds": 4} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/03_explosions/bangs_cannon_25/", "out": "sounds/bangs/", "files": ["cannon_01.mp3", "cannon_02.mp3", "cannon_03.mp3", "cannon_04.mp3", "cannon_05.mp3", "bang_01.mp3", "bang_02.mp3", "bang_03.mp3", "bang_04.mp3", "bang_05.mp3", "bang_06.mp3", "bang_07.mp3", "bang_08.mp3", "bang_09.mp3", "bang_10.mp3", "shot_01.mp3", "shot_02.mp3", "shot_03.mp3"], "encode": {"bitrate": "64k"} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/04_vehicles/", "out": "sounds/vehicles/", "files": ["helicopter_loop.mp3"], "encode": {"bitrate": "48k"} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/04_vehicles/", "out": "sounds/vehicles/", "files": ["jet_takeoff_flyby_CC-BY.mp3", "missile_launch.mp3", "rocket_launch.mp3"], "encode": {"bitrate": "64k", "maxSeconds": 4} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/05_naval/", "out": "sounds/naval/", "files": ["naval_GunShot.mp3", "naval_GunShotGverb.mp3", "cannon_fire_1.mp3", "cannon_hit_ship_short.mp3", "cannon_miss_1.mp3", "naval_ExplosionMetal.mp3", "naval_Splash.mp3", "naval_WaterSurfaceExplosion01.mp3", "naval_WaterSurfaceExplosion02.mp3", "naval_WaterSurfaceExplosion03.mp3", "naval_WaterSurfaceExplosion04.mp3"], "encode": {"bitrate": "64k", "maxSeconds": 3.5} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/05_naval/", "out": "sounds/naval/", "files": ["ship_destroyed_short.mp3"], "encode": {"bitrate": "64k", "maxSeconds": 7} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/05_naval/", "out": "sounds/naval/", "files": ["naval_BattleShipMovementAmbient.mp3"], "encode": {"bitrate": "48k"} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/05_naval/war_on_water/", "out": "sounds/naval/", "files": ["torpedo1.mp3", "shipexplode.mp3", "boatexplode.mp3", "aiplaneexplode.mp3", "gun3Machinegun.mp3", "gun2Heavy.mp3", "scream1.mp3", "scream2.mp3", "scream3.mp3"], "encode": {"bitrate": "64k"} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/06_rts_unit_voices/", "out": "sounds/voices/", "files": ["artil/artil.action.mp3", "artil/artil.die.mp3", "artil/artil.ready.mp3", "artil/artil.select.mp3", "destroyer/destroyer.action.mp3", "destroyer/destroyer.die.mp3", "destroyer/destroyer.ready.mp3", "destroyer/destroyer.select.mp3", "destroyer/destroyer.underattack.mp3", "aircraftfactory/aircraftfactory.select.mp3", "shipyard/shipyard.select.mp3"], "encode": {"bitrate": "64k"} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/07_alerts_radio/", "out": "sounds/alerts/", "files": ["radio_static_6s.mp3"], "encode": {"bitrate": "48k"} },
-    { "zip": "Modern-RTS-Sounds.zip", "prefix": "Modern-RTS-Assets/sounds/07_alerts_radio/", "out": "sounds/alerts/", "files": ["siren_alarm.mp3"], "encode": {"bitrate": "64k", "maxSeconds": 4} }
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/ui/",
+      "out": "sounds/ui/"
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/engines/",
+      "out": "sounds/engines/"
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/music/",
+      "out": "sounds/music/"
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/02_weapons/",
+      "out": "sounds/weapons/",
+      "files": [
+        "m4_ar15_single_near.mp3",
+        "m4_ar15_single_far.mp3",
+        "ak47_single_near.mp3",
+        "ak47_single_far.mp3",
+        "ak47_burst_short_near.mp3",
+        "ak47_burst_short_far.mp3",
+        "smg_burst_short_near.mp3",
+        "smg_burst_long_far.mp3",
+        "sniper_rifle_near.mp3",
+        "sniper_rifle_far.mp3",
+        "sniper_rifle2_near.mp3"
+      ],
+      "encode": {
+        "bitrate": "56k",
+        "split": 3,
+        "maxSeconds": 2.5
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/ww2/",
+      "out": "sounds/ww2/",
+      "files": [
+        "rifle_shot_01.mp3",
+        "rifle_shot_02.mp3",
+        "rifle_shot_03.mp3",
+        "rifle_shot_04.mp3",
+        "mg_burst_01.mp3",
+        "mg_burst_02.mp3",
+        "artillery_01.mp3",
+        "artillery_02.mp3",
+        "artillery_03.mp3",
+        "artillery_04.mp3",
+        "artillery_05.mp3",
+        "artillery_06.mp3",
+        "howitzer_01.mp3",
+        "howitzer_02.mp3",
+        "battle_distant_01.mp3",
+        "battle_distant_02.mp3",
+        "battle_distant_03.mp3",
+        "battle_distant_04.mp3",
+        "radio_morse_02.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k"
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/explosions/",
+      "out": "sounds/explosions/"
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/01_from-your-game-sounds-repo/impacts/",
+      "out": "sounds/impacts/"
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/03_explosions/",
+      "out": "sounds/explosions/",
+      "files": [
+        "explosion_chunky.mp3",
+        "explosion_distant.mp3",
+        "explosion_muffled_distant.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k",
+        "maxSeconds": 4
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/03_explosions/bangs_cannon_25/",
+      "out": "sounds/bangs/",
+      "files": [
+        "cannon_01.mp3",
+        "cannon_02.mp3",
+        "cannon_03.mp3",
+        "cannon_04.mp3",
+        "cannon_05.mp3",
+        "bang_01.mp3",
+        "bang_02.mp3",
+        "bang_03.mp3",
+        "bang_04.mp3",
+        "bang_05.mp3",
+        "bang_06.mp3",
+        "bang_07.mp3",
+        "bang_08.mp3",
+        "bang_09.mp3",
+        "bang_10.mp3",
+        "shot_01.mp3",
+        "shot_02.mp3",
+        "shot_03.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k"
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/04_vehicles/",
+      "out": "sounds/vehicles/",
+      "files": [
+        "helicopter_loop.mp3"
+      ],
+      "encode": {
+        "bitrate": "48k"
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/04_vehicles/",
+      "out": "sounds/vehicles/",
+      "files": [
+        "jet_takeoff_flyby_CC-BY.mp3",
+        "missile_launch.mp3",
+        "rocket_launch.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k",
+        "maxSeconds": 4
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/05_naval/",
+      "out": "sounds/naval/",
+      "files": [
+        "naval_GunShot.mp3",
+        "naval_GunShotGverb.mp3",
+        "cannon_fire_1.mp3",
+        "cannon_hit_ship_short.mp3",
+        "cannon_miss_1.mp3",
+        "naval_ExplosionMetal.mp3",
+        "naval_Splash.mp3",
+        "naval_WaterSurfaceExplosion01.mp3",
+        "naval_WaterSurfaceExplosion02.mp3",
+        "naval_WaterSurfaceExplosion03.mp3",
+        "naval_WaterSurfaceExplosion04.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k",
+        "maxSeconds": 3.5
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/05_naval/",
+      "out": "sounds/naval/",
+      "files": [
+        "ship_destroyed_short.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k",
+        "maxSeconds": 7
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/05_naval/",
+      "out": "sounds/naval/",
+      "files": [
+        "naval_BattleShipMovementAmbient.mp3"
+      ],
+      "encode": {
+        "bitrate": "48k"
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/05_naval/war_on_water/",
+      "out": "sounds/naval/",
+      "files": [
+        "torpedo1.mp3",
+        "shipexplode.mp3",
+        "boatexplode.mp3",
+        "aiplaneexplode.mp3",
+        "gun3Machinegun.mp3",
+        "gun2Heavy.mp3",
+        "scream1.mp3",
+        "scream2.mp3",
+        "scream3.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k"
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/06_rts_unit_voices/",
+      "out": "sounds/voices/",
+      "files": [
+        "artil/artil.action.mp3",
+        "artil/artil.die.mp3",
+        "artil/artil.ready.mp3",
+        "artil/artil.select.mp3",
+        "destroyer/destroyer.action.mp3",
+        "destroyer/destroyer.die.mp3",
+        "destroyer/destroyer.ready.mp3",
+        "destroyer/destroyer.select.mp3",
+        "destroyer/destroyer.underattack.mp3",
+        "aircraftfactory/aircraftfactory.select.mp3",
+        "shipyard/shipyard.select.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k"
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/07_alerts_radio/",
+      "out": "sounds/alerts/",
+      "files": [
+        "radio_static_6s.mp3"
+      ],
+      "encode": {
+        "bitrate": "48k"
+      }
+    },
+    {
+      "zip": "Modern-RTS-Sounds.zip",
+      "prefix": "Modern-RTS-Assets/sounds/07_alerts_radio/",
+      "out": "sounds/alerts/",
+      "files": [
+        "siren_alarm.mp3"
+      ],
+      "encode": {
+        "bitrate": "64k",
+        "maxSeconds": 4
+      }
+    }
   ]
 }

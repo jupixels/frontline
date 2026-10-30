@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontline — UI harness</title>
+    <link rel="stylesheet" href="/src/ui/style.css" />
+  </head>
+  <body>
+    <!-- Dev-only page (not part of the build): the full menu → lobby → match → results flow,
+         wired the way src/main.ts is expected to wire UiApp. Open /src/ui/dev/ in `npm run dev`. -->
+    <canvas id="game"></canvas>
+    <div id="ui"></div>
+    <script type="module" src="./harness.ts"></script>
+  </body>
+</html>

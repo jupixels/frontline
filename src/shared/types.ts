@@ -38,6 +38,8 @@ export interface PlayerSlot {
   color: string;
   kind: 'human' | 'ai';
   aiDifficulty?: 'easy' | 'normal' | 'hard';
+  /** Shared-command co-op: other players whose units, buildings and economy this player may also command. */
+  commandsFor?: PlayerId[];
 }
 
 export type VictoryMode = 'frontline' | 'annihilation';
