@@ -139,11 +139,19 @@ export function victorySystem(world: World): void {
       p.morale = team.morale;
       continue;
     }
+    // Co-commanders own nothing: they stand and fall with the army they share (checked below).
+    if (world.armyOf.has(p.id)) continue;
     let lost = !hasAnything.has(p.id);
     if (frontline) lost ||= team.morale <= 0 || (p.hadHq && !hasHq.has(p.id));
     else lost ||= !hasProduction.has(p.id);
     if (lost) defeat(world, p.id);
     p.morale = Math.max(0, team.morale);
+  }
+  for (const [co, army] of world.armyOf) {
+    const p = world.players.get(co)!;
+    if (p.defeated) continue;
+    if (world.players.get(army)?.defeated) defeat(world, co);
+    p.morale = Math.max(0, world.teams.get(p.team)!.morale);
   }
 
   const alive = new Set<TeamId>();

@@ -269,6 +269,8 @@ export class Simulation implements SimView, SimViewExt {
     const { map } = w.content;
     const spawns = assignSpawns(map, w.setup.players);
     for (const slot of w.setup.players) {
+      // Co-commanders share a teammate's army and start with nothing of their own.
+      if (w.armyOf.has(slot.id)) continue;
       const spawn = map.spawns[spawns.get(slot.id) ?? slot.id % map.spawns.length];
 
       // Face the map center, snapped to 90 degrees so the footprint stays axis-aligned.

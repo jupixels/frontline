@@ -12,6 +12,9 @@
     "assets": "node tools/build-assets.mjs"
   },
   "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@trystero-p2p/core": "^0.26.0",
     "@trystero-p2p/mqtt": "^0.26.0",
     "@trystero-p2p/nostr": "^0.26.0",

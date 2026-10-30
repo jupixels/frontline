@@ -1,8 +1,8 @@
 import type { ArmorClass, Domain, MapDef, UnitDef } from '../shared/data';
 import type { EntityKind, EntityState, PlayerState } from '../shared/entities';
 import type { SimEvent } from '../shared/events';
-import type { EntityId, Heading, MatchSetup, PlayerId, TeamId, Tick, Vec2 } from '../shared/types';
-import { NEUTRAL, SIM_HZ } from '../shared/types';
+import type { CommandRole, EntityId, Heading, MatchSetup, PlayerId, TeamId, Tick, Vec2 } from '../shared/types';
+import { COMMAND_ROLES, NEUTRAL, SIM_HZ } from '../shared/types';
 import { resolveContent, type AbilityDef, type ResolvedContent, type SimContent, type SimUnitDef, type StructureDef, type TargetLayer, type WeaponDef } from './content';
 import type { ProposedEvent, SimPlayerSlot } from './contracts';
 import { Prng } from './math/prng';
@@ -284,6 +284,12 @@ export class World {
   steps = 0;
   /** player -> owners whose stuff they may command (besides their own). See canCommand. */
   readonly commandsFor = new Map<PlayerId, Set<PlayerId>>();
+  /** Co-commander -> the army owner whose units, base and economy they share (co-op). */
+  readonly armyOf = new Map<PlayerId, PlayerId>();
+  /** Co-op role per player. */
+  readonly roles = new Map<PlayerId, CommandRole>();
+  /** Army owner -> roles someone on that army holds; unheld roles are open to every member. */
+  readonly heldRoles = new Map<PlayerId, Set<CommandRole>>();
   events: SimEvent[] = [];
   /** Events not yet in the shared SimEvent union (see contracts.ts). */
   proposed: ProposedEvent[] = [];
@@ -330,6 +336,23 @@ export class World {
     for (const slot of setup.players as SimPlayerSlot[]) {
       const others = (slot.commandsFor ?? []).filter((o) => o !== slot.id && setup.players.some((p) => p.id === o));
       if (others.length) this.commandsFor.set(slot.id, new Set(others));
+    }
+    // Shared-command co-op: a co-commander joins a teammate's army (who must lead one of their own).
+    for (const slot of setup.players) {
+      const army = setup.players.find((p) => p.id === slot.army);
+      if (!army || army.id === slot.id || army.team !== slot.team || army.army !== undefined) continue;
+      this.armyOf.set(slot.id, army.id);
+      const set = this.commandsFor.get(slot.id) ?? new Set<PlayerId>();
+      set.add(army.id);
+      this.commandsFor.set(slot.id, set);
+    }
+    for (const slot of setup.players) {
+      if (!slot.role || !COMMAND_ROLES.includes(slot.role)) continue;
+      this.roles.set(slot.id, slot.role);
+      const owner = this.armyOf.get(slot.id) ?? slot.id;
+      const held = this.heldRoles.get(owner) ?? new Set<CommandRole>();
+      held.add(slot.role);
+      this.heldRoles.set(owner, held);
     }
     this.fog = new FogOfWar(this);
   }
@@ -518,7 +541,32 @@ export class World {
  */
 export function canCommand(world: World, player: PlayerId, e: Entity): boolean {
   if (e.owner < 0) return false;
-  return e.owner === player || !!world.commandsFor.get(player)?.has(e.owner);
+  if (e.owner !== player && !world.commandsFor.get(player)?.has(e.owner)) return false;
+  const role = world.roles.get(player);
+  if (!role) return true;
+  const army = world.armyOf.get(player) ?? player;
+  if (e.owner !== army) return true;
+  const need = entityRole(world, e);
+  return need === role || !world.heldRoles.get(army)?.has(need);
+}
+
+/** The co-op role that commands `e` (see CommandRole). */
+export function entityRole(world: World, e: Entity): CommandRole {
+  if (e.kind === 'unit') {
+    if (e.domain === 'air') return 'air';
+    if (e.domain === 'naval') return 'navy';
+    const def = world.content.units[e.type] as { builder?: boolean } | undefined;
+    return def?.builder || e.unit?.logistics ? 'logistics' : 'ground';
+  }
+  let role: CommandRole = 'logistics';
+  for (const type of world.content.structures[e.type]?.produces ?? []) {
+    const u = world.content.units[type] as { domain?: string; builder?: boolean } | undefined;
+    if (!u) continue;
+    if (u.domain === 'air') return 'air';
+    if (u.domain === 'naval') return 'navy';
+    if (!u.builder) role = 'ground';
+  }
+  return role;
 }
 
 /** Footprint w (x) and d (z), swapped when the structure is rotated by roughly 90 degrees. */
