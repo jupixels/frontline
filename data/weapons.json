@@ -10,7 +10,8 @@
       "air"
     ],
     "mount": "hull",
-    "accuracy": 0.7
+    "accuracy": 0.7,
+    "suppression": 0.06
   },
   "pistol": {
     "range": 30,
@@ -22,7 +23,8 @@
       "ground"
     ],
     "mount": "hull",
-    "accuracy": 0.6
+    "accuracy": 0.6,
+    "suppression": 0.03
   },
   "sniper_rifle": {
     "range": 110,
@@ -34,11 +36,12 @@
       "ground"
     ],
     "mount": "hull",
-    "accuracy": 0.95
+    "accuracy": 0.95,
+    "suppression": 0.35
   },
   "at_rocket": {
-    "range": 55,
-    "damage": 120,
+    "range": 60,
+    "damage": 150,
     "reload": 4,
     "damageType": "ap",
     "delivery": "projectile",
@@ -62,7 +65,8 @@
       "air"
     ],
     "mount": "turret",
-    "accuracy": 0.5
+    "accuracy": 0.5,
+    "suppression": 0.1
   },
   "autocannon": {
     "range": 65,
@@ -76,7 +80,8 @@
       "naval"
     ],
     "mount": "turret",
-    "accuracy": 0.7
+    "accuracy": 0.7,
+    "suppression": 0.1
   },
   "atgm": {
     "range": 80,
@@ -132,11 +137,12 @@
       "ground"
     ],
     "mount": "turret",
-    "accuracy": 0.5
+    "accuracy": 0.5,
+    "suppression": 0.12
   },
   "aa_gun": {
     "range": 120,
-    "damage": 30,
+    "damage": 42,
     "reload": 0.4,
     "damageType": "aa",
     "delivery": "hitscan",
@@ -206,7 +212,8 @@
       "naval"
     ],
     "mount": "turret",
-    "accuracy": 0.6
+    "accuracy": 0.6,
+    "suppression": 0.1
   },
   "door_gun": {
     "range": 50,
@@ -218,7 +225,8 @@
       "ground"
     ],
     "mount": "turret",
-    "accuracy": 0.5
+    "accuracy": 0.5,
+    "suppression": 0.1
   },
   "aa_missile": {
     "range": 150,
@@ -291,9 +299,9 @@
     "splash": 5
   },
   "depth_charge": {
-    "range": 40,
+    "range": 60,
     "damage": 250,
-    "reload": 5,
+    "reload": 4,
     "damageType": "torpedo",
     "delivery": "projectile",
     "targets": [
@@ -319,8 +327,8 @@
   },
   "heavy_naval_gun": {
     "range": 280,
-    "damage": 300,
-    "reload": 5,
+    "damage": 420,
+    "reload": 4,
     "damageType": "he",
     "delivery": "indirect",
     "targets": [
@@ -331,7 +339,7 @@
     "accuracy": 1,
     "minRange": 30,
     "projectileSpeed": 150,
-    "splash": 10,
+    "splash": 14,
     "scatter": 8
   },
   "torpedo": {
@@ -358,7 +366,8 @@
       "air"
     ],
     "mount": "turret",
-    "accuracy": 0.5
+    "accuracy": 0.5,
+    "suppression": 0.1
   },
   "tower_mg": {
     "range": 70,
@@ -371,6 +380,7 @@
       "air"
     ],
     "mount": "turret",
-    "accuracy": 0.55
+    "accuracy": 0.55,
+    "suppression": 0.12
   }
 }

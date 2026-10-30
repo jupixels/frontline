@@ -5,11 +5,10 @@ import { GameRenderer } from '../render/renderer';
 import type { SimEvent } from '../shared/events';
 import type { MatchSetup, PlayerId } from '../shared/types';
 import { TICK_MS } from '../shared/types';
-import type { SimMapDef } from '../sim/content';
 import { Simulation } from '../sim/simulation';
 import type { MatchMode, MatchUi, UiApp } from '../ui';
 import { STRUCTURES, UNITS, mapDef, simContent } from './content';
-import { PlaceholderAi } from './placeholderAi';
+import { SkirmishAi } from '../ai';
 
 /** Hash exchange interval for desync detection. */
 const HASH_EVERY = 50;
@@ -36,12 +35,16 @@ export class Match {
   readonly ui: MatchUi;
   private readonly net: NetSession;
   private readonly audio: AudioManager;
-  private readonly ais: PlaceholderAi[] = [];
+  private readonly ais: SkirmishAi[] = [];
   private acc = 0;
   private last = performance.now();
   private running = true;
   private paused = false;
   private hiddenTimer: ReturnType<typeof setInterval> | undefined;
+  /** Skirmish game speed (1 = normal). Online matches always run at 1. */
+  speed = 1;
+  /** Dev/playtest: an AI of this difficulty also plays the local player's side. */
+  autoplay: 'easy' | 'normal' | 'hard' | null = null;
   private readonly offs: (() => void)[] = [];
 
   constructor(private readonly opts: MatchOptions) {
@@ -51,12 +54,16 @@ export class Match {
     app.setLoadingProgress(0.3, 'Building the battlefield');
     this.sim = new Simulation(setup, simContent(setup.mapId));
     app.setLoadingProgress(0.6, 'Loading units');
-    this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: setup.players, localPlayer, map: map as SimMapDef });
+    this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: setup.players, localPlayer, map });
     this.renderer.setQuality(app.settings.get().graphics);
     const localTeam = setup.players.find((p) => p.id === localPlayer)?.team;
     this.audio = new AudioManager(localPlayer, { team: localTeam, units: UNITS });
 
     const r = this.renderer;
+    r.cam.panKeys = () => {
+      const k = app.settings.get().keybinds;
+      return { up: k.panUp, down: k.panDown, left: k.panLeft, right: k.panRight };
+    };
     const spawn = map.spawns[Math.max(0, localPlayer) % map.spawns.length];
     r.cam.lookAt(spawn.x, spawn.z);
     this.refreshViews();
@@ -72,6 +79,7 @@ export class Match {
       structures: STRUCTURES,
       map,
       mode: opts.mode,
+      render: { minimapImage: r.terrain.minimapImage() },
       issue: (cmd) => {
         net.submit(cmd);
         r.markCommand(cmd);
@@ -113,12 +121,39 @@ export class Match {
     this.audio.dispose();
   }
 
+  private resyncAi: () => void = () => {};
+
+  /**
+   * Dev/playtest (skirmish only): simulate `seconds` of game time right now, AIs included, without
+   * drawing in between. Views are rebuilt at the end.
+   */
+  fastForward(seconds: number): void {
+    if (this.opts.mode !== 'skirmish') return;
+    const end = this.sim.tick + Math.round(seconds * 1000 / TICK_MS);
+    while (this.sim.tick < end && this.sim.winner === null) {
+      for (const ai of this.ais) ai.update();
+      const turn = this.net.pollTurn(this.sim.tick);
+      if (!turn) break;
+      const events: SimEvent[] = this.sim.step(turn.commands);
+      if (this.sim.proposedEvents.length) events.push(...this.sim.proposedEvents);
+      this.renderer.handleEvents(this.sim, events.filter((e) => e.type === 'removed' || e.type === 'spawned' || e.type === 'placed' || e.type === 'built'));
+      this.ui.handleEvents(events);
+    }
+    this.refreshViews();
+  }
+
+  /** Turn the local player's autoplay AI on or off (dev/playtest). */
+  setAutoplay(d: 'easy' | 'normal' | 'hard' | null): void {
+    this.autoplay = this.opts.mode === 'skirmish' ? d : null;
+    this.resyncAi();
+  }
+
   private lockstep(): LockstepSession | null {
     const n = this.net as Partial<LockstepSession>;
     return typeof n.controls === 'function' && n.events ? (this.net as LockstepSession) : null;
   }
 
-  /** Placeholder AIs for AI slots this peer controls (all of them in skirmish; the host's online). */
+  /** Skirmish AIs for AI slots this peer controls (all of them in skirmish; the controlling peer's online). */
   private setupAi(): void {
     const ls = this.lockstep();
     const controls = (p: PlayerId) => (ls ? ls.controls(p) : true);
@@ -126,9 +161,14 @@ export class Match {
     const sync = () => {
       this.ais.length = 0;
       for (const p of this.opts.setup.players) {
-        if (p.kind === 'ai' && controls(p.id)) this.ais.push(new PlaceholderAi(p.id, this.opts.setup, this.sim, issue));
+        const auto = this.autoplay && p.id === this.opts.localPlayer;
+        if ((p.kind === 'ai' && controls(p.id)) || auto) {
+          const setup = auto ? { ...this.opts.setup, players: this.opts.setup.players.map((s) => (s.id === p.id ? { ...s, aiDifficulty: this.autoplay! } : s)) } : this.opts.setup;
+          this.ais.push(new SkirmishAi(p.id, setup, this.sim, mapDef(this.opts.setup.mapId), issue, this.opts.setup.seed));
+        }
       }
     };
+    this.resyncAi = sync;
     sync();
     if (ls) this.offs.push(ls.events.on('control', sync));
   }
@@ -173,13 +213,13 @@ export class Match {
     const dt = Math.min((now - this.last) / 1000, hidden ? 2 : 0.25);
     this.last = now;
     if (!this.paused) {
-      this.acc += dt * 1000;
-      for (const ai of this.ais) ai.update(dt);
+      this.acc += dt * 1000 * (this.opts.mode === 'skirmish' ? this.speed : 1);
+      for (const ai of this.ais) ai.update();
     } else this.acc = 0;
 
     const backlog = this.net.backlogTicks?.(this.sim.tick) ?? 0;
     const ff = backlog > FAST_FORWARD_BACKLOG;
-    const cap = ff ? backlog : hidden ? HIDDEN_CATCHUP : MAX_CATCHUP;
+    const cap = ff ? backlog : hidden ? HIDDEN_CATCHUP : MAX_CATCHUP * Math.max(1, Math.ceil(this.speed));
     let steps = 0;
     while (!this.paused && (ff || this.acc >= TICK_MS) && steps < cap) {
       const turn = this.net.pollTurn(this.sim.tick);

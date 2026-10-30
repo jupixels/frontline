@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import rules from '../data/rules.json';
+import structures from '../data/structures.json';
 import type { PlayerCommand } from '../src/shared/commands';
 import type { SimEvent } from '../src/shared/events';
 import { NEUTRAL, SIM_HZ } from '../src/shared/types';
@@ -197,7 +199,7 @@ describe('economy & production', () => {
       { player: 0, cmd: { type: 'produce', factory: hq.id, unit: 'tank_mbt', count: 1 } }, // HQ can't make tanks
     ]);
     expect(sim.proposedEvents.filter((e) => e.type === 'blocked').map((e) => (e as { reason: string }).reason)).toEqual(['placement', 'placement', 'requirements']);
-    expect(w.players.get(0)!.supply).toBeCloseTo(supply + 2 / SIM_HZ, 6);
+    expect(w.players.get(0)!.supply).toBeCloseTo(supply + structures.hq.income / SIM_HZ, 6);
     expect(sim.producible(hq.id)).toEqual(['engineer']);
     expect(sim.buildable(0)).not.toContain('airfield');
   });
@@ -215,7 +217,7 @@ describe('economy & production', () => {
     expect(sim.queue(hq.id)).toHaveLength(2);
     expect(p.supply).toBeGreaterThan(s + 99);
     // Fill CP so the queue stalls at 100%.
-    for (let i = 0; i < 40; i++) w.spawnUnit('engineer', 0, { x: -200, z: 200 - i }, 0);
+    for (let i = 0; i < rules.baseCp + 5; i++) w.spawnUnit('engineer', 0, { x: -200, z: 200 - i }, 0);
     const ev = run(sim, 30 * SIM_HZ);
     expect(ev.some((e) => e.type === 'produced')).toBe(false);
     expect(sim.queue(hq.id)[0].progress).toBe(1);
@@ -270,7 +272,7 @@ describe('capture points & victory', () => {
     expect(pt.owner).toBe(NEUTRAL);
   });
 
-  it('the team holding fewer points bleeds tickets and loses at zero', () => {
+  it('the team holding fewer points bleeds morale and loses at zero', () => {
     const sim = new Simulation(twoPlayers(), testContent());
     const w = sim.world;
     const pts = [...w.entities.values()].filter((e) => e.kind === 'point');
@@ -280,10 +282,12 @@ describe('capture points & victory', () => {
       p.captureProgress = 1;
     }
     run(sim, 10 * SIM_HZ);
-    expect(w.teams.get(0)!.tickets).toBe(1000);
-    expect(w.teams.get(1)!.tickets).toBeCloseTo(1000 - 0.12 * 3 * 10, 3);
-    expect(sim.player(1)!.tickets).toBeCloseTo(w.teams.get(1)!.tickets, 6);
-    w.teams.get(1)!.tickets = 0.01;
+    expect(w.teams.get(0)!.morale).toBe(1000);
+    // Holding every point also triggers the sweep multiplier.
+    const sweep = pts.length === 3 ? rules.sweepBleedMult : 1;
+    expect(w.teams.get(1)!.morale).toBeCloseTo(1000 - rules.bleedPerPointDiff * 3 * 10 * sweep, 3);
+    expect(sim.player(1)!.morale).toBeCloseTo(w.teams.get(1)!.morale, 6);
+    w.teams.get(1)!.morale = 0.01;
     const ev = run(sim, 5);
     expect(ev).toContainEqual({ type: 'defeated', player: 1 });
     expect(ev.find((e) => e.type === 'victory')).toMatchObject({ type: 'victory', team: 0 });
@@ -309,8 +313,8 @@ describe('capture points & victory', () => {
     const sim = new Simulation(twoPlayers('annihilation'), testContent());
     const w = sim.world;
     const hq1 = [...w.entities.values()].find((e) => e.owner === 1 && e.type === 'hq')!;
-    // Tickets don't matter in annihilation.
-    w.teams.get(1)!.tickets = -50;
+    // Morale don't matter in annihilation.
+    w.teams.get(1)!.morale = -50;
     run(sim, 5);
     expect(w.players.get(1)!.defeated).toBe(false);
     hq1.dead = true;
@@ -325,9 +329,10 @@ describe('capture points & victory', () => {
     sim.step([]);
     expect(w.suddenDeath).toBe(true);
     expect(sim.proposedEvents.some((e) => e.type === 'suddenDeath')).toBe(true);
-    const t0 = w.teams.get(0)!.tickets;
+    const t0 = w.teams.get(0)!.morale;
     run(sim, SIM_HZ);
-    expect(w.teams.get(0)!.tickets).toBeCloseTo(t0 - 0.5, 3);
+    // One second in: the base sudden-death bleed plus a second of the ramp (averaged over the second).
+    expect(w.teams.get(0)!.morale).toBeCloseTo(t0 - rules.suddenDeathBleed - rules.suddenDeathRamp * 0.5, 2);
   });
 });
 

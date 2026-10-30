@@ -8,7 +8,7 @@ A 3D modern-warfare RTS that runs in the browser from GitHub Pages and supports 
 
 1. **It looks real.** PBR lighting, soft shadows, atmospheric fog, color grading, dust and smoke, tracers, craters. Everything sits in one grounded visual style (muted military palette). Toy-like assets get reskinned or left out.
 2. **Combined arms is how you win.** Infantry, armor, artillery, air and navy counter each other. No single unit spam wins.
-3. **Every minute matters.** Contested capture points, a ticket bleed and escalating tech tiers keep the pressure on, so a match never stalls. Pacing serves fun, not a target duration.
+3. **Every minute matters.** Contested capture points, a Morale drain and escalating tech tiers keep the pressure on, so a match never stalls. Pacing serves fun, not a target duration.
 4. **Zero install.** Open a link, share a lobby code, play. No server to host or pay for.
 
 ---
@@ -89,10 +89,10 @@ Zsky (CC BY 4.0), dklon jet sound (CC BY 3.0), the five ww2 sound credits from t
 | Skirmish (Tier 1) | 5–20 | Infantry, recon, light vehicles. Fights over the central points |
 | Escalation (Tier 2) | 20–45 | Tanks, IFVs, artillery, helicopters, navy. Unlocked by the Radar + tech research |
 | Total War (Tier 3) | 45+ | Air strikes, capital ships, one superweapon per side (bomber run / cruise missile, long cooldown, early warning to the enemy) |
-| Endgame | — | Ticket bleed accelerates; sudden death at 90 min (the HQ loses armor) |
+| Endgame | — | Morale drain accelerates; sudden death at 90 min (the HQ loses armor) |
 
 ### Victory conditions (choose in lobby)
-- **Frontline (default):** each side starts with **1000 tickets**. A side holding the majority of the **Strategic Points** drains enemy tickets, and losing units drains your own a little. First to 0 loses. Destroying the enemy HQ also wins. The drain is tuned so a dominant side wins in ~45 min and an even game ends by ~90.
+- **Frontline (default):** each side starts with **1000 Morale**. A side holding more **Strategic Points** than the enemy drains the enemy's Morale, and losing units drains your own a little. A side whose Morale hits 0 breaks and loses. Below 25% a side is shaken: its pinned troops shake off suppression more slowly (announced to everyone). Destroying the enemy HQ also wins. The drain is tuned so a dominant side wins in ~45 min and an even game ends by ~90.
 - **Annihilation:** destroy all enemy production buildings.
 
 ### Economy (2 resources, kept simple)
@@ -187,7 +187,7 @@ Needs to land **before** fan-out, because everyone builds on it:
 ### Phase 1 — Parallel workstreams (each in its own worktree/branch → PR to `main`)
 | # | Session | Owns | Delivers |
 |---|---|---|---|
-| A | **Simulation core** | `src/sim/`, `data/`, `tests/sim` | ECS world, movement + flow-field pathing, combat/damage/armor, economy, capture points, tickets, fog of war, production queues, determinism test |
+| A | **Simulation core** | `src/sim/`, `data/`, `tests/sim` | ECS world, movement + flow-field pathing, combat/damage/armor, economy, capture points, Morale, fog of war, production queues, determinism test |
 | B | **Rendering & VFX** | `src/render/` | Terrain + splat + water, lighting/post stack, unit view layer (GLB loading, instancing, animation state machine driven by events, turret aiming), particles, decals, quality presets |
 | C | **Networking** | `src/net/`, `tests/net` | Trystero transport, lobby/rooms, lockstep turn scheduler, desync hash check, reconnect, replay save/load |
 | D | **UI / UX & input** | `src/ui/`, `index.html`, CSS | Main menu, lobby screen, HUD (resources, selection panel, build grid, minimap), selection/box-select/control groups, input→Command mapping, settings, credits |
@@ -233,7 +233,7 @@ Tutorial mission, replays UI, achievements/stats screen, accessibility (colorbli
 ### Milestones
 - **M0:** one tank moves on a flat map; the site is live on Pages.
 - **M1:** two browsers connect by room code; both see the same tanks fight (lockstep works).
-- **M2:** a full 1v1 on Valley Pass with economy, building and tickets is playable start to finish.
+- **M2:** a full 1v1 on Valley Pass with economy, building and Morale is playable start to finish.
 - **M3:** AI opponent, 3 maps, both factions, navy and air.
 - **M4:** polish pass and the 1.0 release.
 
@@ -247,24 +247,25 @@ Tutorial mission, replays UI, achievements/stats screen, accessibility (colorbli
 | Lockstep desyncs | Fixed-point sim, headless determinism tests in CI, a per-tick state hash with a debug dump on mismatch |
 | Mixed asset styles look cheap | One shared camo PBR material, unified lighting/post, and drop the worst-fitting models |
 | Download size | Meshopt + KTX2, lazy load per map/faction, a loading screen with progress |
-| Matches drag on | Ticket bleed + sudden death at 90 min, both tunable through headless sims |
+| Matches drag on | Morale drain + sudden death at 90 min, both tunable through headless sims |
 
 ---
 
 ## 8b. Strategic depth (so it's not "biggest army A-moves")
 **Phase 1 (sim workstream A, built into the core now):**
 - **Ability system:** data-driven active abilities with cooldowns/costs and a `useAbility` command. Starter set: smoke (blocks LOS), deploy/entrench (infantry: +armor, no move), sprint/overdrive, artillery barrage on a spotted area, AT ambush (hidden until it fires).
-- **Physical logistics:** supply is carried by **supply trucks** from depots/points to the HQ along roads. Trucks can be ambushed, and cutting a line starves production. Units far from supply slowly lose readiness (fire rate/morale).
+- **Physical logistics:** supply is carried by **supply trucks** from depots/points to the HQ along roads. Trucks can be ambushed, and cutting a line starves production. Units far from supply slowly lose Readiness (fire rate and accuracy).
 
 **Phase 2:**
 - **Map design goals** (maps workstream): every map has chokepoints, bridges, high ground, forests/cover, at least 2 alternate routes to each point, and points that are harder to hold than to take.
 - **Smart AI** (AI workstream): scouts, counter-builds against what it has seen, flanks, raids supply lines and power, contests points instead of sending waves.
-- **Anti-degenerate balance tests** (balance workstream): headless sims assert that no single-unit-type army beats a mixed army of equal cost, and that a side down 30% on tickets can still come back.
+- **Anti-degenerate balance tests** (balance workstream): headless sims assert that no single-unit-type army beats a mixed army of equal cost, and that a side down 30% on Morale can still come back.
 - **Pacing review:** tune sudden death, bleed acceleration and the pop-cap comeback mechanic against playtests so they don't reward turtling.
 
 ## 9. Decisions (2026-10-29)
 1. **Repo:** https://github.com/jupixels/frontline, deployed to https://jupixels.github.io/frontline/
 2. **Extra assets:** downloading free assets is approved. Prefer CC0, and record anything CC-BY in the credits.
 3. **Factions:** v1 uses **one shared roster with team colors**. The two-faction split in §3 is post-v1.
-4. **Players:** 1v1, 2v2 and **1v1v1v1 FFA** at launch. Design for **up to 8 players** (PlayerId 0–7, team ids separate from player ids, maps declare their spawn count, and lockstep must not assume 2 peers). With FFA, the Frontline ticket rule becomes: each player holding fewer points than the leader bleeds tickets.
+4. **Players:** 1v1, 2v2 and **1v1v1v1 FFA** at launch. Design for **up to 8 players** (PlayerId 0–7, team ids separate from player ids, maps declare their spawn count, and lockstep must not assume 2 peers). With FFA, the Frontline Morale rule becomes: each player holding fewer points than the leader loses Morale.
 5. **Name:** Frontline.
+6. **Morale (2026-10-29):** the victory pool formerly called "tickets" is **Morale**. The unit-level supply stat is only ever called **Readiness**.

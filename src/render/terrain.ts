@@ -1,97 +1,19 @@
 import * as THREE from 'three';
-import { fbm, lerp, ridged, smoothstep } from './noise';
+import { fbm, smoothstep, TerrainModel, WATER_LEVEL } from '../shared/terrain';
 import { generateTerrainTextures, loadTerrainTextures, type TerrainTextureSet } from './terrainTextures';
 
-export const WATER_LEVEL = 0;
-
-/** Same shape as the sim's map shapes (`SimMapDef.water` / `obstacles`). */
-export type MapShape =
-  | { shape: 'rect'; x: number; z: number; w: number; d: number }
-  | { shape: 'circle'; x: number; z: number; r: number };
-
-/** Gameplay terrain the sim knows about; the renderer shapes the ground to match. */
-export interface MapFeatures {
-  /** Naval-only water. When given, it replaces the procedural coastline. */
-  water?: MapShape[];
-  /** Impassable cliffs/rocks: drawn as rocky outcrops. */
-  obstacles?: MapShape[];
-}
+export { WATER_LEVEL };
 
 /**
- * Signed distance (meters) from (x, z) to a shape; negative inside. Rect water that touches the map
- * edge continues outward so it reads as open sea rather than a pond cut off by the rim hills.
+ * Deterministic terrain height in meters at world (x, z): the shared TerrainModel the sim plays on.
+ * Kept as a function for callers that only have a map.
  */
-export function shapeDistance(s: MapShape, x: number, z: number, half: number): number {
-  if (s.shape === 'circle') return Math.sqrt((x - s.x) * (x - s.x) + (z - s.z) * (z - s.z)) - s.r;
-  let x0 = s.x - s.w / 2;
-  let x1 = s.x + s.w / 2;
-  let z0 = s.z - s.d / 2;
-  let z1 = s.z + s.d / 2;
-  if (x1 >= half - 1) x1 = 1e9;
-  if (x0 <= -half + 1) x0 = -1e9;
-  if (z1 >= half - 1) z1 = 1e9;
-  if (z0 <= -half + 1) z0 = -1e9;
-  const dx = Math.max(x0 - x, 0, x - x1);
-  const dz = Math.max(z0 - z, 0, z - z1);
-  if (dx > 0 || dz > 0) return Math.sqrt(dx * dx + dz * dz);
-  return -Math.min(x - x0, x1 - x, z - z0, z1 - z);
-}
-
-function minDistance(shapes: MapShape[] | undefined, x: number, z: number, half: number): number {
-  let d = 1e9;
-  for (const s of shapes ?? []) d = Math.min(d, shapeDistance(s, x, z, half));
-  return d;
-}
-
-/**
- * Deterministic terrain height in meters at world (x, z): rolling farmland inside the playable square,
- * rim hills outside it, rocky outcrops on the map's obstacles and basins where the map has water.
- * Maps without water data get a procedural coastline along the north (-z) edge.
- *
- * Uses only + - * / sqrt and floor so it can be promoted to shared/ and used by the sim as-is.
- * TODO(sim): promote this (and noise.ts) to src/shared/terrain.ts if the sim needs heights (LOS).
- */
-export function terrainHeight(x: number, z: number, mapSize: number, seed: number, features?: MapFeatures): number {
-  const half = mapSize / 2;
-  let h = 4 + (fbm(x / 230, z / 230, seed, 4) - 0.5) * 9 + (fbm(x / 55, z / 55, seed + 7, 3) - 0.5) * 1.6;
-  // Keep the playable land comfortably above the water line.
-  if (h < 1.2) h = 1.2 - (1.2 - h) * 0.2;
-
-  // Rocky outcrops where the sim has obstacles.
-  if (features?.obstacles?.length) {
-    const od = minDistance(features.obstacles, x, z, half);
-    const mound = smoothstep(6, -3, od);
-    if (mound > 0) h += mound * (3.5 + ridged(x / 14, z / 14, seed + 9, 3) * 6);
-  }
-
-  // Rim hills rise beyond the playable square.
-  const ax = x < 0 ? -x : x;
-  const az = z < 0 ? -z : z;
-  const out = (ax > az ? ax : az) - half;
-  let rim = smoothstep(-30, 180, out);
-
-  let sea: number;
-  let floor: number;
-  if (features?.water) {
-    const wd = minDistance(features.water, x, z, half);
-    sea = smoothstep(10, -14, wd);
-    floor = -2.5 - smoothstep(0, -60, wd) * 6 + (fbm(x / 40, z / 40, seed + 12, 2) - 0.5) * 1.5;
-    rim *= smoothstep(20, 120, wd);
-  } else {
-    // Coastline along -z, wobbling with noise. Sea floor slopes down to ~-9 m.
-    const shore = -half * 0.8 + (fbm(x / 150, 3.5, seed + 11, 3) - 0.5) * 90;
-    sea = smoothstep(shore + 30, shore - 40, z);
-    floor = -2.5 - smoothstep(shore, shore - 160, z) * 6.5 + (fbm(x / 40, z / 40, seed + 12, 2) - 0.5) * 1.5;
-  }
-  const ridge = ridged(x / 160, z / 160, seed + 3, 4);
-  h += rim * (10 + ridge * 70 + fbm(x / 70, z / 70, seed + 4, 3) * 12);
-  return lerp(h, floor, sea);
+export function terrainHeight(x: number, z: number, model: TerrainModel): number {
+  return model.height(x, z);
 }
 
 export interface TerrainOptions {
-  mapSize: number;
-  seed: number;
-  features?: MapFeatures;
+  model: TerrainModel;
   /** Side length of the rendered terrain (covers the map plus scenic surroundings). */
   extent?: number;
   segments?: number;
@@ -103,6 +25,7 @@ export class Terrain {
   readonly material: THREE.MeshStandardMaterial;
   readonly extent: number;
   readonly mapSize: number;
+  readonly model: TerrainModel;
   /** Height samples on a (n+1)² grid. */
   private readonly heights: Float32Array;
   private readonly n: number;
@@ -123,9 +46,10 @@ export class Terrain {
   };
 
   constructor(opts: TerrainOptions) {
-    this.mapSize = opts.mapSize;
-    this.extent = opts.extent ?? opts.mapSize * 2.4;
-    this.n = opts.segments ?? 448;
+    this.model = opts.model;
+    this.mapSize = opts.model.map.size;
+    this.extent = opts.extent ?? this.mapSize * 2.4;
+    this.n = opts.segments ?? 512;
     this.step = this.extent / this.n;
     this.min = -this.extent / 2;
     const n = this.n;
@@ -134,7 +58,7 @@ export class Terrain {
     let maxH = -Infinity;
     for (let j = 0; j <= n; j++) {
       for (let i = 0; i <= n; i++) {
-        const h = terrainHeight(this.min + i * this.step, this.min + j * this.step, opts.mapSize, opts.seed, opts.features);
+        const h = this.model.height(this.min + i * this.step, this.min + j * this.step);
         this.heights[j * (n + 1) + i] = h;
         if (h > maxH) maxH = h;
       }
@@ -153,7 +77,7 @@ export class Terrain {
     geo.computeBoundingSphere();
 
     this.heightTexture = this.buildHeightTexture();
-    this.splatTexture = this.buildSplatTexture(geo, opts.seed, opts.features);
+    this.splatTexture = this.buildSplatTexture(geo);
 
     const tex = generateTerrainTextures();
     this.uniforms = {
@@ -183,13 +107,72 @@ export class Terrain {
     this.uniforms.uTile.value = 9;
   }
 
+  /** Top-down map picture for the minimap: hill-shaded ground, water, woods, roads and rock. */
+  minimapImage(px = 256): HTMLCanvasElement {
+    const c = document.createElement('canvas');
+    c.width = c.height = px;
+    const g = c.getContext('2d')!;
+    const img = g.createImageData(px, px);
+    const m = this.model;
+    const size = this.mapSize;
+    const land: Record<string, [number, number, number]> = { temperate: [74, 92, 52], coastal: [82, 96, 62], desert: [168, 140, 96] };
+    const base = land[m.style] ?? land.temperate;
+    const step = size / px;
+    for (let j = 0; j < px; j++) {
+      for (let i = 0; i < px; i++) {
+        const x = (i + 0.5) * step - size / 2;
+        const z = (j + 0.5) * step - size / 2;
+        const h = this.heightAt(x, z);
+        const hx = this.groundAt(x + step, z) - this.groundAt(x - step, z);
+        const hz = this.groundAt(x, z + step) - this.groundAt(x, z - step);
+        // Light from the north-west.
+        const shade = Math.max(0.55, Math.min(1.35, 1 + (-hx - hz) / (step * 2) * 0.9 + (h - 6) * 0.006));
+        let r: number;
+        let gg: number;
+        let b: number;
+        if (h < WATER_LEVEL - 0.1) {
+          const deep = Math.min(1, -h / 7);
+          r = 46 - deep * 26;
+          gg = 86 - deep * 40;
+          b = 98 - deep * 30;
+        } else if (m.hasCliffs && m.isCliff(x, z)) {
+          [r, gg, b] = [96 * shade, 92 * shade, 86 * shade];
+        } else if (m.bridges.length && m.bridgeDeck(x, z) !== null) {
+          [r, gg, b] = [150, 146, 136];
+        } else if (m.roads.length && m.isRoad(x, z)) {
+          [r, gg, b] = [150 * shade, 128 * shade, 96 * shade];
+        } else if (m.forests.length && m.isForest(x, z)) {
+          [r, gg, b] = [36 * shade, 58 * shade, 32 * shade];
+        } else {
+          [r, gg, b] = [base[0] * shade, base[1] * shade, base[2] * shade];
+        }
+        const o = (j * px + i) * 4;
+        img.data[o] = r;
+        img.data[o + 1] = gg;
+        img.data[o + 2] = b;
+        img.data[o + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    return c;
+  }
+
   setDecals(tex: THREE.Texture, bounds: THREE.Vector4): void {
     this.uniforms.tDecal.value = tex;
     this.uniforms.uDecalBounds.value.copy(bounds);
   }
 
-  /** Bilinear height in meters at (x, z). Outside the terrain it clamps to the border. */
+  /** Where things stand at (x, z): bridge deck on bridges, else the ground. */
   heightAt(x: number, z: number): number {
+    if (this.model.bridges.length) {
+      const deck = this.model.bridgeDeck(x, z);
+      if (deck !== null) return deck;
+    }
+    return this.groundAt(x, z);
+  }
+
+  /** Bilinear ground height in meters at (x, z). Outside the terrain it clamps to the border. */
+  groundAt(x: number, z: number): number {
     const n = this.n;
     const fx = Math.min(Math.max((x - this.min) / this.step, 0), n - 1e-4);
     const fz = Math.min(Math.max((z - this.min) / this.step, 0), n - 1e-4);
@@ -233,14 +216,14 @@ export class Terrain {
       const z = o.z + d.z * t;
       if (Math.abs(x) > this.extent / 2 || Math.abs(z) > this.extent / 2) return null;
       const y = o.y + d.y * t;
-      if (y <= this.heightAt(x, z)) {
+      if (y <= this.groundAt(x, z)) {
         let lo = prevT;
         let hi = t;
         for (let k = 0; k < 10; k++) {
           const mid = (lo + hi) / 2;
           const px = o.x + d.x * mid;
           const pz = o.z + d.z * mid;
-          if (o.y + d.y * mid <= this.heightAt(px, pz)) hi = mid;
+          if (o.y + d.y * mid <= this.groundAt(px, pz)) hi = mid;
           else lo = mid;
         }
         return out.copy(o).addScaledVector(d, hi);
@@ -262,12 +245,17 @@ export class Terrain {
     return tex;
   }
 
-  /** RGBA = dirt, rock, sand, mud weights (grass = remainder), from slope, height and noise. */
-  private buildSplatTexture(geo: THREE.BufferGeometry, seed: number, features?: MapFeatures): THREE.DataTexture {
+  /** RGBA = dirt, rock, sand, mud weights (grass = remainder), from slope, height, forests, roads and style. */
+  private buildSplatTexture(geo: THREE.BufferGeometry): THREE.DataTexture {
     const w = this.n + 1;
     const data = new Uint8Array(w * w * 4);
     const nrm = geo.attributes.normal as THREE.BufferAttribute;
     const pos = geo.attributes.position as THREE.BufferAttribute;
+    const m = this.model;
+    const seed = m.def.seed;
+    const desert = m.style === 'desert';
+    const coastal = m.style === 'coastal';
+    const half = this.mapSize / 2;
     for (let v = 0; v < pos.count; v++) {
       const x = pos.getX(v);
       const z = pos.getZ(v);
@@ -275,13 +263,31 @@ export class Terrain {
       const i = Math.round((x - this.min) / this.step);
       const j = Math.round((z - this.min) / this.step);
       const ny = nrm.getY(v);
-      const outcrop = features?.obstacles?.length ? smoothstep(4, -2, minDistance(features.obstacles, x, z, this.mapSize / 2)) : 0;
-      const rock = Math.max(smoothstep(0.9, 0.74, ny), smoothstep(22, 45, h) * 0.85, outcrop * 0.9);
-      const sand = smoothstep(2.4, 1.0, h) * (1 - rock);
+      const inside = Math.abs(x) < half + 40 && Math.abs(z) < half + 40;
+      const cliff = inside && m.hasCliffs && m.isCliff(x, z) ? 1 : 0;
+      const rock = Math.max(smoothstep(0.88, 0.7, ny), smoothstep(22, 45, h) * 0.85, cliff * 0.95);
+      let sand = smoothstep(coastal ? 3.4 : 2.4, 1.0, h) * (1 - rock);
       const patches = fbm(x / 75, z / 75, seed + 21, 3);
-      const dirt = smoothstep(0.5, 0.75, patches) * 0.8 * (1 - rock) * (1 - sand);
+      let dirt = smoothstep(0.5, 0.75, patches) * 0.8 * (1 - rock) * (1 - sand);
       const wet = fbm(x / 45, z / 45, seed + 33, 3);
-      const mud = smoothstep(0.6, 0.72, wet) * smoothstep(5.5, 2.5, h) * 0.9 * (1 - rock) * (1 - sand);
+      let mud = smoothstep(0.6, 0.72, wet) * smoothstep(5.5, 2.5, h) * 0.9 * (1 - rock) * (1 - sand);
+      if (desert) {
+        // Desert: sand everywhere, packed dirt patches, rock on slopes.
+        sand = Math.max(sand, (1 - rock) * (0.75 + 0.25 * patches));
+        dirt = smoothstep(0.55, 0.8, patches) * 0.6 * (1 - rock);
+        mud = 0;
+      }
+      if (inside && m.forests.length && m.isForest(x, z)) {
+        // Forest floor: dark dirt and leaf litter.
+        dirt = Math.max(dirt, 0.55);
+        mud = Math.max(mud, desert ? 0 : 0.3);
+        sand *= 0.3;
+      }
+      if (inside && m.roads.length && m.isRoad(x, z)) {
+        dirt = 0.95;
+        mud = 0;
+        sand = desert ? 0.3 : 0;
+      }
       let r = dirt;
       let g = rock;
       let b = sand;

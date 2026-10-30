@@ -105,7 +105,7 @@ export class MenuScreen implements Screen {
           'ul',
           { class: 'sitrep-list' },
           h('li', null, h('b', null, 'Modes'), ' 1v1 · 2v2 · 4-player FFA, rooms up to 8'),
-          h('li', null, h('b', null, 'Victory'), ' Frontline tickets or Annihilation'),
+          h('li', null, h('b', null, 'Victory'), ' Frontline (Morale) or Annihilation'),
           h('li', null, h('b', null, 'Netcode'), ' Peer-to-peer lockstep, no server, no install'),
           h('li', null, h('b', null, 'Invite'), ' Host, then share the room link'),
         ),

@@ -83,6 +83,13 @@ export class Minimap {
     if (p) this.camera.lookAt(p.x, p.z);
   }
 
+  private marks: { pos: Vec2; radius: number; until: number }[] = [];
+
+  /** Strike target circle until `untilMs` (performance.now time). */
+  mark(pos: Vec2, radius: number, untilMs: number): void {
+    this.marks.push({ pos, radius, until: untilMs + 1500 });
+  }
+
   ping(pos: Vec2, color = '#ff5a3c'): void {
     this.pings.push({ pos, color, born: performance.now() });
     if (this.pings.length > 12) this.pings.shift();
@@ -177,6 +184,31 @@ export class Minimap {
         g.arc(x, y, r + 3 * dpr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.abs(p.progress));
         g.stroke();
       }
+    }
+
+    // Frontlines (own and allied) in their owner's color.
+    for (const line of this.adapter.lines(this.local)) {
+      if (line.points.length < 2) continue;
+      g.strokeStyle = this.adapter.colorOf(line.owner);
+      g.lineWidth = 2.2 * dpr;
+      g.setLineDash([5 * dpr, 3 * dpr]);
+      g.beginPath();
+      line.points.forEach((p, i) => {
+        const [x, y] = this.toPx(p.x, p.z);
+        if (i) g.lineTo(x, y);
+        else g.moveTo(x, y);
+      });
+      g.stroke();
+      g.setLineDash([]);
+    }
+    this.marks = this.marks.filter((m) => m.until > now);
+    for (const m of this.marks) {
+      const [x, y] = this.toPx(m.pos.x, m.pos.z);
+      g.strokeStyle = (now / 250) % 2 < 1 ? '#ff2a1a' : '#ffd0c8';
+      g.lineWidth = 2 * dpr;
+      g.beginPath();
+      g.arc(x, y, Math.max(4 * dpr, (m.radius / this.mapSize) * W), 0, Math.PI * 2);
+      g.stroke();
     }
 
     // Structures as squares, units as dots; own units drawn last so they sit on top.

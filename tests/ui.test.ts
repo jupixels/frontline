@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EntityState, PlayerState, SimView } from '../src/shared/entities';
 import type { MatchSetup } from '../src/shared/types';
 import { StatsTracker } from '../src/ui/hud/stats';
-import { ACTIONS, defaultKeybinds, isBindable, keyLabel, rebind } from '../src/ui/keybinds';
+import { ACTIONS, conflicts, defaultKeybinds, isBindable, KEYBINDS_VERSION, keyLabel, rebind } from '../src/ui/keybinds';
 import {
   FakeLobbyConnector,
   MemoryLobby,
@@ -155,15 +155,27 @@ describe('MemoryLobby (online)', () => {
 
 describe('keybinds & settings', () => {
   it('swaps keys between conflicting actions', () => {
-    const k = rebind(defaultKeybinds(), 'stop', 'KeyA');
-    expect(k.stop).toBe('KeyA');
-    expect(k.attackMove).toBe('KeyS');
+    const k = rebind(defaultKeybinds(), 'stop', 'KeyQ');
+    expect(k.stop).toBe('KeyQ');
+    expect(k.attackMove).toBe('KeyX');
   });
 
-  it('lets command-card slots share keys with orders (they never show together)', () => {
-    const k = rebind(defaultKeybinds(), 'slot1', 'KeyA');
-    expect(k.slot1).toBe('KeyA');
+  it('defaults: WASD pans the camera and no two live actions share a key', () => {
+    const k = defaultKeybinds();
+    expect([k.panUp, k.panLeft, k.panDown, k.panRight]).toEqual(['KeyW', 'KeyA', 'KeyS', 'KeyD']);
+    for (const a of ACTIONS) for (const b of ACTIONS) if (a.id !== b.id && k[a.id] === k[b.id]) expect(conflicts(a.id, b.id), `${a.id} vs ${b.id}`).toBe(false);
+  });
+
+  it('lets placement rotation share a key with a command-card slot', () => {
+    const k = rebind(defaultKeybinds(), 'rotateStructure', 'KeyE');
+    expect(k.rotateStructure).toBe('KeyE');
+    expect(k.slot1).toBe('KeyE');
+  });
+
+  it('binding an order to a pan key moves the pan key, never leaving both on it', () => {
+    const k = rebind(defaultKeybinds(), 'attackMove', 'KeyA');
     expect(k.attackMove).toBe('KeyA');
+    expect(k.panLeft).not.toBe('KeyA');
   });
 
   it('never leaves two live actions on one key', () => {
@@ -183,12 +195,24 @@ describe('keybinds & settings', () => {
   });
 
   it('sanitizes stored settings', () => {
-    const s = sanitizeSettings({ graphics: 'potato', volume: { master: 7 }, edgePanSpeed: -1, keybinds: { stop: 'KeyX', bogus: 'KeyZ' } });
+    const s = sanitizeSettings({ graphics: 'potato', volume: { master: 7 }, edgePanSpeed: -1, keybinds: { stop: 'KeyZ', bogus: 'KeyM' }, keybindsVersion: KEYBINDS_VERSION });
     expect(s.graphics).toBe('high');
     expect(s.volume.master).toBe(1);
     expect(s.edgePanSpeed).toBe(0);
-    expect(s.keybinds.stop).toBe('KeyX');
-    expect(s.keybinds.attackMove).toBe('KeyA');
+    expect(s.keybinds.stop).toBe('KeyZ');
+    expect(s.keybinds.attackMove).toBe('KeyQ');
+  });
+
+  it('migrates binds saved with the old layout (A/S orders) to the WASD-pan defaults', () => {
+    const s = sanitizeSettings({ keybinds: { attackMove: 'KeyA', stop: 'KeyS', slot2: 'KeyW', hold: 'KeyG' } });
+    expect(s.keybinds).toEqual(defaultKeybinds());
+    expect(s.keybindsVersion).toBe(KEYBINDS_VERSION);
+  });
+
+  it('resolves a stored clash with the pan keys back to the default', () => {
+    const s = sanitizeSettings({ keybinds: { hold: 'KeyW' }, keybindsVersion: KEYBINDS_VERSION });
+    expect(s.keybinds.panUp).toBe('KeyW');
+    expect(s.keybinds.hold).toBe('KeyH');
   });
 
   it('persists through the storage', () => {
@@ -262,15 +286,15 @@ describe('StatsTracker', () => {
 
 describe('SimAdapter', () => {
   const players: PlayerState[] = [
-    { id: 0, supply: 500, power: 5, tickets: 900, defeated: false },
-    { id: 1, supply: 0, power: 0, tickets: 400, defeated: false },
-    { id: 2, supply: 0, power: 0, tickets: 400, defeated: true },
+    { id: 0, supply: 500, power: 5, morale: 900, defeated: false },
+    { id: 1, supply: 0, power: 0, morale: 400, defeated: false },
+    { id: 2, supply: 0, power: 0, morale: 400, defeated: true },
   ];
 
-  it('groups tickets per team', () => {
+  it('groups morale per team', () => {
     const a = new SimAdapter(fakeSim([], players), SETUP, {});
-    const t = a.teamTickets();
-    expect(t.map((x) => [x.team, x.tickets, x.players.length, x.defeated])).toEqual([
+    const t = a.teamMorale();
+    expect(t.map((x) => [x.team, x.morale, x.players.length, x.defeated])).toEqual([
       [0, 900, 1, false],
       [1, 400, 2, false],
     ]);

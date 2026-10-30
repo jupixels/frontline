@@ -215,9 +215,14 @@ export function economySystem(world: World): void {
       } else income.set(p.id, (income.get(p.id) ?? 0) + def.income);
     }
   }
+  // Comeback: teams behind on morale may field a bigger army (they still have to take points to stop the bleed).
+  let leader = -Infinity;
+  for (const t of world.teams.values()) if (!t.defeated && t.morale > leader) leader = t.morale;
   for (const p of world.players.values()) {
     p.power = p.powerProduced - p.powerUsed;
-    p.cpCap = Math.min(rules.cpMax, rules.baseCp + rules.cpPerPoint * p.pointsHeld);
+    const behind = Math.max(0, leader - (world.teams.get(p.team)?.morale ?? leader));
+    const comeback = rules.cpComebackPer ? Math.min(rules.cpComebackMax ?? 0, Math.floor(behind / rules.cpComebackPer)) : 0;
+    p.cpCap = Math.min(rules.cpMax, rules.baseCp + rules.cpPerPoint * p.pointsHeld) + comeback;
     let tier = 1;
     for (const [type, n] of p.structures) {
       const g = world.content.structures[type]?.grantsTier ?? 0;
@@ -226,7 +231,8 @@ export function economySystem(world: World): void {
     if (tier >= 2 && world.seconds() >= rules.tier3UnlockSeconds) tier = 3;
     p.tier = tier;
     if (p.defeated) continue;
-    p.supply += (income.get(p.id) ?? 0) / SIM_HZ;
+    const boost = Math.min(rules.incomeComebackMax ?? 0, (behind / 100) * (rules.incomeComebackPer100 ?? 0));
+    p.supply += ((income.get(p.id) ?? 0) + (p.hadHq ? boost : 0)) / SIM_HZ;
   }
 
   for (const e of world.entities.values()) {

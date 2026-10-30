@@ -62,6 +62,17 @@ const BY_TYPE: Record<string, Symbol> = {
   airfield: 'airfield',
   naval_yard: 'navalyard',
   watchtower: 'defense',
+  trench: 'defense',
+  ruin: 'defense',
+  strategic_command: 'radar',
+  at_soldier: 'antitank',
+  scout_car: 'recon',
+  aa_tank: 'antiair',
+  rocket_truck: 'rocket',
+  artillery: 'artillery',
+  heli_attack: 'helicopter',
+  heli_transport: 'helicopter',
+  jet_fighter: 'jet',
   point: 'point',
 };
 
@@ -192,4 +203,22 @@ export const ICONS = {
   clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7 V12 L15 14"/></svg>',
   alert: '<svg viewBox="0 0 24 24"><path d="M12 4 L21 20 H3 Z M12 10 V14 M12 17 V17.5"/></svg>',
   flag: '<svg viewBox="0 0 24 24"><path d="M6 21 V4 M6 5 H18 L15 8.5 L18 12 H6"/></svg>',
+  enter: '<svg viewBox="0 0 24 24"><path d="M10 5 H19 V19 H10 M4 12 H14 M11 9 L14 12 L11 15"/></svg>',
+  unload: '<svg viewBox="0 0 24 24"><path d="M14 5 H5 V19 H14 M10 12 H20 M17 9 L20 12 L17 15"/></svg>',
+  line: '<svg viewBox="0 0 24 24"><path d="M3 15 Q8 9 12 13 T21 9"/><circle cx="6" cy="18" r="1.2"/><circle cx="12" cy="17" r="1.2"/><circle cx="18" cy="14" r="1.2"/></svg>',
+  advance: '<svg viewBox="0 0 24 24"><path d="M4 18 Q12 13 20 18 M12 15 V4 M8 8 L12 4 L16 8"/></svg>',
+  disband: '<svg viewBox="0 0 24 24"><path d="M3 14 Q8 9 12 13 T21 9"/><path d="M8 4 L16 20"/></svg>',
+  missile: '<svg viewBox="0 0 24 24"><path d="M5 19 L15 9 M15 9 L19 5 L17 11 M15 9 L13 7 L19 5 M5 19 L4 16 M5 19 L8 20"/></svg>',
+  smoke: '<svg viewBox="0 0 24 24"><path d="M6 17 A4 4 0 0 1 7 9 A5 5 0 0 1 16 8 A4 4 0 0 1 18 16 Z"/></svg>',
+  entrench: '<svg viewBox="0 0 24 24"><path d="M3 17 H21 M5 17 L7 12 H17 L19 17 M9 12 V9 H15 V12"/></svg>',
+  sprint: '<svg viewBox="0 0 24 24"><path d="M5 12 H13 M3 8 H10 M6 16 H12 M13 6 L19 12 L13 18"/></svg>',
+  barrage: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="6"/><circle cx="12" cy="13" r="2"/><path d="M12 3 V6 M12 20 V23 M2 13 H5 M19 13 H22"/></svg>',
+  ambush: '<svg viewBox="0 0 24 24"><path d="M3 12 Q12 4 21 12 Q12 20 3 12 Z M4 20 L20 4"/></svg>',
+  pause: '<svg viewBox="0 0 24 24"><path d="M8 5 V19 M16 5 V19"/></svg>',
 } as const;
+
+/** Command-card icon for an ability id. */
+export function abilityIcon(id: string): string {
+  const m: Record<string, string> = { smoke: ICONS.smoke, entrench: ICONS.entrench, sprint: ICONS.sprint, overdrive: ICONS.sprint, barrage: ICONS.barrage, ambush: ICONS.ambush };
+  return m[id] ?? ICONS.flag;
+}

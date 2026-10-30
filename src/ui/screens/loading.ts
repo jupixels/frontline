@@ -7,7 +7,7 @@ import type { Screen } from './screen';
 const TIPS = [
   'Power plants are high-value raid targets: low power slows production and shuts off radar.',
   'Flank tanks. Side and rear armor is much thinner than the front.',
-  'Holding more strategic points than the enemy drains their tickets.',
+  'Holding more strategic points than the enemy drains their Morale. At low Morale, pinned troops recover more slowly.',
   'Mobile AA keeps helicopters off your armor. Bring some before Tier 2.',
   'Shift-queue orders to chain waypoints. Right-drag sets the formation facing.',
   'Double-click a unit to select every visible unit of that type.',

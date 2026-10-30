@@ -2,7 +2,7 @@ import type { Command } from '../../shared/commands';
 import type { EntityState, SimView } from '../../shared/entities';
 import type { EntityId, PlayerId } from '../../shared/types';
 import { fmtInt, h, setChildren } from '../dom';
-import { ICONS, glyphFor } from '../glyphs';
+import { ICONS, abilityIcon, glyphFor } from '../glyphs';
 import type { InputController } from '../input';
 import { keyLabel, SLOT_ACTIONS, type Keybinds } from '../keybinds';
 import type { SimAdapter } from '../simAdapter';
@@ -131,11 +131,95 @@ export class CommandCard {
           label: 'Patrol',
           key: k.patrol,
           active: mode.kind === 'patrol',
-          detail: 'Patrol to a point (attack-move until patrol orders exist)',
+          detail: 'Walk back and forth between here and a point, engaging anything on the way',
           run: () => this.input.setMode({ kind: 'patrol' }),
         },
       ];
-      if (builders.length) buttons.push({ id: 'build', icon: ICONS.build, label: 'Build', key: k.build, detail: 'Open the construction menu', run: () => this.openBuild() });
+      if (builders.length) buttons.push({ id: 'build', icon: ICONS.build, label: 'Build', key: k.build, detail: 'Open the construction menu (trenches hold 8 infantry)', run: () => this.openBuild() });
+      if (units.some((u) => this.adapter.unitDef(u.type)?.domain === 'ground')) {
+        buttons.push({
+          id: 'enter',
+          icon: ICONS.enter,
+          label: 'Board / garrison',
+          key: k.enter,
+          active: mode.kind === 'enter',
+          detail: 'Click a transport (IFV, transport helicopter or ship), a building or a trench to get in. Right-clicking one works too.',
+          run: () => this.input.setMode({ kind: 'enter' }),
+        });
+      }
+      const carrying = units.filter((u) => (u.cargo?.length ?? 0) > 0);
+      if (carrying.length) {
+        const n = carrying.reduce((a, u) => a + (u.cargo?.length ?? 0), 0);
+        buttons.push({
+          id: 'unload',
+          icon: ICONS.unload,
+          label: 'Unload',
+          key: k.unload,
+          badge: String(n),
+          active: mode.kind === 'unload',
+          detail: 'Click where the passengers should get out (ships stop at the beach). Shift: unload right here.',
+          run: (shift) => {
+            if (shift) this.issue({ type: 'unload', units: carrying.map((u) => u.id) });
+            else this.input.setMode({ kind: 'unload' });
+          },
+        });
+      }
+      const lines = [...new Set(units.map((u) => u.line ?? 0).filter((l) => l > 0))];
+      buttons.push({
+        id: 'line',
+        icon: ICONS.line,
+        label: lines.length === 1 ? 'Redraw / reinforce line' : 'Frontline',
+        key: k.drawLine,
+        active: mode.kind === 'line',
+        detail: `Hold ${keyLabel(k.drawLine)} and drag on the map: units spread along the line by role (infantry into cover, AT on the flanks, tanks behind, artillery far back) and hold it.`,
+        run: () => this.input.setMode({ kind: 'line' }),
+      });
+      if (lines.length) {
+        buttons.push({
+          id: 'advance',
+          icon: ICONS.advance,
+          label: 'Advance line',
+          key: k.advanceLine,
+          detail: 'Push the whole line 40 m forward (Shift: pull it back 40 m)',
+          run: (shift) => {
+            for (const line of lines) this.issue({ type: 'advanceLine', line, distance: shift ? -40 : 40 });
+          },
+        });
+        buttons.push({ id: 'disband', icon: ICONS.disband, label: 'Disband line', key: k.disbandLine, detail: 'Units stop holding the line and stay where they are', run: () => lines.forEach((line) => this.issue({ type: 'disbandLine', line })) });
+      }
+      // Abilities shared by the selection, on the slot keys.
+      const abil = new Map<string, { info: NonNullable<ReturnType<SimAdapter['abilityInfo']>>; ready: EntityId[]; casters: EntityId[]; cd: number; active: boolean }>();
+      for (const u of units) {
+        for (const a of this.adapter.abilities(u)) {
+          let g = abil.get(a.ability);
+          if (!g) abil.set(a.ability, (g = { info: a.info, ready: [], casters: [], cd: 1, active: false }));
+          g.casters.push(u.id);
+          if (a.cooldown <= 0) g.ready.push(u.id);
+          g.cd = Math.min(g.cd, a.cooldown);
+          g.active ||= a.active;
+        }
+      }
+      let slot = 0;
+      for (const [id, g] of abil) {
+        if (buttons.length >= COLS * ROWS) break;
+        const secs = Math.ceil(g.cd * g.info.cooldown);
+        buttons.push({
+          id: `ability:${id}`,
+          icon: abilityIcon(id),
+          label: g.info.name,
+          key: k[SLOT_ACTIONS[slot++ % SLOT_ACTIONS.length]],
+          cost: g.info.cost || undefined,
+          badge: g.ready.length ? undefined : `${secs}s`,
+          active: g.active || (mode.kind === 'ability' && mode.ability === id),
+          disabled: !g.ready.length,
+          detail: `${g.info.target === 'self' ? 'Toggles/activates on the selected units' : g.info.target === 'point' ? 'Click a spot on the map' : 'Click a unit'} · cooldown ${g.info.cooldown}s${g.info.cost ? ` · ${g.info.cost} supply` : ''}`,
+          run: (shift) => {
+            if (!g.ready.length) return this.notify(`${g.info.name} is recharging`);
+            if (g.info.target === 'self') this.issue({ type: 'useAbility', units: g.ready, ability: id, queue: shift });
+            else this.input.setMode({ kind: 'ability', ability: id, target: g.info.target === 'unit' ? 'unit' : 'point', units: g.ready });
+          },
+        });
+      }
       const types = new Set(units.map((u) => u.type));
       return { title: types.size === 1 ? this.adapter.displayName([...types][0]).toUpperCase() : 'ORDERS', buttons };
     }
@@ -166,16 +250,49 @@ export class CommandCard {
           },
         };
       });
-      buttons.push({
-        id: 'rally',
-        icon: ICONS.rally,
-        label: 'Rally',
-        key: k[SLOT_ACTIONS[Math.min(buttons.length, SLOT_ACTIONS.length - 1)]],
-        active: mode.kind === 'rally',
-        detail: 'Set where new units gather (or right click the map)',
-        run: () => this.input.setMode({ kind: 'rally', factories: same.map((s) => s.id) }),
-      });
+      if (producible.length) {
+        buttons.push({
+          id: 'rally',
+          icon: ICONS.rally,
+          label: 'Rally',
+          key: k[SLOT_ACTIONS[Math.min(buttons.length, SLOT_ACTIONS.length - 1)]],
+          active: mode.kind === 'rally',
+          detail: 'Set where new units gather (or right click the map)',
+          run: () => this.input.setMode({ kind: 'rally', factories: same.map((s) => s.id) }),
+        });
+      }
+      const garrisoned = same.filter((s) => (s.cargo?.length ?? 0) > 0);
+      if (garrisoned.length) {
+        buttons.push({
+          id: 'unload',
+          icon: ICONS.unload,
+          label: 'Evacuate',
+          key: k.unload,
+          badge: String(garrisoned.reduce((a, s) => a + (s.cargo?.length ?? 0), 0)),
+          detail: 'Order the garrison out',
+          run: () => this.issue({ type: 'unload', units: garrisoned.map((s) => s.id) }),
+        });
+      }
+      if (this.adapter.structures[type]?.superweapon) {
+        const sw = this.adapter.superweapon(this.local);
+        const pct = Math.floor((sw?.charge ?? 0) * 100);
+        buttons.push({
+          id: 'superweapon',
+          icon: ICONS.missile,
+          label: 'Cruise missile',
+          key: k[SLOT_ACTIONS[0]],
+          badge: sw?.ready ? 'READY' : `${pct}%`,
+          active: mode.kind === 'superweapon',
+          disabled: !sw?.ready,
+          detail: 'Strategic strike on any point. Everyone sees the target marker 12 s before impact. Recharges for 6 minutes.',
+          run: () => {
+            if (!sw?.ready) return this.notify(`Cruise missile charging (${pct}%)`);
+            this.input.setMode({ kind: 'superweapon' });
+          },
+        });
+      }
       return { title: this.adapter.displayName(type).toUpperCase(), buttons };
+
     }
     return { title: '', buttons: [] };
   }

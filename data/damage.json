@@ -8,7 +8,7 @@
     "structure": 0.1
   },
   "ap": {
-    "infantry": 0.35,
+    "infantry": 0.25,
     "light": 1.2,
     "heavy": 1,
     "air": 0.5,
