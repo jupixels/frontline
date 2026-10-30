@@ -1,4 +1,4 @@
-import type { EntityId, Heading, PlayerId, Tick, Vec2 } from './types';
+import type { EntityId, Heading, PlayerId, TeamId, Tick, Vec2 } from './types';
 
 export type EntityKind = 'unit' | 'structure' | 'projectile' | 'point';
 
@@ -25,6 +25,78 @@ export interface PlayerState {
   readonly power: number;
   readonly tickets: number;
   readonly defeated: boolean;
+}
+
+/** Fog-of-war cell states. */
+export const FOG_UNEXPLORED = 0;
+export const FOG_EXPLORED = 1;
+export const FOG_VISIBLE = 2;
+
+/**
+ * Read-only fog of war, computed deterministically in the sim (so AI and lockstep agree).
+ * Grid cell (0,0) is the map's -x,-z corner; index = row * cols + col.
+ */
+export interface FogView {
+  readonly cellSize: number;
+  readonly cols: number;
+  readonly rows: number;
+  /** Increments every time the grids are recomputed (a few times per second). */
+  readonly version: number;
+  /** Per-cell FOG_* values for the player's team. Do not mutate. */
+  cells(player: PlayerId): Readonly<Uint8Array>;
+  isVisible(player: PlayerId, x: number, z: number): boolean;
+  isExplored(player: PlayerId, x: number, z: number): boolean;
+  /** Whether `player` should see entity `id` right now (own/allied/neutral points always). */
+  canSee(player: PlayerId, id: EntityId): boolean;
+}
+
+export interface ProductionView {
+  readonly unit: string;
+  /** 0..1 */
+  readonly progress: number;
+}
+
+/** Player economy beyond PlayerState. */
+export interface EconomyView {
+  readonly team: TeamId;
+  readonly supply: number;
+  readonly power: number;
+  readonly powerProduced: number;
+  readonly powerUsed: number;
+  readonly cp: number;
+  readonly cpCap: number;
+  readonly tier: number;
+  readonly pointsHeld: number;
+  /** Team tickets (members of a team share one pool). */
+  readonly tickets: number;
+}
+
+/** Richer reads for HUD build menus, queues, capture bars, fog and AI. Implemented by Simulation. */
+export interface SimViewExt {
+  readonly fog: FogView;
+  economy(player: PlayerId): EconomyView | undefined;
+  /** Production queue of a factory (front item first). */
+  queue(factory: EntityId): readonly ProductionView[];
+  rally(factory: EntityId): Vec2 | null;
+  /** Structure construction progress 0..1 (1 = complete). */
+  buildProgress(id: EntityId): number;
+  capture(point: EntityId): { owner: PlayerId; capturer: PlayerId; progress: number; radius: number } | undefined;
+  /** Unit types `factory` can produce right now (tier/requirements met). */
+  producible(factory: EntityId): string[];
+  /** Structures `player`'s builders can place right now. */
+  buildable(player: PlayerId): string[];
+  /** Whether a `build` command would be accepted at this spot (for the placement ghost). */
+  canPlace(player: PlayerId, structure: string, at: Vec2, rotation: number): boolean;
+  /** Abilities of a unit with remaining cooldown (0..1 of the full cooldown, 0 = ready). */
+  abilities(id: EntityId): readonly { ability: string; cooldown: number; active: boolean }[];
+  /** 0.5..1: fire rate and accuracy factor from distance to friendly supply. */
+  readiness(id: EntityId): number;
+  /** Supply waiting at a source (capture point / depot) for a truck. */
+  stock(id: EntityId): number;
+  /** Whether `player` may give orders to `id` (owner, or shared command). */
+  canCommand(player: PlayerId, id: EntityId): boolean;
+  /** Match over: winning team, or null while playing. */
+  readonly winner: TeamId | null;
 }
 
 /** Read-only view of the simulation that other modules depend on. */
