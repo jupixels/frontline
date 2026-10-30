@@ -11,6 +11,8 @@ import { testContent } from './fixtures';
 
 const HASH_EVERY = 50;
 const MAX_CATCHUP = 10;
+/** Mirrors src/game/match.ts: hidden tabs step from a timer with a larger catch-up cap. */
+const HIDDEN_CATCHUP = 40;
 
 /** In-memory storage standing in for sessionStorage. */
 export class MemStorage {
@@ -34,6 +36,9 @@ export class VirtualPeer {
   /** sim.tick → hash, recorded every HASH_EVERY ticks. */
   readonly hashes = new Map<number, number>();
   frozen = false;
+  /** Simulate a background tab whose timers fire only every `throttleMs` (browsers: ~1000). */
+  throttleMs = 0;
+  private throttled = 0;
   /** Uncapped catch-up (what the match loop should do while a rejoin backlog is large). */
   fastForward = true;
   submitted = 0;
@@ -66,10 +71,17 @@ export class VirtualPeer {
     const sim = this.sim;
     const net = this.session;
     if (!sim || !net || this.frozen) return;
+    if (this.throttleMs) {
+      this.throttled += ms;
+      if (this.throttled < this.throttleMs) return;
+      ms = Math.min(this.throttled, 2000); // match.ts clamps dt to 2 s when hidden
+      this.throttled = 0;
+    }
     this.acc += ms;
     const ff = this.fastForward && net.backlogTicks(sim.tick) > 20;
     let steps = 0;
-    while (ff ? steps < 200_000 : this.acc >= TICK_MS && steps < MAX_CATCHUP) {
+    const cap = this.throttleMs ? HIDDEN_CATCHUP : MAX_CATCHUP;
+    while (ff ? steps < 200_000 : this.acc >= TICK_MS && steps < cap) {
       const turn = net.pollTurn(sim.tick);
       if (!turn) {
         this.acc = Math.min(this.acc, TICK_MS);
@@ -86,7 +98,7 @@ export class VirtualPeer {
       if (sim.tick % 15 === 0) this.issueCommands(net, sim);
       if (ff && net.backlogTicks(sim.tick) === 0) break;
     }
-    if (!ff && steps === MAX_CATCHUP) this.acc = 0;
+    if (!ff && steps === cap) this.acc = 0;
   }
 
   /** Random but legal orders for every player this tab controls (its human and any AI). */

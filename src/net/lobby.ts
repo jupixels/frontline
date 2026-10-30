@@ -46,6 +46,7 @@ const TICKET_KEY = 'frontline.rejoin';
 const DEFAULT_TURN_TICKS = 2;
 const DEFAULT_REJOIN_WINDOW_MS = 5 * 60_000;
 const HELLO_RETRY_MS = 2500;
+const LOBBY_PING_MS = 2000;
 const MAX_NAME = 24;
 const MAX_CHAT = 300;
 
@@ -173,6 +174,7 @@ export class Lobby {
   private joinReject?: (e: NetError) => void;
   private helloTimer: unknown;
   private rejoinTicket: RejoinTicket | null = null;
+  private pingTimer: unknown;
 
   /** @internal Use hostLobby / joinLobby. */
   constructor(
@@ -199,6 +201,7 @@ export class Lobby {
     transport.events.on('status', (s) => {
       if (s.state === 'failed') this.close(new NetError(s.error ?? 'signaling-unavailable'));
     });
+    this.pingLoop();
   }
 
   // -------------------------------------------------------------------------------------
@@ -253,6 +256,12 @@ export class Lobby {
 
   setReady(ready: boolean): void {
     this.updateSelf({ ready });
+  }
+
+  /** Move to another open slot (keeps name, team, color; clears ready). */
+  moveToSlot(index: number): void {
+    if (this.isHost) this.applyMove(this.selfId, index);
+    else this.toHost({ t: 'moveReq', index });
   }
 
   sendChat(text: string): void {
@@ -313,6 +322,13 @@ export class Lobby {
     }
     next.ready = true;
     this.replaceSlot(next);
+  }
+
+  /** Host: change another human's team / color / faction (not their name or ready flag). */
+  setPlayerSlot(index: number, patch: Pick<SlotPatch, 'team' | 'color' | 'faction'>): void {
+    const slot = this.state.slots[index];
+    if (!this.isHost || slot?.state !== 'human' || !slot.peer) return;
+    this.applySlotPatch(slot.peer, { team: patch.team, color: patch.color, faction: patch.faction });
   }
 
   /** Open or close an empty / AI slot. */
@@ -470,7 +486,8 @@ export class Lobby {
   private migrateHost(): void {
     const old = this.state.hostPeer;
     const peers = new Set(this.transport.peers());
-    const slots = this.state.slots.map((s) => (s.peer === old ? emptySlot(s.index, 'open') : s));
+    // Pings were measured from the old host; the new one re-measures.
+    const slots = this.state.slots.map((s) => (s.peer === old ? emptySlot(s.index, 'open') : { ...s, pingMs: undefined }));
     const next = slots.find((s) => s.state === 'human' && s.peer && (s.peer === this.selfId || peers.has(s.peer)));
     if (!next?.peer) return this.close(new NetError('host-unreachable', 'host left'));
     this.state = { ...this.state, slots, hostPeer: next.peer };
@@ -507,6 +524,13 @@ export class Lobby {
       case 'slotReq':
         if (this.isHost) this.applySlotPatch(from, msg.patch);
         return;
+      case 'moveReq':
+        if (this.isHost) this.applyMove(from, msg.index);
+        return;
+      case 'lping':
+        return this.transport.send({ t: 'lpong', ts: msg.ts }, from);
+      case 'lpong':
+        return this.onLobbyPong(from, msg.ts);
       case 'chat':
         if (this.isHost) this.hostChat(from, msg.text);
         return;
@@ -573,6 +597,36 @@ export class Lobby {
   private freeColor(index: number, slots = this.state.slots): string {
     const used = new Set(slots.filter((s) => s.index !== index && (s.state === 'human' || s.state === 'ai')).map((s) => s.color));
     return [PLAYER_COLORS[index], ...PLAYER_COLORS].find((c) => !used.has(c)) ?? PLAYER_COLORS[index];
+  }
+
+  private applyMove(peer: PeerId, index: number): void {
+    if (this.state.phase !== 'lobby') return;
+    const from = this.state.slots.find((s) => s.peer === peer);
+    const to = this.state.slots[index];
+    if (!from || !to || to.state !== 'open' || index >= this.state.settings.maxPlayers) return;
+    const slots = this.state.slots.slice();
+    slots[index] = { ...from, index, ready: peer === this.state.hostPeer };
+    slots[from.index] = emptySlot(from.index, 'open');
+    this.state = { ...this.state, slots };
+    this.broadcastState();
+  }
+
+  /** Host pings every peer in the lobby and publishes the RTTs in the slots. */
+  private pingLoop(): void {
+    if (this.closed || this.state.phase !== 'lobby') return;
+    if (this.isHost && this.transport.peers().length) this.transport.send({ t: 'lping', ts: this.env.now() });
+    this.pingTimer = this.env.setTimeout(() => this.pingLoop(), LOBBY_PING_MS);
+  }
+
+  private onLobbyPong(peer: PeerId, ts: number): void {
+    if (!this.isHost || this.state.phase !== 'lobby') return;
+    const slot = this.state.slots.find((s) => s.peer === peer);
+    if (!slot) return;
+    const sample = Math.max(0, Math.round(this.env.now() - ts));
+    const pingMs = slot.pingMs === undefined ? sample : Math.round(slot.pingMs * 0.7 + sample * 0.3);
+    // Skip tiny changes so pings don't flood every peer with state updates.
+    if (slot.pingMs !== undefined && Math.abs(pingMs - slot.pingMs) < 3) return;
+    this.replaceSlot({ ...slot, pingMs });
   }
 
   private applySlotPatch(peer: PeerId, patch: SlotPatch): void {
@@ -681,6 +735,7 @@ export class Lobby {
     if (this.closed) return;
     this.closed = true;
     this.env.clearTimeout(this.helloTimer);
+    this.env.clearTimeout(this.pingTimer);
     const session = this.session;
     this.session = null;
     session?.dispose();

@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { DesyncInfo } from '../src/net/lockstep';
 import { compareHashes, TestWorld, type VirtualPeer } from './net-harness';
+
+// Several full sims run per test; the sim got heavier than vitest's 5 s default allows.
+vi.setConfig({ testTimeout: 60_000 });
 
 /** Host + n-1 joiners, all ready, optional AI slots, match started. */
 async function startMatch(world: TestWorld, humans: number, ais = 0): Promise<VirtualPeer[]> {
@@ -75,6 +78,40 @@ describe('lockstep over loopback', () => {
     expect(a.sim!.tick).toBeGreaterThan(stuckAt);
     expect(a.session!.status.phase).toBe('running');
     expect(compareHashes([a, b]).mismatches).toEqual([]);
+  });
+
+  it('a 1 Hz-throttled background tab does not slow the game down', async () => {
+    const world = new TestWorld({ latencyMs: 40, jitterMs: 20, ordered: false, seed: 9 });
+    const [a, b, c] = await startMatch(world, 3);
+    await world.run(3000);
+    c.throttleMs = 1000; // what browsers do to timers in hidden tabs
+    const t0 = a.sim!.tick;
+    const delays: number[] = [];
+    const visiblePhases = new Set<string>();
+    for (let i = 0; i < 20; i++) {
+      await world.run(1000);
+      for (const p of [a, b, c]) delays.push(p.session!.status.inputDelayTicks);
+      for (const p of [a, b]) visiblePhases.add(p.session!.status.phase);
+    }
+    // c's send-ahead must not make a and b think they're behind (that would delay their commands).
+    expect(visiblePhases.has('catchingUp')).toBe(false);
+    // Close to the nominal 20 ticks/s, and nobody's input delay grows.
+    expect((a.sim!.tick - t0) / 20).toBeGreaterThan(18);
+    expect(Math.max(...delays)).toBeLessThanOrEqual(4);
+    expect(Math.abs(a.sim!.tick - c.sim!.tick)).toBeLessThan(45);
+    // The hidden player's units still get (late) orders through.
+    const cTurns = a.session!.commandLog().turns.filter((t) => t.tick > t0 && t.commands.some((x) => x.player === c.session!.localPlayer));
+    expect(cTurns.length).toBeGreaterThan(0);
+    expect(compareHashes([a, b, c]).mismatches).toEqual([]);
+
+    // Gaps beyond the send-ahead cap stall the others, but nothing breaks.
+    c.throttleMs = 5000;
+    await world.run(15_000);
+    c.throttleMs = 0;
+    await world.run(5000);
+    expect(Math.abs(a.sim!.tick - c.sim!.tick)).toBeLessThan(15);
+    expect(a.session!.status.phase).toBe('running');
+    expect(compareHashes([a, b, c]).mismatches).toEqual([]);
   });
 
   it('detects a desync and reports per-player hashes', async () => {
