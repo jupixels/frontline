@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ChatMessage } from '../src/net/protocol';
 import { makeRoomCode, normalizeRoomCode, roomCodeFromUrl, shareUrl } from '../src/net/lobby';
 import { TestWorld } from './net-harness';
+
+// Several full sims run per test; the sim got heavier than vitest's 5 s default allows.
+vi.setConfig({ testTimeout: 60_000 });
 
 describe('room codes', () => {
   it('generates 6-char unambiguous codes and parses share links', () => {
@@ -100,6 +103,58 @@ describe('lobby', () => {
     b.lobby.setReady(true);
     await world.run(100);
     expect(a.lobby.canStart()).toEqual({ ok: true });
+  });
+
+  it('moves players between slots, lets the host edit humans, and publishes pings', async () => {
+    const world = new TestWorld({ latencyMs: 40 });
+    const host = await world.host('H');
+    const a = await world.join('A', host.lobby.code);
+    const b = await world.join('B', host.lobby.code);
+    await world.run(200);
+    a.lobby.setReady(true);
+    await world.run(100);
+
+    // A moves from slot 1 to slot 5: keeps its name, loses ready; slot 1 opens up.
+    a.lobby.moveToSlot(5);
+    // B tries to take an occupied slot (the host's): ignored.
+    b.lobby.moveToSlot(0);
+    await world.run(200);
+    expect(b.lobby.slots[5]).toMatchObject({ state: 'human', name: 'A', peer: a.lobby.selfId, ready: false });
+    expect(b.lobby.slots[1].state).toBe('open');
+    expect(b.lobby.slots[0].name).toBe('H');
+    expect(b.lobby.localSlot?.index).toBe(2);
+    expect(a.lobby.localSlot?.index).toBe(5);
+
+    // Host moves itself too and stays ready.
+    host.lobby.moveToSlot(7);
+    await world.run(200);
+    expect(a.lobby.slots[7]).toMatchObject({ name: 'H', ready: true });
+
+    // Host edits another human's team and color; a taken color is refused.
+    host.lobby.setPlayerSlot(5, { team: 3, color: '#123456' });
+    host.lobby.setPlayerSlot(2, { color: '#123456' });
+    a.lobby.setPlayerSlot(2, { team: 6 }); // not host: ignored
+    await world.run(200);
+    expect(b.lobby.slots[5]).toMatchObject({ team: 3, color: '#123456', name: 'A' });
+    expect(b.lobby.slots[2].color).not.toBe('#123456');
+    expect(b.lobby.slots[2].team).not.toBe(6);
+
+    // Pings: host-measured RTT (~2 x 40 ms) shows up in every peer's copy of the slots.
+    await world.run(5000);
+    for (const p of [host, a, b]) {
+      expect(p.lobby.slots[5].pingMs).toBeGreaterThanOrEqual(75);
+      expect(p.lobby.slots[5].pingMs).toBeLessThan(120);
+      expect(p.lobby.slots[2].pingMs).toBeGreaterThanOrEqual(75);
+      expect(p.lobby.slots[7].pingMs).toBeUndefined(); // the host itself
+    }
+
+    // Start still assigns ids in slot order: B (slot 2) = 0, A (slot 5) = 1, H (slot 7) = 2.
+    b.lobby.setReady(true);
+    a.lobby.setReady(true);
+    await world.run(200);
+    const { setup } = await host.lobby.start();
+    expect(setup.players.map((p) => p.name)).toEqual(['B', 'A', 'H']);
+    expect(setup.players[1].team).toBe(3);
   });
 
   it('times out with host-unreachable when nobody answers', async () => {

@@ -33,6 +33,8 @@ export interface LobbySlot {
   aiDifficulty?: AiDifficulty;
   /** Internal: SHA-256 of the player's rejoin secret. UIs ignore it. */
   secretHash?: string;
+  /** Round trip between the host and this player, ms (host-measured; unset for the host itself). */
+  pingMs?: number;
 }
 
 export interface LobbySettings {
@@ -132,13 +134,17 @@ export type NetMessage =
   | { t: 'reject'; reason: RejectReason }
   | { t: 'lobby'; state: LobbyState }
   | { t: 'slotReq'; patch: SlotPatch }
+  | { t: 'moveReq'; index: number }
+  | { t: 'lping'; ts: number }
+  | { t: 'lpong'; ts: number }
   | { t: 'chat'; text: string }
   | { t: 'chatMsg'; msg: ChatMessage }
   | { t: 'kicked' }
   | { t: 'start'; start: StartInfo }
   // match
   | { t: 'in'; b: number; c: [PlayerId, Command[]][]; ctl?: CtlChange[] }
-  | { t: 'ping'; ts: number }
+  /** `blk`: the sender's current block, so peers can tell when they've fallen behind. */
+  | { t: 'ping'; ts: number; blk?: number }
   | { t: 'pong'; ts: number }
   | { t: 'hash'; tick: number; h: number }
   | { t: 'bye' }
