@@ -70,7 +70,19 @@
 .morale.low .morale-value { color: var(--danger); animation: pulse 1.2s infinite; }
 .morale.defeated { opacity: 0.4; }
 .morale.defeated .morale-value { text-decoration: line-through; }
-.center-foot { display: flex; align-items: center; justify-content: center; gap: 12px; }
+/* Three or more sides: our Morale stays a full card, the others shrink to chips in balanced rows (TopBar.fitCenter sets --cols/--rows). */
+.center-panel.multi .morale-row { display: grid; grid-template-columns: auto repeat(var(--cols, 7), auto); justify-content: center; }
+.center-panel.multi .morale.mine { min-width: 150px; grid-row: span var(--rows, 1); }
+.center-panel.multi .morale-row.stacked { grid-template-columns: repeat(var(--cols, 4), auto); }
+.center-panel.multi .morale-row.stacked .morale.mine { grid-column: 1 / -1; grid-row: auto; }
+.morale.chip { grid-template-columns: minmax(0, 1fr) auto; align-content: center; gap: 0 6px; min-width: 0; width: 86px; padding: 4px 7px 5px 8px; }
+.morale.chip .morale-name { font-size: 9.5px; letter-spacing: 0.1em; max-width: none; }
+.morale.chip .morale-value { font-size: 15px; }
+.morale.chip .morale-bar { height: 3px; margin-top: 4px; }
+.morale.chip .morale-drain { display: none; }
+.morale.lead { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); }
+.morale.lead .morale-name::before { content: '\25B2\00a0'; color: var(--accent); }
+.center-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; }
 .points-strip { display: flex; gap: 5px; }
 .pt { position: relative; width: 17px; height: 17px; padding: 0; border: none; background: none; cursor: pointer; }
 .pt-core { position: absolute; inset: 4px; transform: rotate(45deg); background: var(--owner, transparent); border: 1.5px solid rgba(218, 226, 212, 0.55); border-radius: 1px; transition: background var(--t-med); }
@@ -78,6 +90,11 @@
 .pt.ours .pt-core { box-shadow: 0 0 8px color-mix(in srgb, var(--owner) 70%, transparent); }
 .pt-ring { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(var(--cap) calc(var(--prog) * 360deg), transparent 0); -webkit-mask: radial-gradient(circle, transparent 6.5px, #000 7px); mask: radial-gradient(circle, transparent 6.5px, #000 7px); }
 .pt:hover .pt-core { border-color: var(--accent); }
+/* Many points: smaller diamonds so 13+ still fit in one strip. */
+.points-strip.many { gap: 3px; }
+.points-strip.many .pt { width: 14px; height: 14px; }
+.points-strip.many .pt-core { inset: 3.5px; }
+.points-strip.many .pt-ring { -webkit-mask: radial-gradient(circle, transparent 5px, #000 5.5px); mask: radial-gradient(circle, transparent 5px, #000 5.5px); }
 .clock { display: flex; align-items: center; gap: 5px; color: var(--text-2); cursor: default; }
 .clock-value { font-family: var(--mono); font-size: var(--fs-sm); letter-spacing: 0.04em; color: var(--text); }
 .right-panel { display: flex; align-items: center; gap: 4px; height: 50px; padding: 0 6px 0 10px; }

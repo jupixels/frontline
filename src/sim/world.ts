@@ -191,6 +191,8 @@ export interface Entity extends EntityState {
   hurtAt: Tick;
   /** Demolition countdown end (game tick), 0 = not being demolished. */
   demolishAt: Tick;
+  /** Who last hurt this entity, and when (idle units turn on attackers they can see). */
+  lastAttacker: EntityId;
   /** Frontline membership and assigned slot. */
   line: number;
   lineSlot: Vec2 | null;
@@ -432,6 +434,7 @@ export class World {
       rank: 0,
       hurtAt: -100000,
       demolishAt: 0,
+      lastAttacker: 0,
       line: 0,
       lineSlot: null,
       homeOwner: owner,

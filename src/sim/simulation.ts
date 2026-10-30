@@ -124,7 +124,7 @@ export class Simulation implements SimView, SimViewExt {
       for (const a of e.abilities) h.num(a.cooldown);
       h.str(e.entrench).num(e.entrenchAt).num(e.boostUntil).num(e.ambush ? 1 : 0).num(e.readiness).num(e.stock).num(e.truck).num(e.truckReadyAt);
       if (e.haul) h.num(e.haul.source).str(e.haul.phase).num(e.haul.cargo);
-      h.num(e.inside).num(e.demolishAt).num(e.firedAt).num(e.cargo.length).num(e.suppression).num(e.xp).num(e.rank).num(e.maxHp).num(e.line);
+      h.num(e.inside).num(e.demolishAt).num(e.firedAt).num(e.lastAttacker).num(e.hurtAt).num(e.cargo.length).num(e.suppression).num(e.xp).num(e.rank).num(e.maxHp).num(e.line);
       if (e.lineSlot) h.num(e.lineSlot.x).num(e.lineSlot.z);
     }
     for (const l of w.lines.values()) {

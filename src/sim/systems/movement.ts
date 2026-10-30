@@ -3,7 +3,7 @@ import { headingTo, turnToward, wrapAngle } from '../math/dmath';
 import type { Entity, World } from '../world';
 import { abilityOrderTick } from './abilities';
 import { enterTick, unloadTick } from './containers';
-import { builderTick } from './economy';
+import { autoBuild, builderTick } from './economy';
 import { lineTick } from './lines';
 import { logisticsTick } from './logistics';
 import { terrainSpeed } from './terrain';
@@ -125,6 +125,8 @@ export function movementSystem(world: World): void {
     const o = e.order;
     if (!o) {
       e.path = null;
+      // Idle engineers lend a hand on unfinished buildings nearby.
+      if (autoBuild(world, e)) builderTick(world, e, (e.order as { siteId: number }).siteId);
       continue;
     }
     if (o.kind === 'move') {
