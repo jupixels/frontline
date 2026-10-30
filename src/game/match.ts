@@ -5,6 +5,7 @@ import { GameRenderer } from '../render/renderer';
 import type { SimEvent } from '../shared/events';
 import type { MatchSetup, PlayerId } from '../shared/types';
 import { TICK_MS } from '../shared/types';
+import type { SimMapDef } from '../sim/content';
 import { Simulation } from '../sim/simulation';
 import type { MatchMode, MatchUi, UiApp } from '../ui';
 import { STRUCTURES, UNITS, mapDef, simContent } from './content';
@@ -50,9 +51,10 @@ export class Match {
     app.setLoadingProgress(0.3, 'Building the battlefield');
     this.sim = new Simulation(setup, simContent(setup.mapId));
     app.setLoadingProgress(0.6, 'Loading units');
-    this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: setup.players, localPlayer });
+    this.renderer = new GameRenderer({ canvas, mapSize: map.size, units: UNITS, players: setup.players, localPlayer, map: map as SimMapDef });
     this.renderer.setQuality(app.settings.get().graphics);
-    this.audio = new AudioManager(localPlayer);
+    const localTeam = setup.players.find((p) => p.id === localPlayer)?.team;
+    this.audio = new AudioManager(localPlayer, { team: localTeam, units: UNITS });
 
     const r = this.renderer;
     const spawn = map.spawns[Math.max(0, localPlayer) % map.spawns.length];
@@ -76,7 +78,7 @@ export class Match {
       },
       onSelectionChange: (ids) => {
         r.setSelection(ids);
-        if (ids.length) this.audio.uiSelect();
+        if (ids.length) this.audio.uiSelect(ids, this.sim);
       },
       onPauseChange: (p) => (this.paused = p && opts.mode === 'skirmish'),
       onDesyncReport: () => this.downloadDesyncReport(),
@@ -107,9 +109,8 @@ export class Match {
     clearInterval(this.hiddenTimer);
     for (const off of this.offs) off();
     this.net.dispose();
-    // TODO(render): GameRenderer.dispose(). Until then drop the GL context; main swaps in a fresh canvas.
-    this.renderer.renderer.dispose();
-    this.renderer.renderer.forceContextLoss();
+    this.renderer.dispose();
+    this.audio.dispose();
   }
 
   private lockstep(): LockstepSession | null {
@@ -191,7 +192,7 @@ export class Match {
       if (this.sim.proposedEvents.length) events.push(...this.sim.proposedEvents);
       if (!ff) {
         this.renderer.handleEvents(this.sim, events);
-        this.audio.handleEvents(events);
+        this.audio.handleEvents(events, this.sim);
       }
       this.ui.handleEvents(events);
       if (this.sim.tick % HASH_EVERY === 0) this.net.reportHash(this.sim.tick, this.sim.hash());
@@ -203,6 +204,8 @@ export class Match {
     if (hidden) return;
 
     this.renderer.frame(this.sim, Math.min(this.acc / TICK_MS, 1), dt);
+    this.audio.setListenerFromCamera(this.renderer.cam.camera.position, this.renderer.cam.target);
+    this.audio.update(this.sim, dt);
     this.ui.frame(dt);
   }
 }

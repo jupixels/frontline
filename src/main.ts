@@ -1,3 +1,4 @@
+import { setVolume } from './audio/audio';
 import { MAPS } from './game/content';
 import { Match } from './game/match';
 import { NetLobbyAdapter, netLobbyConnector } from './game/netLobby';
@@ -40,7 +41,7 @@ const app = new UiApp({
     match = null;
   },
   onSettingsChange: (s) => {
-    // TODO(audio): apply s.volume once the audio PR lands.
+    for (const bus of ['master', 'music', 'sfx', 'voice'] as const) setVolume(bus, s.volume[bus]);
     document.documentElement.dataset.quality = s.graphics;
     match?.renderer.setQuality(s.graphics);
   },

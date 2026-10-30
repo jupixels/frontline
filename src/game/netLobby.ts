@@ -89,10 +89,11 @@ export class NetLobbyAdapter implements LobbyApi {
     if (!slot) return;
     if (slot.peer === this.lobby.selfId) this.lobby.updateSelf(patch);
     else if (slot.state === 'ai') this.lobby.setAiSlot(index, { team: patch.team, color: patch.color });
+    else if (slot.state === 'human') this.lobby.setPlayerSlot(index, { team: patch.team, color: patch.color });
   }
 
-  moveToSlot(): void {
-    // Not supported by the P2P lobby yet: slots are assigned on join.
+  moveToSlot(index: number): void {
+    this.lobby.moveToSlot(index);
   }
 
   sendChat(text: string): void {
@@ -143,6 +144,7 @@ function toUiSlot(s: NetSlot): LobbySlot {
     team: s.team,
     color: s.color,
     ready: s.state === 'ai' ? true : s.ready,
+    ...(s.pingMs !== undefined ? { pingMs: s.pingMs } : {}),
   };
 }
 
