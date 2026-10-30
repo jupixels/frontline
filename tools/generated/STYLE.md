@@ -58,6 +58,15 @@ team accent is the roof (`accent.minHeight`, or `minHeightM` when a mast makes t
 
 After the prefix, add one or two sentences on the specific model's identifying features.
 
+**Prop (map dressing, wrecks, rubble):**
+
+> Realistic map prop, generic, no text, no signs. Matte weathered materials. Single object, entire object in
+> frame, three-quarter view from above, centered on a plain light grey background, no ground, no shadow, soft
+> even overcast lighting, photorealistic 3D render.
+
+War-damaged props start with "Realistic war-damaged map prop" instead. Props keep the Meshy texture (no team
+paint: `paint.vMin: 2` in the Blender config), no moving parts and no clips.
+
 ## 3D generation
 
 - Candidates (only when the reference image is in doubt): `meshy_image_to_3d`, `ai_model: meshy-6-lite`,
@@ -113,3 +122,5 @@ After the prefix, add one or two sentences on the specific model's identifying f
 - 2026-10-30: team color as an accent (`TeamAccent`) with a faint tint elsewhere. Aircraft use "plain olive drab"
   (helicopters) or "plain grey-green" (jets) paint; ships "plain haze grey, dark red-brown below the waterline,
   full hull out of the water"; the submarine matte dark grey.
+- 2026-10-30: props (prefix above, 2k triangles, no team tint); `buildings/props/rubble_pile.glb` is what destroyed
+  buildings leave behind (`src/render/scars.ts`).

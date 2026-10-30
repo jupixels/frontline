@@ -1,0 +1,41 @@
+{
+  "id": "sandbag_wall",
+  "date": "2026-10-30",
+  "batch": "props",
+  "replaces": "map dressing prop (new; for the maps session)",
+  "style": "tools/generated/STYLE.md, prop",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "Realistic military map prop, generic, no text, no logos, no markings. Matte weathered materials, light dust. Single object, entire object in frame, three-quarter view from above, centered on a plain light grey background, no ground, no shadow, soft even overcast lighting, photorealistic 3D render. A straight sandbag wall segment, about four times longer than tall, stacked olive and tan sandbags three rows high.",
+    "taskId": "01a18ee8-1aac-7702-b457-d64f5457b513",
+    "file": "raw/sandbag_wall/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 2000,
+      "texture": true,
+      "taskId": "01a18ee8-9610-7364-a7cd-e0975c2d15a9",
+      "file": "raw/sandbag_wall/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/sandbag_wall.json",
+    "output": "buildings/props/sandbag_wall.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/props/sandbag_wall.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

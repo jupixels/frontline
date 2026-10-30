@@ -370,6 +370,23 @@
       ]
     },
     {
+      "id": "fuel_tank",
+      "path": "models/buildings/props/fuel_tank.glb",
+      "kind": "prop",
+      "size": [
+        3.81,
+        5.08,
+        10
+      ],
+      "sizeKB": 47,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ]
+    },
+    {
       "id": "gas_tank",
       "path": "models/buildings/props/gas_tank.glb",
       "kind": "prop",
@@ -404,6 +421,23 @@
       ]
     },
     {
+      "id": "jersey_barrier",
+      "path": "models/buildings/props/jersey_barrier.glb",
+      "kind": "prop",
+      "size": [
+        3.6,
+        1.68,
+        1.36
+      ],
+      "sizeKB": 74,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ]
+    },
+    {
       "id": "light_pole",
       "path": "models/buildings/props/light_pole.glb",
       "kind": "prop",
@@ -418,6 +452,91 @@
       "license": "CC-BY-4.0",
       "credits": [
         "Zsky (zsky2000.itch.io)"
+      ]
+    },
+    {
+      "id": "pier",
+      "path": "models/buildings/props/pier.glb",
+      "kind": "prop",
+      "size": [
+        16,
+        2.96,
+        4.42
+      ],
+      "sizeKB": 69,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ]
+    },
+    {
+      "id": "power_pole",
+      "path": "models/buildings/props/power_pole.glb",
+      "kind": "prop",
+      "size": [
+        4.6,
+        8.97,
+        2.19
+      ],
+      "sizeKB": 62,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ]
+    },
+    {
+      "id": "rubble_pile",
+      "path": "models/buildings/props/rubble_pile.glb",
+      "kind": "prop",
+      "size": [
+        10,
+        1.52,
+        9.63
+      ],
+      "sizeKB": 71,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ]
+    },
+    {
+      "id": "ruined_wall",
+      "path": "models/buildings/props/ruined_wall.glb",
+      "kind": "prop",
+      "size": [
+        6,
+        5.25,
+        3.01
+      ],
+      "sizeKB": 77,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ]
+    },
+    {
+      "id": "sandbag_wall",
+      "path": "models/buildings/props/sandbag_wall.glb",
+      "kind": "prop",
+      "size": [
+        4,
+        1.26,
+        0.87
+      ],
+      "sizeKB": 55,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
       ]
     },
     {
@@ -486,6 +605,40 @@
       "license": "CC-BY-4.0",
       "credits": [
         "Zsky (zsky2000.itch.io)"
+      ]
+    },
+    {
+      "id": "wreck_apc",
+      "path": "models/buildings/props/wreck_apc.glb",
+      "kind": "prop",
+      "size": [
+        4.67,
+        3.66,
+        7.5
+      ],
+      "sizeKB": 50,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
+      ]
+    },
+    {
+      "id": "wreck_truck",
+      "path": "models/buildings/props/wreck_truck.glb",
+      "kind": "prop",
+      "size": [
+        2.46,
+        2.4,
+        7
+      ],
+      "sizeKB": 69,
+      "clips": [],
+      "nodes": [],
+      "license": "owned (Meshy Pro output)",
+      "credits": [
+        "Frontline (models made with Meshy AI, Pro plan)"
       ]
     },
     {

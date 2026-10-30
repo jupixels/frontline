@@ -306,7 +306,7 @@ export class UnitView {
     if (this.dying) return;
     this.dying = true;
     this.ring.visible = false;
-    this.rigVisible = true;
+    this.setRigVisible(true); // a unit killed while drawn as a far-LOD instance needs its model back for the wreck
     if (this.cls === 'heli' || this.cls === 'jet') this.fall = { vy: this.cls === 'jet' ? -6 : 0, spin: this.cls === 'heli' ? 2.5 : 0.4 };
     if (this.cls !== 'infantry') this.setBurnt(true);
     this.playDeath();
@@ -316,6 +316,7 @@ export class UnitView {
   becomeWreck(): boolean {
     if (!this.dying && this.hp > 0) return false;
     if (!this.dying) this.die();
+    this.setRigVisible(true);
     this.wreckAge = 0;
     return true;
   }
@@ -325,8 +326,17 @@ export class UnitView {
     return this.cls === 'infantry' ? 14 : this.cls === 'ship' ? 25 : this.cls === 'structure' ? 60 : 45;
   }
 
+  /** Kept wrecks stay on the battlefield until the renderer releases them (see BattleScars). */
+  keep = false;
+
   get wreckDone(): boolean {
-    return this.wreckAge > this.wreckLifetime + 5;
+    return !this.keep && this.wreckAge > this.wreckLifetime + 5;
+  }
+
+  /** Let a kept wreck sink away now. */
+  release(): void {
+    this.keep = false;
+    this.wreckAge = Math.max(this.wreckAge, this.wreckLifetime);
   }
 
   /** Place the view between the previous and current tick (alpha in [0,1]). */
@@ -357,7 +367,7 @@ export class UnitView {
     this.updateFalling(dt);
     this.tickMixer(dt, animate);
     // After its lifetime the wreck sinks into the ground (or water) and is removed.
-    const sink = Math.max(0, this.wreckAge - this.wreckLifetime);
+    const sink = this.keep ? 0 : Math.max(0, this.wreckAge - this.wreckLifetime);
     if (sink > 0) this.body.position.y = -sink * (this.height / 4 + 0.3);
   }
 
