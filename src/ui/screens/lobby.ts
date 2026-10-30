@@ -111,18 +111,23 @@ export class LobbyScreen implements Screen {
         'div',
         { class: 'lobby-body' },
         h(
-          'section',
-          { class: 'panel slots-panel' },
+          'div',
+          { class: 'lobby-main' },
           h(
-            'div',
-            { class: 'panel-title' },
-            h('span', null, mode === 'online' ? 'PLAYERS' : 'FORCES'),
-            h('span', { class: 'team-presets' }),
+            'section',
+            { class: `panel slots-panel${mode === 'online' ? '' : ' no-tail'}` },
+            h(
+              'div',
+              { class: 'panel-title' },
+              h('span', null, mode === 'online' ? 'PLAYERS' : 'FORCES'),
+              h('span', { class: 'team-presets' }),
+            ),
+            h('div', { class: 'slot-head mono' }, h('span', null, '#'), h('span', null, 'Player'), h('span', null, 'Team'), h('span', null, 'Status'), h('span', null, '')),
+            this.slotsEl,
           ),
-          h('div', { class: 'slot-head mono' }, h('span', null, '#'), h('span', null, 'Player'), h('span', null, 'Team'), h('span', null, 'Status'), h('span', null, '')),
-          this.slotsEl,
+          chatPanel,
         ),
-        h('div', { class: 'lobby-side' }, this.mapPanel, chatPanel),
+        h('div', { class: 'lobby-side' }, this.mapPanel),
       ),
       this.footer,
     );
@@ -236,7 +241,21 @@ export class LobbyScreen implements Screen {
     const num = h('span', { class: 'slot-num mono' }, String(slot.index + 1).padStart(2, '0'));
 
     let who: HTMLElement;
-    if (slot.state === 'taken' && o) {
+    if (o?.kind === 'ai' && host && s.status === 'open') {
+      // The host picks the AI's difficulty where its name would be.
+      const sel = h(
+        'select',
+        { class: 'select occupancy-select', title: 'Slot', onchange: () => lobby.setOccupancy(slot.index, parseOccupancy(sel.value)) },
+        OCCUPANCY_OPTIONS.map((opt) => h('option', { value: opt.value }, opt.label)),
+      );
+      sel.value = occupancyValue(slot);
+      who = h(
+        'span',
+        { class: 'slot-who' },
+        h('button', { class: 'swatch', type: 'button', title: 'Change color', style: { background: slot.color }, onclick: (e: MouseEvent) => this.openColorPicker(e.currentTarget as HTMLElement, slot) }),
+        sel,
+      );
+    } else if (slot.state === 'taken' && o) {
       const swatch = h('button', {
         class: 'swatch',
         type: 'button',
@@ -257,7 +276,7 @@ export class LobbyScreen implements Screen {
     } else if (host && s.status === 'open') {
       const sel = h(
         'select',
-        { class: 'select', onchange: () => lobby.setOccupancy(slot.index, parseOccupancy(sel.value)) },
+        { class: 'select occupancy-select', onchange: () => lobby.setOccupancy(slot.index, parseOccupancy(sel.value)) },
         OCCUPANCY_OPTIONS.map((opt) => h('option', { value: opt.value }, opt.label)),
       );
       sel.value = occupancyValue(slot);
@@ -312,18 +331,7 @@ export class LobbyScreen implements Screen {
       const q = slot.pingMs < 80 ? 'good' : slot.pingMs < 160 ? 'ok' : 'bad';
       tail.append(h('span', { class: `ping mono ${q}` }, `${slot.pingMs} ms`));
     }
-    if (host && o && !isMe && s.status === 'open') {
-      if (o.kind === 'human') tail.append(button('Kick', () => lobby.kick(o.peerId), 'btn-chip btn-danger'));
-      else {
-        const sel = h(
-          'select',
-          { class: 'select select-sm', title: 'Slot', onchange: () => lobby.setOccupancy(slot.index, parseOccupancy(sel.value)) },
-          OCCUPANCY_OPTIONS.map((opt) => h('option', { value: opt.value }, opt.label)),
-        );
-        sel.value = occupancyValue(slot);
-        tail.append(sel);
-      }
-    }
+    if (host && o?.kind === 'human' && !isMe && s.status === 'open') tail.append(button('Kick', () => lobby.kick(o.peerId), 'btn-chip btn-danger'));
 
     row.append(num, who, team, status, tail);
     return row;
@@ -402,7 +410,7 @@ export class LobbyScreen implements Screen {
       h(
         'div',
         { class: 'map-body' },
-        canvas,
+        h('div', { class: 'map-preview-wrap' }, canvas),
         h(
           'div',
           { class: 'map-fields' },
