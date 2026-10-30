@@ -559,7 +559,14 @@ export class MatchUi {
 
   private reasonFor(team: TeamId | null): string | undefined {
     if (team === null || this.ctx.setup.victory !== 'frontline') return this.ctx.setup.victory === 'annihilation' ? 'Enemy production destroyed' : undefined;
-    const losers = this.adapter.teamTickets().filter((t) => t.team !== team);
+    // Explain it from our side: why we lost, or how the last enemy fell.
+    const myTeam = this.adapter.teamOf(this.ctx.localPlayer);
+    const tickets = this.adapter.teamTickets();
+    if (team !== myTeam) {
+      const mine = tickets.find((t) => t.team === myTeam);
+      return mine && mine.tickets <= 0 ? 'Tickets depleted' : 'Our HQ was destroyed';
+    }
+    const losers = tickets.filter((t) => t.team !== team);
     return losers.every((t) => t.tickets <= 0) ? 'Tickets depleted' : 'Enemy HQ destroyed';
   }
 

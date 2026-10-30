@@ -56,7 +56,23 @@ Everything in GAME_PLAN §7 "Phase 2" and §8b "Phase 2", built on one branch.
 - [x] Naval models scaled to their gameplay footprint (they rendered 140–170 m long).
 - [ ] Lobby `moveToSlot` / per-slot ping over real relays: see below.
 
+### Shared-contract changes (src/shared)
+- `terrain.ts` (new), `maps.ts` (new: `assignSpawns`, teammates start together via `MapDef.sides`).
+- `MapDef`: `terrain`, `points`, `supplyNodes`, `structures`, `props`, `scatter`, `atmosphere`, `sides`, `modes` (legacy `water`/`obstacles` still load).
+- `Command`: `patrol`, `enter`, `unload`, `holdLine`, `advanceLine`, `disbandLine`, `superweapon`, `pauseVote`; `move.facing` is now used (right-drag lines up the group).
+- `SimEvent`: `suppressed`, `promoted`, `boarded`, `superweaponLaunched/Impact/Ready`, `line`, `pauseVote`, `paused`.
+- `EntityState`: `inside`, `cargo`, `suppression`, `rank`, `line`. `SimView.gameTick` (game clock; `tick` keeps counting while paused for lockstep). `SimViewExt`: `lines`, `superweapon`, `pause`, `heightAt`, `canEnter`, `reachable`.
+
+### Verification
+- `npm run typecheck && npm test && npm run build` pass. New suites: `sim.phase2`, `maps`, `balance`, `balance.matches`, plus a determinism run with every Phase 2 order on Valley Pass terrain.
+- Headless (FULL_BALANCE=1): equal Normal AIs on Valley Pass ended after 31, 40 and 44 minutes; see the comeback/maps results in the PR comments.
+- Preview: full skirmishes played to the end with my side on autoplay: Valley Pass vs Easy (won, 25 min), vs Hard (lost, 54 min, 94 tickets in it); Coastal Strait 2v2 with Easy ally vs Normal + Hard (lost, 40 min; Hard took both isles by air/sea assault); Desert Oilfields FFA vs Easy/Normal/Hard (see below).
+
 ### Deliberately deferred
-(filled in at the end)
+- **Prone animation**: the soldier pack has no prone clip, so pinned infantry tip the rig over instead.
+- **Foliage wind sway**: trees are static instances (cheap); sway is a render polish item.
+- **A second superweapon**: v1 has one shared roster, so one superweapon (cruise missile). The bomber carpet strike exists as the Tier 3 Strategic Bomber unit.
+- **Human-level AI**: the AI plays complete games on every map and difficulty and doesn't cheat, but it's beatable by a decent human on Hard. Tuning it further is ongoing work best driven by playtests.
+- **Map editor**: stretch goal, not in Phase 2.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
