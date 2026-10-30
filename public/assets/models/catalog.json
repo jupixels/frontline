@@ -6,22 +6,70 @@
       "path": "models/aa_tank.glb",
       "kind": "unit",
       "size": [
-        5.14,
-        4,
-        5.11
+        3.43,
+        4.35,
+        7.6
       ],
-      "sizeKB": 20,
+      "sizeKB": 107,
       "clips": [
         "Idle",
         "Move",
         "Fire",
+        "TurretTurn",
+        "TurretScan",
         "Hit",
         "Death"
       ],
-      "nodes": [],
-      "license": "CC-BY-SA-3.0",
+      "nodes": [
+        "P_turret",
+        "wheels_0",
+        "wheels_1",
+        "wheels_2",
+        "wheels_3",
+        "wheels_4",
+        "wheels_5",
+        "wheels_6",
+        "wheels_7",
+        "wheels_8",
+        "wheels_9",
+        "wheels_10",
+        "wheels_11",
+        "wheels_12",
+        "wheels_13",
+        "wheels_14",
+        "wheels_15",
+        "wheels_16",
+        "wheels_17",
+        "wheels_18",
+        "wheels_19",
+        "wheels_20",
+        "wheels_21",
+        "wheels_22",
+        "wheels_23",
+        "wheels_24",
+        "wheels_25",
+        "wheels_26",
+        "wheels_27",
+        "wheels_28",
+        "wheels_29",
+        "wheels_30",
+        "wheels_31",
+        "wheels_32",
+        "wheels_33",
+        "wheels_34",
+        "wheels_35",
+        "aa_turret",
+        "aa_gunpod_l",
+        "aa_gunpod_r",
+        "aa_barrel_l",
+        "aa_barrel_r",
+        "aa_track_radar",
+        "aa_radar_mast",
+        "aa_search_radar"
+      ],
+      "license": "CC0",
       "credits": [
-        "Nikke / Nickotopia (nickotopia.com)"
+        "yd (Freeciv units, OpenGameArt)"
       ]
     },
     {
@@ -56,7 +104,7 @@
         1.86,
         0.38
       ],
-      "sizeKB": 525,
+      "sizeKB": 493,
       "clips": [
         "Bazooka_Aim01",
         "Bazooka_Aim01_Shoot01",
@@ -1042,7 +1090,7 @@
         1.86,
         0.38
       ],
-      "sizeKB": 525,
+      "sizeKB": 493,
       "clips": [
         "AssaultRifle_Aim01",
         "AssaultRifle_Aim01_Shoot01",
@@ -1119,7 +1167,7 @@
         1.86,
         0.38
       ],
-      "sizeKB": 524,
+      "sizeKB": 493,
       "clips": [
         "Damage01",
         "Death01",

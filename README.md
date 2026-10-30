@@ -28,5 +28,4 @@ npm run build
 - "Sherman E8 (Easy 8) tank driving" by nicStage (freesound), CC BY 4.0
 - Radio morse by ERH (freesound), CC BY 4.0
 - CC0 models and sounds by erik90mx, Casti_131, yd (Freeciv), tbbk, Nikke, mutantleg, pixelmannen, danitorres567, CptDrunkBear, artie31, padadu, z3eus, whitaker, kumasousa, Sketlux, MNDV.ecb, Quaternius, MallNinjaMax, Harrison1, Kenney, KayKit, and the OpenGameArt sound authors listed in the plan.
-- Anti-aircraft tank model from the Abstract RTS pack by **Nikke / Nickotopia** (www.nickotopia.com), CC BY-SA 3.0
 - CC0 terrain textures by ambientCG, sky HDRI "Kloppenheim 06 (Pure Sky)" by Greg Zaal and Jarod Guest (Poly Haven), and the Nature Kit and City Kit (Industrial) by Kenney

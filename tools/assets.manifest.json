@@ -83,10 +83,6 @@
       "author": "CptDrunkBear (OpenGameArt)",
       "license": "CC0"
     },
-    "nikke": {
-      "author": "Nikke / Nickotopia (nickotopia.com)",
-      "license": "CC-BY-SA-3.0"
-    },
     "kenney_nature-kit.zip": {
       "author": "Kenney (kenney.nl)",
       "license": "CC0"
@@ -153,6 +149,19 @@
       "animTolerance": 0.0005,
       "animPrune": {
         "dropBones": "jaw"
+      },
+      "holdPose": {
+        "clip": "WeaponHold_AssaultRifle01",
+        "into": [
+          "Idle01",
+          "MilitaryIdle01",
+          "Walk01_Forward",
+          "Run01_Forward"
+        ],
+        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
+      },
+      "reparent": {
+        "Human_AssaultRifle": "B-handProp.R"
       }
     },
     {
@@ -197,6 +206,19 @@
       "animTolerance": 0.0005,
       "animPrune": {
         "dropBones": "jaw"
+      },
+      "holdPose": {
+        "clip": "WeaponHold_Rifle01",
+        "into": [
+          "Idle01",
+          "MilitaryIdle01",
+          "Walk01_Forward",
+          "Run01_Forward"
+        ],
+        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
+      },
+      "reparent": {
+        "Human_Rifle": "B-handProp.R"
       }
     },
     {
@@ -241,6 +263,19 @@
       "animTolerance": 0.0005,
       "animPrune": {
         "dropBones": "jaw"
+      },
+      "holdPose": {
+        "clip": "WeaponHold_Bazooka01",
+        "into": [
+          "Idle01",
+          "MilitaryIdle01",
+          "Walk01_Forward",
+          "Run01_Forward"
+        ],
+        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
+      },
+      "reparent": {
+        "Human_Bazooka": "B-handProp.R"
       }
     },
     {
@@ -284,16 +319,147 @@
       "length": 9.5
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/AntiAirTank1_abstract.glb",
       "out": "models/aa_tank.glb",
       "kind": "unit",
-      "credit": "nikke",
-      "colors": {
-        "*": "#6d7456"
-      },
-      "height": 4.0,
-      "rotateY": 180
+      "kitbash": [
+        {
+          "zip": "Modern-RTS-Animations.zip",
+          "path": "Modern-RTS-Animations/vehicles/ground/Tank_MBT.glb",
+          "credit": "freeciv-yd",
+          "length": 7.6,
+          "stripMeshesUnder": "P_turret",
+          "name": "hull"
+        },
+        {
+          "box": [
+            2.3,
+            1.15,
+            2.7
+          ],
+          "color": "#5c6631",
+          "name": "aa_turret",
+          "center": false,
+          "at": [
+            0.02,
+            2.0,
+            -0.16
+          ],
+          "parent": "P_turret"
+        },
+        {
+          "box": [
+            0.4,
+            0.55,
+            1.5
+          ],
+          "color": "#5c6631",
+          "name": "aa_gunpod_l",
+          "center": false,
+          "at": [
+            -1.33,
+            2.45,
+            0.19
+          ],
+          "parent": "P_turret"
+        },
+        {
+          "box": [
+            0.4,
+            0.55,
+            1.5
+          ],
+          "color": "#5c6631",
+          "name": "aa_gunpod_r",
+          "center": false,
+          "at": [
+            1.37,
+            2.45,
+            0.19
+          ],
+          "parent": "P_turret"
+        },
+        {
+          "box": [
+            0.13,
+            0.13,
+            2.4
+          ],
+          "color": "#2b2d28",
+          "name": "aa_barrel_l",
+          "center": false,
+          "at": [
+            -1.33,
+            2.65,
+            2.04
+          ],
+          "parent": "P_turret"
+        },
+        {
+          "box": [
+            0.13,
+            0.13,
+            2.4
+          ],
+          "color": "#2b2d28",
+          "name": "aa_barrel_r",
+          "center": false,
+          "at": [
+            1.37,
+            2.65,
+            2.04
+          ],
+          "parent": "P_turret"
+        },
+        {
+          "cylinder": [
+            0.38,
+            0.38,
+            0.45
+          ],
+          "color": "#3e4436",
+          "name": "aa_track_radar",
+          "center": false,
+          "at": [
+            0.02,
+            3.15,
+            0.84
+          ],
+          "parent": "P_turret",
+          "segments": 12
+        },
+        {
+          "box": [
+            0.18,
+            0.7,
+            0.18
+          ],
+          "color": "#2b2d28",
+          "name": "aa_radar_mast",
+          "center": false,
+          "at": [
+            0.02,
+            3.15,
+            -1.21
+          ],
+          "parent": "P_turret"
+        },
+        {
+          "box": [
+            1.9,
+            0.5,
+            0.14
+          ],
+          "color": "#3e4436",
+          "name": "aa_search_radar",
+          "center": false,
+          "at": [
+            0.02,
+            3.85,
+            -1.21
+          ],
+          "parent": "P_turret"
+        }
+      ]
     },
     {
       "zip": "Modern-RTS-Animations.zip",
@@ -1189,7 +1355,8 @@
         "albedo": "_Color.jpg",
         "normal": "_NormalGL.jpg",
         "rough": "_Roughness.jpg"
-      }
+      },
+      "roughMin": 0.55
     },
     {
       "zip": "Ground103_1K-JPG.zip",
