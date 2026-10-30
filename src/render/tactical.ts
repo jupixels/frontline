@@ -118,11 +118,20 @@ export class TacticalLayer {
     const live = new Set<number>();
     for (const l of lines) {
       live.add(l.id);
-      const key = JSON.stringify([l.points, l.owner, l.facing]);
+      const key = JSON.stringify([l.points, l.owner, l.facing, l.target ?? null]);
       const cur = this.lines.get(l.id);
       if (cur?.key === key) continue;
       if (cur) this.disposeLine(cur.obj);
       const obj = this.buildLine(l);
+      // Advancing: a faint copy of the line where it's headed.
+      if (l.target) {
+        const ghost = this.buildLine({ ...l, points: l.target, target: null });
+        ghost.traverse((o) => {
+          const mat = (o as THREE.Mesh).material as THREE.Material & { opacity?: number };
+          if (mat && 'opacity' in mat) mat.opacity = 0.32;
+        });
+        obj.add(ghost);
+      }
       this.group.add(obj);
       this.lines.set(l.id, { key, obj });
     }

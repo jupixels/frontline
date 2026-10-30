@@ -149,6 +149,7 @@ export class MatchUi {
         return this.adapter.canPlace(s, at, ctx.map.size, localPlayer, m?.kind === 'place' ? m.rotation : 0);
       },
       canEnter: (units, target) => this.adapter.canEnter(units, target),
+      lineAttack: (units, at) => this.lineAttack(units, at),
       onLineStroke: (pts) => this.drawStroke(pts),
       onModeChange: (m) => this.onMode(m),
       onFormationDrag: (a, b) => this.drawArrow(a, b),
@@ -402,6 +403,27 @@ export class MatchUi {
       e.preventDefault();
       this.input.selectArmy();
     }
+  }
+
+  /**
+   * Attack with a frontline: if every selected unit holds the same line and `at` is in front of it,
+   * the line advances level with that point (parallel to its facing) in formation.
+   */
+  private lineAttack(units: EntityId[], at: Vec2): boolean {
+    const ids = new Set<number>();
+    for (const id of units) ids.add(this.ctx.sim.get(id)?.line ?? 0);
+    if (ids.size !== 1 || ids.has(0)) return false;
+    const lineId = [...ids][0];
+    const line = this.adapter.lines(this.ctx.localPlayer).find((l) => l.id === lineId);
+    if (!line || !line.points.length) return false;
+    // How far ahead of the line's middle the point is, measured along its facing.
+    const fx = Math.sin(line.facing);
+    const fz = Math.cos(line.facing);
+    const mid = line.points.reduce((m, p) => ({ x: m.x + p.x / line.points.length, z: m.z + p.z / line.points.length }), { x: 0, z: 0 });
+    const d = (at.x - mid.x) * fx + (at.z - mid.z) * fz;
+    if (d < 8) return false;
+    this.ctx.issue({ type: 'advanceLine', line: lineId, distance: d });
+    return true;
   }
 
   private onKeyUp(e: KeyboardEvent): void {

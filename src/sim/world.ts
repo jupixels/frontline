@@ -215,6 +215,10 @@ export interface Frontline {
   strength: number[];
   /** Slots need recomputing (membership or shape changed). */
   dirty: boolean;
+  /** Advancing in formation: unit direction, meters still to go, and the line's pace (m/s). */
+  march: { dx: number; dz: number; left: number; speed: number } | null;
+  /** Where the points will be when the march ends (for the HUD), null when not marching. */
+  target: Vec2[] | null;
 }
 
 /** Cruise missile in flight. */
