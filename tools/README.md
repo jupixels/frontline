@@ -139,3 +139,17 @@ CC0, so we don't ship anything from it.
 
 Anything marked CC-BY needs a credit line in the in-game credits (see the Credits section of the root
 `README.md` and `docs/GAME_PLAN.md` §3).
+
+## Maps
+
+The launch maps in `data/maps/` (Valley Pass, Coastal Strait, Desert Oilfields) are generated:
+
+```bash
+node tools/make-maps.mjs
+```
+
+Edit `tools/make-maps.mjs`, not the JSON. Features are written once and copied with 180-degree (two
+sides) or 90-degree (four corners) rotational symmetry, and `terrain.symmetry` makes the random
+relief match, so every spawn gets identical ground. `tests/maps.test.ts` checks the result:
+buildable bases, reachable points, and exact symmetry. The terrain format is `TerrainDef` in
+`src/shared/terrain.ts`; the sim and the renderer both read it.

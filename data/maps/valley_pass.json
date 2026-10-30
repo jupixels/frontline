@@ -1,0 +1,1390 @@
+{
+ "id": "valley_pass",
+ "name": "Valley Pass",
+ "size": 1100,
+ "modes": [
+  "1v1"
+ ],
+ "atmosphere": "golden",
+ "spawns": [
+  {
+   "x": 0,
+   "z": 430
+  },
+  {
+   "x": 0,
+   "z": -430
+  }
+ ],
+ "sides": [
+  [
+   0
+  ],
+  [
+   1
+  ]
+ ],
+ "terrain": {
+  "seed": 11,
+  "symmetry": 2,
+  "style": "temperate",
+  "base": 6,
+  "relief": 6,
+  "detail": 1.2,
+  "hills": [
+   {
+    "x": 0,
+    "z": 440,
+    "r": 200,
+    "h": 12,
+    "plateau": 0.55
+   },
+   {
+    "x": -170,
+    "z": 125,
+    "r": 80,
+    "h": 20,
+    "plateau": 0.35
+   },
+   {
+    "x": 440,
+    "z": 300,
+    "r": 110,
+    "h": 15,
+    "plateau": 0.3
+   },
+   {
+    "x": -470,
+    "z": 360,
+    "r": 90,
+    "h": 24,
+    "plateau": 0.2
+   },
+   {
+    "x": 260,
+    "z": 120,
+    "r": 60,
+    "h": 9
+   },
+   {
+    "x": 0,
+    "z": -440,
+    "r": 200,
+    "h": 12,
+    "plateau": 0.55
+   },
+   {
+    "x": 170,
+    "z": -125,
+    "r": 80,
+    "h": 20,
+    "plateau": 0.35
+   },
+   {
+    "x": -440,
+    "z": -300,
+    "r": 110,
+    "h": 15,
+    "plateau": 0.3
+   },
+   {
+    "x": 470,
+    "z": -360,
+    "r": 90,
+    "h": 24,
+    "plateau": 0.2
+   },
+   {
+    "x": -260,
+    "z": -120,
+    "r": 60,
+    "h": 9
+   }
+  ],
+  "ridges": [
+   {
+    "points": [
+     [
+      -560,
+      235
+     ],
+     [
+      -400,
+      250
+     ],
+     [
+      -260,
+      245
+     ],
+     [
+      -150,
+      258
+     ]
+    ],
+    "width": 30,
+    "h": 24,
+    "cliff": true
+   },
+   {
+    "points": [
+     [
+      70,
+      248
+     ],
+     [
+      200,
+      232
+     ],
+     [
+      380,
+      205
+     ]
+    ],
+    "width": 28,
+    "h": 22,
+    "cliff": true
+   },
+   {
+    "points": [
+     [
+      560,
+      -235
+     ],
+     [
+      400,
+      -250
+     ],
+     [
+      260,
+      -245
+     ],
+     [
+      150,
+      -258
+     ]
+    ],
+    "width": 30,
+    "h": 24,
+    "cliff": true
+   },
+   {
+    "points": [
+     [
+      -70,
+      -248
+     ],
+     [
+      -200,
+      -232
+     ],
+     [
+      -380,
+      -205
+     ]
+    ],
+    "width": 28,
+    "h": 22,
+    "cliff": true
+   }
+  ],
+  "rivers": [
+   {
+    "points": [
+     [
+      -570,
+      12
+     ],
+     [
+      -330,
+      -18
+     ],
+     [
+      -120,
+      22
+     ],
+     [
+      0,
+      0
+     ],
+     [
+      120,
+      -22
+     ],
+     [
+      330,
+      18
+     ],
+     [
+      570,
+      -12
+     ]
+    ],
+    "width": 32,
+    "depth": 3.2
+   }
+  ],
+  "fords": [
+   {
+    "x": -205,
+    "z": 7,
+    "r": 24
+   },
+   {
+    "x": 205,
+    "z": -7,
+    "r": 24
+   }
+  ],
+  "bridges": [
+   {
+    "a": [
+     0,
+     -36
+    ],
+    "b": [
+     0,
+     36
+    ],
+    "width": 12
+   },
+   {
+    "a": [
+     -330,
+     -54
+    ],
+    "b": [
+     -330,
+     18
+    ],
+    "width": 12
+   },
+   {
+    "a": [
+     330,
+     54
+    ],
+    "b": [
+     330,
+     -18
+    ],
+    "width": 12
+   }
+  ],
+  "forests": [
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -394.3,
+      175
+     ],
+     [
+      -386.9,
+      219.5
+     ],
+     [
+      -431.1,
+      225.4
+     ],
+     [
+      -470.1,
+      227.2
+     ],
+     [
+      -484,
+      191
+     ],
+     [
+      -506,
+      151
+     ],
+     [
+      -466.3,
+      129.4
+     ],
+     [
+      -431.2,
+      124.9
+     ],
+     [
+      -398.3,
+      140
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -95,
+      62
+     ],
+     [
+      -42,
+      52
+     ],
+     [
+      -30,
+      98
+     ],
+     [
+      -82,
+      112
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      366.7,
+      350
+     ],
+     [
+      340.9,
+      385.9
+     ],
+     [
+      305,
+      409.4
+     ],
+     [
+      268.6,
+      386.4
+     ],
+     [
+      258.6,
+      350
+     ],
+     [
+      279.8,
+      324.8
+     ],
+     [
+      305,
+      310.4
+     ],
+     [
+      350.6,
+      304.4
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      236.5,
+      125
+     ],
+     [
+      213.6,
+      153.6
+     ],
+     [
+      185,
+      168.6
+     ],
+     [
+      150.6,
+      159.4
+     ],
+     [
+      134.8,
+      125
+     ],
+     [
+      157.1,
+      97.1
+     ],
+     [
+      185,
+      65.5
+     ],
+     [
+      221.9,
+      88.1
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -266.4,
+      330
+     ],
+     [
+      -272,
+      365.1
+     ],
+     [
+      -309.8,
+      373.1
+     ],
+     [
+      -332.5,
+      345.6
+     ],
+     [
+      -338.9,
+      311.3
+     ],
+     [
+      -307,
+      299.5
+     ],
+     [
+      -273.5,
+      296.8
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      525.9,
+      90
+     ],
+     [
+      498,
+      118
+     ],
+     [
+      470,
+      124.3
+     ],
+     [
+      443.4,
+      116.6
+     ],
+     [
+      418,
+      90
+     ],
+     [
+      444,
+      64
+     ],
+     [
+      470,
+      49.7
+     ],
+     [
+      507.6,
+      52.4
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      394.3,
+      -175
+     ],
+     [
+      386.9,
+      -219.5
+     ],
+     [
+      431.1,
+      -225.4
+     ],
+     [
+      470.1,
+      -227.2
+     ],
+     [
+      484,
+      -191
+     ],
+     [
+      506,
+      -151
+     ],
+     [
+      466.3,
+      -129.4
+     ],
+     [
+      431.2,
+      -124.9
+     ],
+     [
+      398.3,
+      -140
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      95,
+      -62
+     ],
+     [
+      42,
+      -52
+     ],
+     [
+      30,
+      -98
+     ],
+     [
+      82,
+      -112
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -366.7,
+      -350
+     ],
+     [
+      -340.9,
+      -385.9
+     ],
+     [
+      -305,
+      -409.4
+     ],
+     [
+      -268.6,
+      -386.4
+     ],
+     [
+      -258.6,
+      -350
+     ],
+     [
+      -279.8,
+      -324.8
+     ],
+     [
+      -305,
+      -310.4
+     ],
+     [
+      -350.6,
+      -304.4
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -236.5,
+      -125
+     ],
+     [
+      -213.6,
+      -153.6
+     ],
+     [
+      -185,
+      -168.6
+     ],
+     [
+      -150.6,
+      -159.4
+     ],
+     [
+      -134.8,
+      -125
+     ],
+     [
+      -157.1,
+      -97.1
+     ],
+     [
+      -185,
+      -65.5
+     ],
+     [
+      -221.9,
+      -88.1
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      266.4,
+      -330
+     ],
+     [
+      272,
+      -365.1
+     ],
+     [
+      309.8,
+      -373.1
+     ],
+     [
+      332.5,
+      -345.6
+     ],
+     [
+      338.9,
+      -311.3
+     ],
+     [
+      307,
+      -299.5
+     ],
+     [
+      273.5,
+      -296.8
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -525.9,
+      -90
+     ],
+     [
+      -498,
+      -118
+     ],
+     [
+      -470,
+      -124.3
+     ],
+     [
+      -443.4,
+      -116.6
+     ],
+     [
+      -418,
+      -90
+     ],
+     [
+      -444,
+      -64
+     ],
+     [
+      -470,
+      -49.7
+     ],
+     [
+      -507.6,
+      -52.4
+     ]
+    ]
+   }
+  ],
+  "roads": [
+   {
+    "points": [
+     [
+      0,
+      420
+     ],
+     [
+      0,
+      250
+     ],
+     [
+      -10,
+      120
+     ],
+     [
+      0,
+      36
+     ],
+     [
+      0,
+      -36
+     ],
+     [
+      10,
+      -120
+     ],
+     [
+      0,
+      -250
+     ],
+     [
+      0,
+      -420
+     ]
+    ],
+    "width": 8
+   },
+   {
+    "points": [
+     [
+      0,
+      420
+     ],
+     [
+      200,
+      325
+     ],
+     [
+      460,
+      205
+     ],
+     [
+      420,
+      95
+     ],
+     [
+      330,
+      54
+     ],
+     [
+      330,
+      -18
+     ],
+     [
+      200,
+      -110
+     ],
+     [
+      10,
+      -170
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      0,
+      -420
+     ],
+     [
+      -200,
+      -325
+     ],
+     [
+      -460,
+      -205
+     ],
+     [
+      -420,
+      -95
+     ],
+     [
+      -330,
+      -54
+     ],
+     [
+      -330,
+      18
+     ],
+     [
+      -200,
+      110
+     ],
+     [
+      -10,
+      170
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      -10,
+      150
+     ],
+     [
+      -200,
+      90
+     ],
+     [
+      -330,
+      -18
+     ]
+    ],
+    "width": 6
+   },
+   {
+    "points": [
+     [
+      10,
+      -150
+     ],
+     [
+      200,
+      -90
+     ],
+     [
+      330,
+      18
+     ]
+    ],
+    "width": 6
+   }
+  ]
+ },
+ "points": [
+  {
+   "x": 0,
+   "z": 0,
+   "name": "Bridge",
+   "radius": 32
+  },
+  {
+   "x": -380,
+   "z": 95,
+   "name": "West Mill"
+  },
+  {
+   "x": 170,
+   "z": 300,
+   "name": "South Farm"
+  },
+  {
+   "x": 380,
+   "z": -95,
+   "name": "East Mill"
+  },
+  {
+   "x": -170,
+   "z": -300,
+   "name": "North Farm"
+  }
+ ],
+ "supplyNodes": [
+  {
+   "x": -120,
+   "z": 380
+  },
+  {
+   "x": 130,
+   "z": 405
+  },
+  {
+   "x": -280,
+   "z": 145
+  },
+  {
+   "x": 110,
+   "z": 75
+  },
+  {
+   "x": 120,
+   "z": -380
+  },
+  {
+   "x": -130,
+   "z": -405
+  },
+  {
+   "x": 280,
+   "z": -145
+  },
+  {
+   "x": -110,
+   "z": -75
+  }
+ ],
+ "structures": [
+  {
+   "type": "ruin",
+   "x": -405,
+   "z": 125,
+   "rotation": 0
+  },
+  {
+   "type": "ruin",
+   "x": 46,
+   "z": 58,
+   "rotation": 0
+  },
+  {
+   "type": "ruin",
+   "x": 196,
+   "z": 322,
+   "rotation": 1.6
+  },
+  {
+   "type": "ruin",
+   "x": 405,
+   "z": -125,
+   "rotation": 3.1
+  },
+  {
+   "type": "ruin",
+   "x": -46,
+   "z": -58,
+   "rotation": 3.1
+  },
+  {
+   "type": "ruin",
+   "x": -196,
+   "z": -322,
+   "rotation": 4.7
+  }
+ ],
+ "scatter": [
+  {
+   "models": [
+    "models/env/rock_large_a.glb",
+    "models/env/rock_large_b.glb",
+    "models/env/rock_small_a.glb",
+    "models/env/rock_tall_a.glb",
+    "models/env/rock_stone_large.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1100,
+    "d": 1100
+   },
+   "count": 160,
+   "scale": [
+    0.6,
+    1.6
+   ]
+  },
+  {
+   "models": [
+    "models/env/bush_small.glb",
+    "models/env/bush_large.glb",
+    "models/env/bush_detailed.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1100,
+    "d": 1100
+   },
+   "count": 420,
+   "scale": [
+    0.8,
+    1.6
+   ]
+  }
+ ],
+ "props": [
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 11,
+   "z": 0,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.5,
+   "z": 9.5,
+   "rotation": 2.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.5,
+   "z": 9.5,
+   "rotation": 3.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -11,
+   "z": 0,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.5,
+   "z": -9.5,
+   "rotation": 5.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.5,
+   "z": -9.5,
+   "rotation": 6.8
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 4,
+   "z": -3,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -3,
+   "z": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -369.5,
+   "z": 98.3,
+   "rotation": 1.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -377.6,
+   "z": 105.7,
+   "rotation": 2.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -388.1,
+   "z": 102.5,
+   "rotation": 4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -390.5,
+   "z": 91.7,
+   "rotation": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -382.4,
+   "z": 84.3,
+   "rotation": 6.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -371.9,
+   "z": 87.5,
+   "rotation": 7.1
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -376,
+   "z": 92,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -383,
+   "z": 100
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 179.1,
+   "z": 306.2,
+   "rotation": 2.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 169.2,
+   "z": 311,
+   "rotation": 3.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 160.1,
+   "z": 304.8,
+   "rotation": 4.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 160.9,
+   "z": 293.8,
+   "rotation": 5.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 170.8,
+   "z": 289,
+   "rotation": 6.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 179.9,
+   "z": 295.2,
+   "rotation": 7.4
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 174,
+   "z": 297,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 167,
+   "z": 305
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 386.8,
+   "z": -86.4,
+   "rotation": 2.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 376,
+   "z": -84.8,
+   "rotation": 3.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 369.1,
+   "z": -93.4,
+   "rotation": 4.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 373.2,
+   "z": -103.6,
+   "rotation": 5.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 384,
+   "z": -105.2,
+   "rotation": 6.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 390.9,
+   "z": -96.6,
+   "rotation": 7.7
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 384,
+   "z": -98,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 377,
+   "z": -90
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -166,
+   "z": -289.7,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -176.9,
+   "z": -291.4,
+   "rotation": 3.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -180.9,
+   "z": -301.7,
+   "rotation": 4.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -174,
+   "z": -310.3,
+   "rotation": 5.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -163.1,
+   "z": -308.6,
+   "rotation": 7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -159.1,
+   "z": -298.3,
+   "rotation": 8
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -166,
+   "z": -303,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -173,
+   "z": -295
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -111,
+   "z": 387,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -128,
+   "z": 389
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -129,
+   "z": 387.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -118,
+   "z": 369,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 139,
+   "z": 412,
+   "rotation": 0.7
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 122,
+   "z": 414
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 121,
+   "z": 412.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 132,
+   "z": 394,
+   "rotation": 1.9
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -271,
+   "z": 152,
+   "rotation": 1.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -288,
+   "z": 154
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -289,
+   "z": 152.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -278,
+   "z": 134,
+   "rotation": 2.2
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 119,
+   "z": 82,
+   "rotation": 2.1
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 102,
+   "z": 84
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 101,
+   "z": 82.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 112,
+   "z": 64,
+   "rotation": 2.5
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 129,
+   "z": -373,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 112,
+   "z": -371
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 111,
+   "z": -372.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 122,
+   "z": -391,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -121,
+   "z": -398,
+   "rotation": 3.5
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -138,
+   "z": -396
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -139,
+   "z": -397.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -128,
+   "z": -416,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 289,
+   "z": -138,
+   "rotation": 4.2
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 272,
+   "z": -136
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 271,
+   "z": -137.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 282,
+   "z": -156,
+   "rotation": 3.4
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -101,
+   "z": -68,
+   "rotation": 4.9
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -118,
+   "z": -66
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -119,
+   "z": -67.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -108,
+   "z": -86,
+   "rotation": 3.7
+  }
+ ]
+}

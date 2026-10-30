@@ -183,6 +183,7 @@ export const WEAPONS: Record<string, WeaponAudio> = {
   heavy_naval_gun: { fire: 'naval_gun', impact: 'explosion_big' },
   torpedo: { fire: 'torpedo', impact: 'water_explosion' },
   ship_mg: { fire: 'naval_mg' },
+  cruise_missile: { fire: 'missile', impact: 'explosion_big' },
   tower_mg: { fire: 'mg' },
   // aliases for future weapons
   mg: { fire: 'mg' },

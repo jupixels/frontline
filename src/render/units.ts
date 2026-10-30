@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { SUPPRESS_PINNED } from '../shared/entities';
 import type { UnitDef } from '../shared/data';
 import type { EntityState } from '../shared/entities';
 import { materialRole, teamMaterial } from './materials';
@@ -111,6 +112,13 @@ export class UnitView {
     loadModel(def.model).then((m) => this.attach(m));
   }
 
+  private edgeMat: THREE.MeshBasicMaterial | null = null;
+
+  /** Neutral buildings change hands when garrisoned: recolor the ownership edge. */
+  setEdgeColor(c: THREE.Color): void {
+    if (this.edgeMat && !this.edgeMat.color.equals(c)) this.edgeMat.color.copy(c);
+  }
+
   /** Concrete pad under a building with a team-colored edge, so ownership reads from above. */
   private buildFoundation(): THREE.Object3D {
     const [w, d] = this.def.footprint ?? [this.def.radius * 2, this.def.radius * 2];
@@ -123,6 +131,7 @@ export class UnitView {
     slab.receiveShadow = true;
     g.add(slab);
     const edgeMat = new THREE.MeshBasicMaterial({ color: this.teamColor, transparent: true, opacity: 0.85, depthWrite: false, toneMapped: false });
+    this.edgeMat = edgeMat;
     const t = 0.5;
     for (const [sx, sz, ex, ez] of [[w, t, 0, d / 2], [w, t, 0, -d / 2], [t, d, w / 2, 0], [t, d, -w / 2, 0]]) {
       const bar = new THREE.Mesh(new THREE.PlaneGeometry(sx * 1.04, sz).rotateX(-Math.PI / 2), edgeMat);
@@ -152,6 +161,34 @@ export class UnitView {
     const model = cloneModel(prepared);
     const size = prepared.bounds.getSize(_v);
     this.height = size.y * this.scale;
+    // Small prop models standing in for buildings (ruins, trenches) are stretched to their footprint.
+    if (this.cls === 'structure' && this.def.footprint) {
+      const [fw, fd] = this.def.footprint;
+      const len = Math.max(size.x, size.z);
+      if (len < Math.max(fw, fd) * 0.6) {
+        const aspect = fw / fd;
+        if (aspect > 2 || aspect < 0.5) {
+          // A long low wall (trench): stretch along its length only.
+          const along = size.x >= size.z ? fw / size.x : fd / size.z;
+          this.body.scale.set(size.x >= size.z ? along : 1.4, 1.2, size.x >= size.z ? 1.4 : along);
+        } else {
+          const k = (Math.max(fw, fd) * 0.85) / len;
+          this.body.scale.multiplyScalar(k);
+          this.height = size.y * k;
+        }
+      }
+    }
+    // Big warships come in at real-world length (140-170 m); draw them at a length that matches their
+    // footprint in the game, or they cover half a strait.
+    if (this.cls === 'ship') {
+      const len = Math.max(size.x, size.z);
+      const target = this.def.radius * 5.2;
+      if (len > target * 1.25) {
+        const k = target / len;
+        this.body.scale.multiplyScalar(k);
+        this.height = size.y * k;
+      }
+    }
     const band = new THREE.Vector2(prepared.bounds.min.y + size.y * 0.45, prepared.bounds.min.y + size.y * 0.55);
     model.traverse((o) => {
       o.userData.entityId = this.id;
@@ -194,10 +231,17 @@ export class UnitView {
   }
 
   private materialFor(src: THREE.Material, prepared: PreparedModel, burnt: boolean, band?: THREE.Vector2): THREE.Material {
-    // Buildings keep their paint; their colored trim (doors, roof bands, tanks) takes the team color.
+    // Bright orange/red roofs on the base buildings are toned down to a weathered military paint.
+    if (this.cls === 'structure' && !burnt && /orange|red/i.test(src.name) && (src as THREE.MeshStandardMaterial).color) {
+      const m = (src as THREE.MeshStandardMaterial).clone();
+      m.color.lerp(new THREE.Color(0x5d5a4e), 0.72);
+      return m;
+    }
+    // Buildings keep their paint (roofs too: a whole team-blue roof is far too loud); only explicit
+    // trim materials take the team color. Ownership also shows on the foundation's edge.
     const role =
       this.cls === 'structure'
-        ? /orange|red|color_|flag/i.test(src.name) ? 'accent' : 'keep'
+        ? /color_|flag|trim|stripe/i.test(src.name) ? 'accent' : 'keep'
         : materialRole(src, src === prepared.primaryMaterial || !prepared.primaryMaterial);
     return teamMaterial(src, role, this.teamColor, burnt, this.cls === 'infantry' ? 0.9 : 2.2, band);
   }
@@ -275,7 +319,11 @@ export class UnitView {
   }
 
   /** Place the view between the previous and current tick (alpha in [0,1]). */
+  /** Pinned by suppression (drawn lying down). */
+  prone = false;
+
   update(e: EntityState, alpha: number, dt: number, animate: boolean): void {
+    this.prone = (e.suppression ?? 0) >= SUPPRESS_PINNED;
     this.hp = e.hp;
     this.maxHp = e.maxHp;
     this.moving = e.moving;
@@ -342,9 +390,14 @@ export class UnitView {
         this.body.scale.set(this.scale, this.scale * k, this.scale);
         break;
       }
-      case 'infantry':
+      case 'infantry': {
         r.position.set(x, ground, z);
+        // Pinned infantry hit the dirt: the rig tips forward onto the ground.
+        const want = this.prone ? 1.35 : 0;
+        this.body.rotation.x += (want - this.body.rotation.x) * Math.min(1, dt * 6);
+        this.body.position.y = this.body.rotation.x * 0.12;
         break;
+      }
       case 'vehicle': {
         r.position.set(x, ground, z);
         // Align to the slope under the hull.

@@ -223,9 +223,34 @@ export function abilitySystem(world: World): void {
   }
 }
 
+/** Submarines show up within this range, and for this long after firing. */
+const SUB_DETECT_RANGE = 60;
+const SUB_REVEAL_TICKS = SIM_HZ * 4;
+
+/** Ships with anti-submarine weapons (depth charges) hear submarines this far out. */
+const SONAR_RANGE = 150;
+
+function sonarContact(world: World, e: Entity, team: TeamId): boolean {
+  let seen = false;
+  world.spatial.query(e.pos.x, e.pos.z, SONAR_RANGE, (o, d2) => {
+    if (o.team !== team || o.kind !== 'unit' || o.dead) return;
+    if (d2 <= SUB_DETECT_RANGE * SUB_DETECT_RANGE || o.weapons.some((w) => w.def.damageType === 'torpedo' && w.def.targets.includes('naval') && w.def.range <= 80)) {
+      seen = true;
+      return true;
+    }
+  });
+  return seen;
+}
+
 /** Ambushing unit hidden from `team`: armed, stationary, and no enemy of it within reveal range. */
 export function hiddenFrom(world: World, e: Entity, team: TeamId): boolean {
-  if (!e.ambush || e.moving || e.team === team) return false;
+  if (e.team === team) return false;
+  // Submarines run submerged: only enemies close by see them, and firing gives them away for a while.
+  if (e.unit?.submerged) {
+    if (world.tick - e.firedAt < SUB_REVEAL_TICKS) return false;
+    return !sonarContact(world, e, team);
+  }
+  if (!e.ambush || e.moving) return false;
   const r = abilityOf(e, 'ambush')?.def.revealRange ?? 15;
   let seen = false;
   world.spatial.query(e.pos.x, e.pos.z, r, (o) => {

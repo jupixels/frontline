@@ -24,6 +24,8 @@ export interface MapInfo {
   size: number;
   description?: string;
   spawns: { x: number; z: number }[];
+  /** Layouts the map is made for, e.g. ['1v1', '2v2', 'ffa4']. */
+  modes?: string[];
 }
 
 export type SlotOccupant = { kind: 'human'; peerId: string; name: string } | { kind: 'ai'; difficulty: AiDifficulty };
@@ -140,6 +142,7 @@ export function mapInfoFromDef(def: MapDef, description?: string): MapInfo {
     size: def.size,
     description,
     spawns: def.spawns.map((s) => ({ x: s.x, z: s.z })),
+    ...(def.modes ? { modes: def.modes } : {}),
   };
 }
 

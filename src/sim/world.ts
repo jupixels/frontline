@@ -18,7 +18,15 @@ export type Order =
   | { kind: 'attack'; targetId: EntityId }
   | { kind: 'hold' }
   | { kind: 'build'; siteId: EntityId }
-  | { kind: 'ability'; ability: string; at: Vec2; targetId: EntityId };
+  | { kind: 'ability'; ability: string; at: Vec2; targetId: EntityId }
+  /** Attack-move between `a` and `b`; `toB` says which way the current leg goes. */
+  | { kind: 'patrol'; a: Vec2; b: Vec2; toB: boolean }
+  /** Walk to a transport/building and get in. */
+  | { kind: 'enter'; targetId: EntityId }
+  /** Containers: go to `at` (transports) and drop everyone. */
+  | { kind: 'unload'; at: Vec2 | null }
+  /** Hold a slot on frontline `lineId` (slot position kept in Entity.lineSlot). */
+  | { kind: 'line'; lineId: number };
 
 export interface AbilityState {
   id: string;
@@ -165,13 +173,62 @@ export interface Entity extends EntityState {
   captureProgress: number;
   capturer: PlayerId;
   captureRadius: number;
+
+  /** Container this unit rides in / garrisons (0 = on the map). */
+  inside: EntityId;
+  /** Units inside this transport or structure, in boarding order. */
+  cargo: EntityId[];
+  /** Seats this container offers (0 = not a container). */
+  capacity: number;
+  /** Infantry suppression 0..1, and when it last went up. */
+  suppression: number;
+  suppressedAt: Tick;
+  pinned: boolean;
+  /** Veterancy: experience (damage dealt, weighted by target value) and rank 0..3. */
+  xp: number;
+  rank: number;
+  /** Last tick this entity took damage (rank 3 self-heal waits for quiet). */
+  hurtAt: Tick;
+  /** Frontline membership and assigned slot. */
+  line: number;
+  lineSlot: Vec2 | null;
+  /** Owner before a neutral building was garrisoned (reverts when empty). */
+  homeOwner: PlayerId;
+  /** Last tick this unit fired (submarines surface on the sonar for a while). */
+  firedAt: Tick;
+  /** Line-of-fire cache (combat). */
+  losTarget: EntityId;
+  losAt: Tick;
+  losOk: boolean;
+}
+
+/** A drawn frontline: polyline plus members. Slots are assigned by systems/lines.ts. */
+export interface Frontline {
+  id: number;
+  owner: PlayerId;
+  team: TeamId;
+  points: Vec2[];
+  facing: Heading;
+  units: EntityId[];
+  strength: number[];
+  /** Slots need recomputing (membership or shape changed). */
+  dirty: boolean;
+}
+
+/** Cruise missile in flight. */
+export interface Missile {
+  player: PlayerId;
+  team: TeamId;
+  site: EntityId;
+  at: Vec2;
+  arrive: Tick;
 }
 
 export interface Player extends PlayerState {
   supply: number;
   /** Net power (produced - used). Shared PlayerState.power. */
   power: number;
-  tickets: number;
+  morale: number;
   defeated: boolean;
   team: TeamId;
   powerProduced: number;
@@ -184,11 +241,18 @@ export interface Player extends PlayerState {
   structures: Map<string, number>;
   hadHq: boolean;
   lastAlertTick: Tick;
+  /** Superweapon charge in ticks of the full cooldown (ready when >= superweaponTicks). */
+  superCharge: number;
+  superReadyAnnounced: boolean;
+  /** Pauses this player may still start (online pause votes). */
+  pausesLeft: number;
 }
 
 export interface Team {
   id: TeamId;
-  tickets: number;
+  /** Morale below rules.moraleLowFraction: pinned troops recover more slowly. */
+  moraleLow: boolean;
+  morale: number;
   defeated: boolean;
 }
 
@@ -207,6 +271,17 @@ export class World {
   projectiles: Projectile[] = [];
   smokes: Smoke[] = [];
   barrages: Barrage[] = [];
+  missiles: Missile[] = [];
+  readonly lines = new Map<number, Frontline>();
+  nextLineId = 1;
+  /** Online pause: whether the game is paused, votes to pause, and the step it was paused at. */
+  paused = false;
+  pauseVotes: PlayerId[] = [];
+  pauseVoteTick = 0;
+  pausedAtStep = 0;
+  pausedBy: PlayerId = -1;
+  /** Steps taken, including paused ones (Simulation.tick). `tick` is game time. */
+  steps = 0;
   /** player -> owners whose stuff they may command (besides their own). See canCommand. */
   readonly commandsFor = new Map<PlayerId, Set<PlayerId>>();
   events: SimEvent[] = [];
@@ -235,7 +310,7 @@ export class World {
         team: slot.team,
         supply: r.startingSupply,
         power: 0,
-        tickets: r.startingTickets,
+        morale: r.startingMorale,
         defeated: false,
         powerProduced: 0,
         powerUsed: 0,
@@ -246,8 +321,11 @@ export class World {
         structures: new Map(),
         hadHq: false,
         lastAlertTick: -100000,
+        superCharge: 0,
+        superReadyAnnounced: false,
+        pausesLeft: r.pausesPerPlayer ?? 3,
       });
-      if (!this.teams.has(slot.team)) this.teams.set(slot.team, { id: slot.team, tickets: r.startingTickets, defeated: false });
+      if (!this.teams.has(slot.team)) this.teams.set(slot.team, { id: slot.team, morale: r.startingMorale, defeated: false, moraleLow: false });
     }
     for (const slot of setup.players as SimPlayerSlot[]) {
       const others = (slot.commandsFor ?? []).filter((o) => o !== slot.id && setup.players.some((p) => p.id === o));
@@ -319,7 +397,28 @@ export class World {
       truck: 0,
       truckReadyAt: 0,
       haul: null,
+      inside: 0,
+      cargo: [],
+      capacity: 0,
+      suppression: 0,
+      suppressedAt: 0,
+      pinned: false,
+      xp: 0,
+      rank: 0,
+      hurtAt: -100000,
+      line: 0,
+      lineSlot: null,
+      homeOwner: owner,
+      firedAt: -100000,
+      losTarget: 0,
+      losAt: -100,
+      losOk: false,
     };
+  }
+
+  /** Ground height at (x, z), bridge decks included. */
+  heightAt(x: number, z: number): number {
+    return this.nav.heightAt(x, z);
   }
 
   private weaponsFor(ids: string[]): WeaponState[] {
@@ -350,6 +449,7 @@ export class World {
     e.cp = cpShare ?? def.cp / (def.squad ?? 1);
     e.weapons = this.weaponsFor(def.weapons);
     e.guard = { x: e.pos.x, z: e.pos.z };
+    e.capacity = def.transport?.seats ?? 0;
     e.abilities = (def.abilities ?? []).map((id) => {
       const ad = this.content.abilities[id];
       if (!ad) throw new Error(`Unknown ability "${id}"`);
@@ -372,6 +472,7 @@ export class World {
     e.radius = Math.sqrt(w * w + d * d) / 2;
     e.sight = def.sight;
     e.weapons = this.weaponsFor(def.weapons ?? []);
+    e.capacity = def.garrison ?? 0;
     if (e.weapons.some((wp) => wp.def.mount === 'turret')) e.turretHeading = rotation;
     e.footprint = this.nav.footprintCells(pos, w, d);
     this.nav.occupy(e.footprint, 1);
@@ -402,8 +503,9 @@ export class World {
 
   rebuildSpatial(): void {
     this.spatial.clear();
-    for (const e of this.entities.values()) if (!e.dead && e.kind !== 'point') this.spatial.insert(e);
+    for (const e of this.entities.values()) if (!e.dead && e.kind !== 'point' && !e.inside) this.spatial.insert(e);
   }
+
 
   areEnemies(a: TeamId, b: TeamId): boolean {
     return a !== b && a >= 0 && b >= 0;

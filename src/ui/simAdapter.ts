@@ -1,6 +1,16 @@
+import abilitiesJson from '../../data/abilities.json';
 import type { UnitDef } from '../shared/data';
-import type { EntityState, PlayerState, SimView, SimViewExt } from '../shared/entities';
-import type { MatchSetup, PlayerId, PlayerSlot, TeamId, Vec2 } from '../shared/types';
+import type { EntityState, FrontlineView, PauseView, PlayerState, SimView, SimViewExt, SuperweaponView } from '../shared/entities';
+import type { EntityId, MatchSetup, PlayerId, PlayerSlot, TeamId, Vec2 } from '../shared/types';
+
+/** What the HUD shows for an ability (data/abilities.json). */
+export interface AbilityInfo {
+  name: string;
+  target: 'self' | 'point' | 'unit';
+  cooldown: number;
+  cost: number;
+}
+const ABILITIES = abilitiesJson as Record<string, AbilityInfo>;
 
 /**
  * Everything the HUD reads beyond `SimView` (structures, production queues, power, command
@@ -20,6 +30,10 @@ export interface StructureInfo {
   /** Unit types this structure trains. */
   produces: string[];
   hotkeyHint?: string;
+  /** Infantry seats for garrisoning. */
+  garrison?: number;
+  /** Fires the superweapon. */
+  superweapon?: boolean;
 }
 
 // TODO(sim): replace with data/structures.json once it exists (shape proposed in the PR).
@@ -55,13 +69,13 @@ export interface EconomyView {
   /** Single power number from PlayerState (net) when the breakdown is missing. */
   netPower: number;
   commandPoints: { used: number; cap: number };
-  tickets: number;
+  morale: number;
 }
 
-export interface TeamTickets {
+export interface TeamMorale {
   team: TeamId;
-  tickets: number;
-  /** Starting tickets, for the bar. */
+  morale: number;
+  /** Starting morale, for the bar. */
   max: number;
   color: string;
   players: PlayerSlot[];
@@ -81,8 +95,8 @@ export interface CapturePoint {
 type Loose = Record<string, unknown>;
 const num = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
 
-/** Starting tickets per side (GAME_PLAN §4). TODO(sim): read from the match rules. */
-export const START_TICKETS = 1000;
+/** Starting morale per side (GAME_PLAN §4). TODO(sim): read from the match rules. */
+export const START_MORALE = 1000;
 /** TODO(sim): command point cap comes from held points. */
 const FALLBACK_CP_CAP = 100;
 /** TODO(sim): per-unit CP cost should live in data/units.json. */
@@ -147,7 +161,7 @@ export class SimAdapter {
         power: { produced: x.powerProduced, used: x.powerUsed },
         netPower: x.power,
         commandPoints: { used: x.cp, cap: x.cpCap },
-        tickets: x.tickets,
+        morale: x.morale,
       };
     }
     const p = this.sim.player(player) as (PlayerState & Loose) | undefined;
@@ -161,26 +175,26 @@ export class SimAdapter {
       power: produced !== undefined && consumed !== undefined ? { produced, used: consumed } : null,
       netPower: p?.power ?? 0,
       commandPoints: { used: num(p?.commandPoints) ?? used, cap: num(p?.commandPointCap) ?? FALLBACK_CP_CAP },
-      tickets: p?.tickets ?? 0,
+      morale: p?.morale ?? 0,
     };
   }
 
   /**
-   * Tickets per team. PlayerState carries tickets per player; when the sim keeps one pool per
+   * Morale per team. PlayerState carries morale per player; when the sim keeps one pool per
    * team every member mirrors it, so the max is the team's value either way.
    */
-  teamTickets(): TeamTickets[] {
-    const teams = new Map<TeamId, TeamTickets>();
+  teamMorale(): TeamMorale[] {
+    const teams = new Map<TeamId, TeamMorale>();
     for (const slot of this.setup.players) {
       const ps = this.sim.player(slot.id);
       let t = teams.get(slot.team);
       if (!t) {
-        t = { team: slot.team, tickets: 0, max: START_TICKETS, color: slot.color, players: [], defeated: true };
+        t = { team: slot.team, morale: 0, max: START_MORALE, color: slot.color, players: [], defeated: true };
         teams.set(slot.team, t);
       }
       t.players.push(slot);
-      t.tickets = Math.max(t.tickets, ps?.tickets ?? 0);
-      t.max = Math.max(t.max, ps?.tickets ?? 0);
+      t.morale = Math.max(t.morale, ps?.morale ?? 0);
+      t.max = Math.max(t.max, ps?.morale ?? 0);
       t.defeated = t.defeated && (ps?.defeated ?? false);
     }
     return [...teams.values()].sort((a, b) => a.team - b.team);
@@ -257,10 +271,49 @@ export class SimAdapter {
     return this.units[type]?.cost ?? this.structures[type]?.cost ?? 0;
   }
 
-  /** Overlap check for structure placement: map bounds + existing footprints. */
-  canPlace(structure: string, at: Vec2, mapSize: number): boolean {
+  /** Abilities of a unit with cooldown (0 = ready) and active state. */
+  abilities(e: EntityState): { ability: string; cooldown: number; active: boolean; info: AbilityInfo }[] {
+    if (!this.ext) return [];
+    return this.ext.abilities(e.id).flatMap((a) => (ABILITIES[a.ability] ? [{ ...a, info: ABILITIES[a.ability] }] : []));
+  }
+
+  unitDef(type: string): UnitDef | undefined {
+    return this.units[type];
+  }
+
+  abilityInfo(id: string): AbilityInfo | undefined {
+    return ABILITIES[id];
+  }
+
+  /** Seats a transport or garrisonable building offers (0 if it carries nobody). */
+  capacity(e: EntityState): number {
+    if (e.kind === 'structure') return this.structures[e.type]?.garrison ?? 0;
+    return (this.units[e.type] as (UnitDef & { transport?: { seats: number } }) | undefined)?.transport?.seats ?? 0;
+  }
+
+  /** Whether any of `units` can board/garrison `target`. */
+  canEnter(units: EntityId[], target: EntityState): boolean {
+    if (!this.ext || this.capacity(target) <= 0) return false;
+    return units.some((u) => this.ext!.canEnter(u, target.id));
+  }
+
+  superweapon(player: PlayerId): SuperweaponView | null {
+    return this.ext?.superweapon(player) ?? null;
+  }
+
+  lines(player: PlayerId): readonly FrontlineView[] {
+    return this.ext?.lines(player) ?? [];
+  }
+
+  pause(): PauseView | null {
+    return this.ext?.pause ?? null;
+  }
+
+  /** Overlap check for structure placement: the sim's rules when available, else bounds + footprints. */
+  canPlace(structure: string, at: Vec2, mapSize: number, player?: PlayerId, rotation = 0): boolean {
     const s = this.structures[structure];
     if (!s) return false;
+    if (this.ext && player !== undefined) return this.ext.canPlace(player, structure, at, rotation);
     const half = mapSize / 2 - s.footprint;
     if (Math.abs(at.x) > half || Math.abs(at.z) > half) return false;
     for (const e of this.sim.entities()) {

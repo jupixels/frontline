@@ -2,8 +2,12 @@ import { TICK_SECONDS, type Vec2 } from '../../shared/types';
 import { headingTo, turnToward, wrapAngle } from '../math/dmath';
 import type { Entity, World } from '../world';
 import { abilityOrderTick } from './abilities';
+import { enterTick, unloadTick } from './containers';
 import { builderTick } from './economy';
+import { lineTick } from './lines';
 import { logisticsTick } from './logistics';
+import { terrainSpeed } from './terrain';
+import { PINNED_SPEED } from './veterancy';
 
 const ARRIVE_DIST = 0.75;
 /** Vehicles only drive forward once roughly facing the target (radians). */
@@ -56,7 +60,9 @@ export function driveToward(world: World, e: Entity, to: Vec2, stopAt = ARRIVE_D
   const want = headingTo(dx, dz);
   e.heading = turnToward(e.heading, want, def.turnRate * TICK_SECONDS);
   if (Math.abs(wrapAngle(want - e.heading)) > DRIVE_CONE) return d;
-  const speed = world.tick < e.boostUntil ? def.speed * e.boostMult : def.speed;
+  let speed = world.tick < e.boostUntil ? def.speed * e.boostMult : def.speed;
+  speed *= terrainSpeed(world, e, dx / d, dz / d);
+  if (e.pinned) speed *= PINNED_SPEED;
   const step = Math.min(speed * TICK_SECONDS, d - stopAt * 0.5);
   if (step <= 0) return d;
   slide(world, e, (dx / d) * step, (dz / d) * step);
@@ -106,7 +112,7 @@ export function movementSystem(world: World): void {
       logisticsTick(world, e);
       continue;
     }
-    if (e.busy) continue;
+    if (e.busy || e.inside) continue;
     // Entrenching / packing infantry can't move.
     if (e.entrench !== 'none') {
       e.path = null;
@@ -124,6 +130,19 @@ export function movementSystem(world: World): void {
     if (o.kind === 'move') {
       if (!e.path) setPath(world, e, o.target);
       if (followPath(world, e)) nextOrder(e);
+    } else if (o.kind === 'patrol') {
+      const goal = o.toB ? o.b : o.a;
+      if (!e.path) setPath(world, e, goal);
+      if (followPath(world, e, 2)) {
+        o.toB = !o.toB;
+        e.path = null;
+      }
+    } else if (o.kind === 'line') {
+      lineTick(world, e);
+    } else if (o.kind === 'enter') {
+      enterTick(world, e, o.targetId);
+    } else if (o.kind === 'unload') {
+      unloadTick(world, e, o.at);
     } else if (o.kind === 'ability') {
       abilityOrderTick(world, e, o);
     } else if (o.kind === 'build') {
@@ -143,8 +162,9 @@ export function avoidanceSystem(world: World): void {
   world.rebuildSpatial();
   const nav = world.nav;
   for (const a of world.entities.values()) {
-    if (a.kind !== 'unit' || a.dead) continue;
+    if (a.kind !== 'unit' || a.dead || a.inside) continue;
     let px = 0;
+
     let pz = 0;
     world.spatial.query(a.pos.x, a.pos.z, a.radius + MAX_RADIUS, (b, d2) => {
       if (b === a || b.kind !== 'unit' || b.domain !== a.domain || b.dead) return;

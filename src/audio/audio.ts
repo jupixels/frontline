@@ -315,6 +315,46 @@ export class AudioManager {
         case 'smoke':
           if (this.audible(view, ev.at)) this.play('smoke_pop', ev.at);
           break;
+        case 'superweaponLaunched':
+          // Everyone hears the warning; it's the point of the early warning.
+          this.intensity.add(BATTLE_ENTER);
+          playFlat('siren', { gain: 0.9 });
+          this.play('missile', ev.at);
+          break;
+        case 'superweaponImpact':
+          this.play('death_tank', ev.at);
+          this.play('explosion_big', ev.at);
+          this.intensity.add(6);
+          break;
+        case 'superweaponReady':
+          if (ev.player === this.localPlayer) this.alert('produced', ['radio_morse', 'ui_confirm']);
+          break;
+        case 'promoted': {
+          const u = this.lookup(ev.id, view);
+          if (u?.owner === this.localPlayer) playFlat('ui_confirm', { gain: 0.8 });
+          break;
+        }
+        case 'suppressed': {
+          // Pinned own infantry: a radio burst so you notice without looking.
+          const u = this.lookup(ev.id, view);
+          if (ev.pinned && u?.owner === this.localPlayer) this.alert('underAttack', ['radio_static'], 0.6);
+          break;
+        }
+        case 'boarded': {
+          const u = this.lookup(ev.id, view);
+          if (u?.owner === this.localPlayer && this.audible(view, u)) playFlat('ui_click', { gain: 0.5 });
+          break;
+        }
+        case 'line':
+          if (ev.owner === this.localPlayer) playFlat('radio_morse', { gain: 0.5 });
+          break;
+        case 'morale':
+          // Morale breaking is a big moment either way: a radio burst, plus the siren if it's us.
+          if (ev.low) this.alert('captured', ev.team === this.team ? ['siren', 'radio_static'] : ['radio_morse']);
+          break;
+        case 'paused':
+          playFlat(ev.paused ? 'ui_open' : 'ui_close');
+          break;
         default:
           // spawned, entrench, revealed, delivered: no sound.
           break;

@@ -1,0 +1,2182 @@
+{
+ "id": "desert_oilfields",
+ "name": "Desert Oilfields",
+ "size": 1200,
+ "modes": [
+  "1v1",
+  "2v2",
+  "ffa4"
+ ],
+ "atmosphere": "noon",
+ "spawns": [
+  {
+   "x": -440,
+   "z": 440
+  },
+  {
+   "x": 440,
+   "z": -440
+  },
+  {
+   "x": -440,
+   "z": -440
+  },
+  {
+   "x": 440,
+   "z": 440
+  }
+ ],
+ "sides": [
+  [
+   0,
+   3
+  ],
+  [
+   1,
+   2
+  ]
+ ],
+ "terrain": {
+  "seed": 37,
+  "symmetry": 4,
+  "style": "desert",
+  "base": 7,
+  "relief": 5,
+  "detail": 1.6,
+  "hills": [
+   {
+    "x": 0,
+    "z": 0,
+    "r": 150,
+    "h": -5,
+    "plateau": 0.45
+   },
+   {
+    "x": 125,
+    "z": 365,
+    "r": 72,
+    "h": 14,
+    "plateau": 0.5
+   },
+   {
+    "x": -420,
+    "z": 420,
+    "r": 130,
+    "h": 6,
+    "plateau": 0.6
+   },
+   {
+    "x": -150,
+    "z": 520,
+    "r": 80,
+    "h": 16
+   },
+   {
+    "x": -365,
+    "z": 125,
+    "r": 72,
+    "h": 14,
+    "plateau": 0.5
+   },
+   {
+    "x": -420,
+    "z": -420,
+    "r": 130,
+    "h": 6,
+    "plateau": 0.6
+   },
+   {
+    "x": -520,
+    "z": -150,
+    "r": 80,
+    "h": 16
+   },
+   {
+    "x": -125,
+    "z": -365,
+    "r": 72,
+    "h": 14,
+    "plateau": 0.5
+   },
+   {
+    "x": 420,
+    "z": -420,
+    "r": 130,
+    "h": 6,
+    "plateau": 0.6
+   },
+   {
+    "x": 150,
+    "z": -520,
+    "r": 80,
+    "h": 16
+   },
+   {
+    "x": 365,
+    "z": -125,
+    "r": 72,
+    "h": 14,
+    "plateau": 0.5
+   },
+   {
+    "x": 420,
+    "z": 420,
+    "r": 130,
+    "h": 6,
+    "plateau": 0.6
+   },
+   {
+    "x": 520,
+    "z": 150,
+    "r": 80,
+    "h": 16
+   }
+  ],
+  "cliffs": [
+   {
+    "shape": "poly",
+    "points": [
+     [
+      296.6,
+      235
+     ],
+     [
+      272.9,
+      266.8
+     ],
+     [
+      244.6,
+      289.4
+     ],
+     [
+      211,
+      276.5
+     ],
+     [
+      193.4,
+      250.1
+     ],
+     [
+      173,
+      212.4
+     ],
+     [
+      205,
+      183
+     ],
+     [
+      246.9,
+      167.4
+     ],
+     [
+      290.1,
+      188.8
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -249,
+      470
+     ],
+     [
+      -252.3,
+      492.1
+     ],
+     [
+      -276.4,
+      498.1
+     ],
+     [
+      -285.7,
+      477.6
+     ],
+     [
+      -287.1,
+      461.8
+     ],
+     [
+      -276.4,
+      441.9
+     ],
+     [
+      -256.9,
+      453.5
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      77.9,
+      160
+     ],
+     [
+      66.5,
+      171.3
+     ],
+     [
+      54,
+      170.4
+     ],
+     [
+      42.3,
+      160
+     ],
+     [
+      53.9,
+      149.5
+     ],
+     [
+      68.6,
+      145
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -72.7,
+      300
+     ],
+     [
+      -79.7,
+      317.9
+     ],
+     [
+      -98.9,
+      315.5
+     ],
+     [
+      -109.2,
+      300
+     ],
+     [
+      -97.5,
+      286.9
+     ],
+     [
+      -79.8,
+      282.4
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -235,
+      296.6
+     ],
+     [
+      -266.8,
+      272.9
+     ],
+     [
+      -289.4,
+      244.6
+     ],
+     [
+      -276.5,
+      211
+     ],
+     [
+      -250.1,
+      193.4
+     ],
+     [
+      -212.4,
+      173
+     ],
+     [
+      -183,
+      205
+     ],
+     [
+      -167.4,
+      246.9
+     ],
+     [
+      -188.8,
+      290.1
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -470,
+      -249
+     ],
+     [
+      -492.1,
+      -252.3
+     ],
+     [
+      -498.1,
+      -276.4
+     ],
+     [
+      -477.6,
+      -285.7
+     ],
+     [
+      -461.8,
+      -287.1
+     ],
+     [
+      -441.9,
+      -276.4
+     ],
+     [
+      -453.5,
+      -256.9
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -160,
+      77.9
+     ],
+     [
+      -171.3,
+      66.5
+     ],
+     [
+      -170.4,
+      54
+     ],
+     [
+      -160,
+      42.3
+     ],
+     [
+      -149.5,
+      53.9
+     ],
+     [
+      -145,
+      68.6
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -300,
+      -72.7
+     ],
+     [
+      -317.9,
+      -79.7
+     ],
+     [
+      -315.5,
+      -98.9
+     ],
+     [
+      -300,
+      -109.2
+     ],
+     [
+      -286.9,
+      -97.5
+     ],
+     [
+      -282.4,
+      -79.8
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -296.6,
+      -235
+     ],
+     [
+      -272.9,
+      -266.8
+     ],
+     [
+      -244.6,
+      -289.4
+     ],
+     [
+      -211,
+      -276.5
+     ],
+     [
+      -193.4,
+      -250.1
+     ],
+     [
+      -173,
+      -212.4
+     ],
+     [
+      -205,
+      -183
+     ],
+     [
+      -246.9,
+      -167.4
+     ],
+     [
+      -290.1,
+      -188.8
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      249,
+      -470
+     ],
+     [
+      252.3,
+      -492.1
+     ],
+     [
+      276.4,
+      -498.1
+     ],
+     [
+      285.7,
+      -477.6
+     ],
+     [
+      287.1,
+      -461.8
+     ],
+     [
+      276.4,
+      -441.9
+     ],
+     [
+      256.9,
+      -453.5
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -77.9,
+      -160
+     ],
+     [
+      -66.5,
+      -171.3
+     ],
+     [
+      -54,
+      -170.4
+     ],
+     [
+      -42.3,
+      -160
+     ],
+     [
+      -53.9,
+      -149.5
+     ],
+     [
+      -68.6,
+      -145
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      72.7,
+      -300
+     ],
+     [
+      79.7,
+      -317.9
+     ],
+     [
+      98.9,
+      -315.5
+     ],
+     [
+      109.2,
+      -300
+     ],
+     [
+      97.5,
+      -286.9
+     ],
+     [
+      79.8,
+      -282.4
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      235,
+      -296.6
+     ],
+     [
+      266.8,
+      -272.9
+     ],
+     [
+      289.4,
+      -244.6
+     ],
+     [
+      276.5,
+      -211
+     ],
+     [
+      250.1,
+      -193.4
+     ],
+     [
+      212.4,
+      -173
+     ],
+     [
+      183,
+      -205
+     ],
+     [
+      167.4,
+      -246.9
+     ],
+     [
+      188.8,
+      -290.1
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      470,
+      249
+     ],
+     [
+      492.1,
+      252.3
+     ],
+     [
+      498.1,
+      276.4
+     ],
+     [
+      477.6,
+      285.7
+     ],
+     [
+      461.8,
+      287.1
+     ],
+     [
+      441.9,
+      276.4
+     ],
+     [
+      453.5,
+      256.9
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      160,
+      -77.9
+     ],
+     [
+      171.3,
+      -66.5
+     ],
+     [
+      170.4,
+      -54
+     ],
+     [
+      160,
+      -42.3
+     ],
+     [
+      149.5,
+      -53.9
+     ],
+     [
+      145,
+      -68.6
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      300,
+      72.7
+     ],
+     [
+      317.9,
+      79.7
+     ],
+     [
+      315.5,
+      98.9
+     ],
+     [
+      300,
+      109.2
+     ],
+     [
+      286.9,
+      97.5
+     ],
+     [
+      282.4,
+      79.8
+     ]
+    ]
+   }
+  ],
+  "ridges": [
+   {
+    "points": [
+     [
+      -560,
+      180
+     ],
+     [
+      -470,
+      230
+     ],
+     [
+      -400,
+      210
+     ]
+    ],
+    "width": 40,
+    "h": 12
+   },
+   {
+    "points": [
+     [
+      -180,
+      -560
+     ],
+     [
+      -230,
+      -470
+     ],
+     [
+      -210,
+      -400
+     ]
+    ],
+    "width": 40,
+    "h": 12
+   },
+   {
+    "points": [
+     [
+      560,
+      -180
+     ],
+     [
+      470,
+      -230
+     ],
+     [
+      400,
+      -210
+     ]
+    ],
+    "width": 40,
+    "h": 12
+   },
+   {
+    "points": [
+     [
+      180,
+      560
+     ],
+     [
+      230,
+      470
+     ],
+     [
+      210,
+      400
+     ]
+    ],
+    "width": 40,
+    "h": 12
+   }
+  ],
+  "forests": [
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -33.8,
+      365
+     ],
+     [
+      -59.1,
+      385
+     ],
+     [
+      -82.4,
+      397.2
+     ],
+     [
+      -105.8,
+      379.8
+     ],
+     [
+      -106.6,
+      349.8
+     ],
+     [
+      -80.3,
+      341.9
+     ],
+     [
+      -58.7,
+      344.6
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      -365,
+      -33.8
+     ],
+     [
+      -385,
+      -59.1
+     ],
+     [
+      -397.2,
+      -82.4
+     ],
+     [
+      -379.8,
+      -105.8
+     ],
+     [
+      -349.8,
+      -106.6
+     ],
+     [
+      -341.9,
+      -80.3
+     ],
+     [
+      -344.6,
+      -58.7
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      33.8,
+      -365
+     ],
+     [
+      59.1,
+      -385
+     ],
+     [
+      82.4,
+      -397.2
+     ],
+     [
+      105.8,
+      -379.8
+     ],
+     [
+      106.6,
+      -349.8
+     ],
+     [
+      80.3,
+      -341.9
+     ],
+     [
+      58.7,
+      -344.6
+     ]
+    ]
+   },
+   {
+    "shape": "poly",
+    "points": [
+     [
+      365,
+      33.8
+     ],
+     [
+      385,
+      59.1
+     ],
+     [
+      397.2,
+      82.4
+     ],
+     [
+      379.8,
+      105.8
+     ],
+     [
+      349.8,
+      106.6
+     ],
+     [
+      341.9,
+      80.3
+     ],
+     [
+      344.6,
+      58.7
+     ]
+    ]
+   }
+  ],
+  "roads": [
+   {
+    "points": [
+     [
+      -440,
+      440
+     ],
+     [
+      -300,
+      300
+     ],
+     [
+      -140,
+      330
+     ],
+     [
+      0,
+      330
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      -300,
+      300
+     ],
+     [
+      -330,
+      140
+     ],
+     [
+      -330,
+      0
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      0,
+      330
+     ],
+     [
+      0,
+      150
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "width": 8
+   },
+   {
+    "points": [
+     [
+      -440,
+      -440
+     ],
+     [
+      -300,
+      -300
+     ],
+     [
+      -330,
+      -140
+     ],
+     [
+      -330,
+      0
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      -300,
+      -300
+     ],
+     [
+      -140,
+      -330
+     ],
+     [
+      0,
+      -330
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      -330,
+      0
+     ],
+     [
+      -150,
+      0
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "width": 8
+   },
+   {
+    "points": [
+     [
+      440,
+      -440
+     ],
+     [
+      300,
+      -300
+     ],
+     [
+      140,
+      -330
+     ],
+     [
+      0,
+      -330
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      300,
+      -300
+     ],
+     [
+      330,
+      -140
+     ],
+     [
+      330,
+      0
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      0,
+      -330
+     ],
+     [
+      0,
+      -150
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "width": 8
+   },
+   {
+    "points": [
+     [
+      440,
+      440
+     ],
+     [
+      300,
+      300
+     ],
+     [
+      330,
+      140
+     ],
+     [
+      330,
+      0
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      300,
+      300
+     ],
+     [
+      140,
+      330
+     ],
+     [
+      0,
+      330
+     ]
+    ],
+    "width": 7
+   },
+   {
+    "points": [
+     [
+      330,
+      0
+     ],
+     [
+      150,
+      0
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "width": 8
+   }
+  ]
+ },
+ "points": [
+  {
+   "x": 0,
+   "z": 0,
+   "name": "Oilfield",
+   "radius": 34
+  },
+  {
+   "x": 0,
+   "z": 330,
+   "name": "South Station"
+  },
+  {
+   "x": -300,
+   "z": 300,
+   "name": "SW Depot"
+  },
+  {
+   "x": -330,
+   "z": 0,
+   "name": "West Station"
+  },
+  {
+   "x": -300,
+   "z": -300,
+   "name": "NW Depot"
+  },
+  {
+   "x": 0,
+   "z": -330,
+   "name": "North Station"
+  },
+  {
+   "x": 300,
+   "z": -300,
+   "name": "NE Depot"
+  },
+  {
+   "x": 330,
+   "z": 0,
+   "name": "East Station"
+  },
+  {
+   "x": 300,
+   "z": 300,
+   "name": "SE Depot"
+  }
+ ],
+ "supplyNodes": [
+  {
+   "x": -360,
+   "z": 330
+  },
+  {
+   "x": -320,
+   "z": 380
+  },
+  {
+   "x": 60,
+   "z": 360
+  },
+  {
+   "x": -60,
+   "z": 300
+  },
+  {
+   "x": -330,
+   "z": -360
+  },
+  {
+   "x": -380,
+   "z": -320
+  },
+  {
+   "x": -360,
+   "z": 60
+  },
+  {
+   "x": -300,
+   "z": -60
+  },
+  {
+   "x": 360,
+   "z": -330
+  },
+  {
+   "x": 320,
+   "z": -380
+  },
+  {
+   "x": -60,
+   "z": -360
+  },
+  {
+   "x": 60,
+   "z": -300
+  },
+  {
+   "x": 330,
+   "z": 360
+  },
+  {
+   "x": 380,
+   "z": 320
+  },
+  {
+   "x": 360,
+   "z": -60
+  },
+  {
+   "x": 300,
+   "z": 60
+  },
+  {
+   "x": 45,
+   "z": 45
+  },
+  {
+   "x": -45,
+   "z": 45
+  },
+  {
+   "x": -45,
+   "z": -45
+  },
+  {
+   "x": 45,
+   "z": -45
+  }
+ ],
+ "structures": [
+  {
+   "type": "ruin",
+   "x": 30,
+   "z": 305,
+   "rotation": 0
+  },
+  {
+   "type": "ruin",
+   "x": -275,
+   "z": 280,
+   "rotation": 1.6
+  },
+  {
+   "type": "ruin",
+   "x": -305,
+   "z": 30,
+   "rotation": 1.6
+  },
+  {
+   "type": "ruin",
+   "x": -280,
+   "z": -275,
+   "rotation": 3.1
+  },
+  {
+   "type": "ruin",
+   "x": -30,
+   "z": -305,
+   "rotation": 3.1
+  },
+  {
+   "type": "ruin",
+   "x": 275,
+   "z": -280,
+   "rotation": 4.7
+  },
+  {
+   "type": "ruin",
+   "x": 305,
+   "z": -30,
+   "rotation": 4.7
+  },
+  {
+   "type": "ruin",
+   "x": 280,
+   "z": 275,
+   "rotation": 0
+  }
+ ],
+ "scatter": [
+  {
+   "models": [
+    "models/env/rock_large_a.glb",
+    "models/env/rock_large_b.glb",
+    "models/env/rock_small_a.glb",
+    "models/env/rock_tall_a.glb",
+    "models/env/rock_stone_large.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1200,
+    "d": 1200
+   },
+   "count": 260,
+   "scale": [
+    0.6,
+    2
+   ]
+  },
+  {
+   "models": [
+    "models/env/bush_small.glb",
+    "models/env/tree_stump.glb"
+   ],
+   "area": {
+    "shape": "rect",
+    "x": 0,
+    "z": 0,
+    "w": 1200,
+    "d": 1200
+   },
+   "count": 120,
+   "scale": [
+    0.6,
+    1.2
+   ]
+  }
+ ],
+ "props": [
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 11,
+   "z": 0,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.5,
+   "z": 9.5,
+   "rotation": 2.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.5,
+   "z": 9.5,
+   "rotation": 3.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -11,
+   "z": 0,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -5.5,
+   "z": -9.5,
+   "rotation": 5.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 5.5,
+   "z": -9.5,
+   "rotation": 6.8
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 4,
+   "z": -3,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -3,
+   "z": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 10.5,
+   "z": 333.3,
+   "rotation": 1.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 2.4,
+   "z": 340.7,
+   "rotation": 2.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -8.1,
+   "z": 337.5,
+   "rotation": 4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -10.5,
+   "z": 326.7,
+   "rotation": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -2.4,
+   "z": 319.3,
+   "rotation": 6.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 8.1,
+   "z": 322.5,
+   "rotation": 7.1
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 4,
+   "z": 327,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -3,
+   "z": 335
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -290.9,
+   "z": 306.2,
+   "rotation": 2.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -300.8,
+   "z": 311,
+   "rotation": 3.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -309.9,
+   "z": 304.8,
+   "rotation": 4.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -309.1,
+   "z": 293.8,
+   "rotation": 5.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -299.2,
+   "z": 289,
+   "rotation": 6.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -290.1,
+   "z": 295.2,
+   "rotation": 7.4
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -296,
+   "z": 297,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -303,
+   "z": 305
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -323.2,
+   "z": 8.6,
+   "rotation": 2.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -334,
+   "z": 10.2,
+   "rotation": 3.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -340.9,
+   "z": 1.6,
+   "rotation": 4.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -336.8,
+   "z": -8.6,
+   "rotation": 5.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -326,
+   "z": -10.2,
+   "rotation": 6.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -319.1,
+   "z": -1.6,
+   "rotation": 7.7
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -326,
+   "z": -3,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -333,
+   "z": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -296,
+   "z": -289.7,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -306.9,
+   "z": -291.4,
+   "rotation": 3.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -310.9,
+   "z": -301.7,
+   "rotation": 4.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -304,
+   "z": -310.3,
+   "rotation": 5.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -293.1,
+   "z": -308.6,
+   "rotation": 7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -289.1,
+   "z": -298.3,
+   "rotation": 8
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": -296,
+   "z": -303,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -303,
+   "z": -295
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 0.8,
+   "z": -319,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -9.1,
+   "z": -323.8,
+   "rotation": 4.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -9.9,
+   "z": -334.8,
+   "rotation": 5.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": -0.8,
+   "z": -341,
+   "rotation": 6.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 9.1,
+   "z": -336.2,
+   "rotation": 7.3
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 9.9,
+   "z": -325.2,
+   "rotation": 8.3
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 4,
+   "z": -333,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -3,
+   "z": -325
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 297.5,
+   "z": -289.3,
+   "rotation": 3.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 289.5,
+   "z": -296.8,
+   "rotation": 4.4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 292,
+   "z": -307.5,
+   "rotation": 5.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 302.5,
+   "z": -310.7,
+   "rotation": 6.5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 310.5,
+   "z": -303.2,
+   "rotation": 7.6
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 308,
+   "z": -292.5,
+   "rotation": 8.6
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 304,
+   "z": -303,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 297,
+   "z": -295
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 324.4,
+   "z": 9.5,
+   "rotation": 3.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 319,
+   "z": -0.1,
+   "rotation": 4.7
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 324.6,
+   "z": -9.6,
+   "rotation": 5.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 335.6,
+   "z": -9.5,
+   "rotation": 6.8
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 341,
+   "z": 0.1,
+   "rotation": 7.9
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 335.4,
+   "z": 9.6,
+   "rotation": 8.9
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 334,
+   "z": -3,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 327,
+   "z": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 291.9,
+   "z": 307.4,
+   "rotation": 4
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 289.5,
+   "z": 296.7,
+   "rotation": 5
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 297.6,
+   "z": 289.3,
+   "rotation": 6.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 308.1,
+   "z": 292.6,
+   "rotation": 7.1
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 310.5,
+   "z": 303.3,
+   "rotation": 8.2
+  },
+  {
+   "model": "models/buildings/props/sandbags.glb",
+   "x": 302.4,
+   "z": 310.7,
+   "rotation": 9.2
+  },
+  {
+   "model": "models/buildings/props/wooden_box.glb",
+   "x": 304,
+   "z": 297,
+   "rotation": 0.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 297,
+   "z": 305
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -351,
+   "z": 337,
+   "rotation": 0
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -368,
+   "z": 339
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -369,
+   "z": 337.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -358,
+   "z": 319,
+   "rotation": 1.6
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -311,
+   "z": 387,
+   "rotation": 0.7
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -328,
+   "z": 389
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -329,
+   "z": 387.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -318,
+   "z": 369,
+   "rotation": 1.9
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 69,
+   "z": 367,
+   "rotation": 1.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 52,
+   "z": 369
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 51,
+   "z": 367.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 62,
+   "z": 349,
+   "rotation": 2.2
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -51,
+   "z": 307,
+   "rotation": 2.1
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -68,
+   "z": 309
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -69,
+   "z": 307.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -58,
+   "z": 289,
+   "rotation": 2.5
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -321,
+   "z": -353,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -338,
+   "z": -351
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -339,
+   "z": -352.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -328,
+   "z": -371,
+   "rotation": 2.8
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -371,
+   "z": -313,
+   "rotation": 3.5
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -388,
+   "z": -311
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -389,
+   "z": -312.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -378,
+   "z": -331,
+   "rotation": 3.1
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -351,
+   "z": 67,
+   "rotation": 4.2
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -368,
+   "z": 69
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -369,
+   "z": 67.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -358,
+   "z": 49,
+   "rotation": 3.4
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -291,
+   "z": -53,
+   "rotation": 4.9
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -308,
+   "z": -51
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -309,
+   "z": -52.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -298,
+   "z": -71,
+   "rotation": 3.7
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 369,
+   "z": -323,
+   "rotation": 5.6
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 352,
+   "z": -321
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 351,
+   "z": -322.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 362,
+   "z": -341,
+   "rotation": 4
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 329,
+   "z": -373,
+   "rotation": 6.3
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 312,
+   "z": -371
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 311,
+   "z": -372.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 322,
+   "z": -391,
+   "rotation": 4.3
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -51,
+   "z": -353,
+   "rotation": 7
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -68,
+   "z": -351
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -69,
+   "z": -352.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -58,
+   "z": -371,
+   "rotation": 4.6
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 69,
+   "z": -293,
+   "rotation": 7.7
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 52,
+   "z": -291
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 51,
+   "z": -292.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 62,
+   "z": -311,
+   "rotation": 4.9
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 339,
+   "z": 367,
+   "rotation": 8.4
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 322,
+   "z": 369
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 321,
+   "z": 367.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 332,
+   "z": 349,
+   "rotation": 5.2
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 389,
+   "z": 327,
+   "rotation": 9.1
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 372,
+   "z": 329
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 371,
+   "z": 327.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 382,
+   "z": 309,
+   "rotation": 5.5
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 369,
+   "z": -53,
+   "rotation": 9.8
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 352,
+   "z": -51
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 351,
+   "z": -52.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 362,
+   "z": -71,
+   "rotation": 5.8
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 309,
+   "z": 67,
+   "rotation": 10.5
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 292,
+   "z": 69
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 291,
+   "z": 67.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 302,
+   "z": 49,
+   "rotation": 6.1
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 54,
+   "z": 52,
+   "rotation": 11.2
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 37,
+   "z": 54
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 36,
+   "z": 52.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 47,
+   "z": 34,
+   "rotation": 6.4
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -36,
+   "z": 52,
+   "rotation": 11.9
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -53,
+   "z": 54
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -54,
+   "z": 52.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -43,
+   "z": 34,
+   "rotation": 6.7
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": -36,
+   "z": -38,
+   "rotation": 12.6
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": -53,
+   "z": -36
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": -54,
+   "z": -37.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": -43,
+   "z": -56,
+   "rotation": 7
+  },
+  {
+   "model": "models/buildings/props/gas_tank.glb",
+   "x": 54,
+   "z": -38,
+   "rotation": 13.3
+  },
+  {
+   "model": "models/buildings/props/barrel.glb",
+   "x": 37,
+   "z": -36
+  },
+  {
+   "model": "models/buildings/props/explosive_barrel.glb",
+   "x": 36,
+   "z": -37.5
+  },
+  {
+   "model": "models/buildings/props/container_02.glb",
+   "x": 47,
+   "z": -56,
+   "rotation": 7.3
+  }
+ ]
+}

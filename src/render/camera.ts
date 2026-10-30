@@ -3,9 +3,21 @@ import * as THREE from 'three';
 const PAN_SPEED = 1.1; // fraction of view distance per second
 const EDGE = 12; // px
 const MIN_DIST = 25;
-const MAX_DIST = 320;
+const MAX_DIST = 420;
 
-/** Classic RTS camera: arrows/edge pan, wheel zoom, middle-drag (or PageUp/PageDown) rotate. */
+/** Rebindable pan keys (KeyboardEvent.code). Arrows always pan too. */
+export interface PanKeys {
+  up: string;
+  down: string;
+  left: string;
+  right: string;
+}
+
+function typing(t: EventTarget | null): boolean {
+  return t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || (t instanceof HTMLElement && t.isContentEditable);
+}
+
+/** Classic RTS camera: WASD/arrows/edge pan, wheel zoom, middle-drag (or PageUp/PageDown) rotate. */
 export class RtsCamera {
   readonly camera: THREE.PerspectiveCamera;
   readonly target = new THREE.Vector3();
@@ -13,6 +25,10 @@ export class RtsCamera {
   private yaw = Math.PI / 4;
   private pitch = 0.95;
   private keys = new Set<string>();
+  /** Ctrl/Alt/Meta held: letter pan keys are ignored so shortcuts like Ctrl+S still work. */
+  private modifier = false;
+  /** Current pan bindings (the UI's keybinds); WASD by default. */
+  panKeys: () => PanKeys = () => ({ up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD' });
   private mouse = { x: -1, y: -1, inside: false };
   private rotating = false;
   private bounds = 300;
@@ -25,10 +41,17 @@ export class RtsCamera {
   constructor(dom: HTMLElement) {
     this.camera = new THREE.PerspectiveCamera(40, 1, 1, 4000);
     this.on(window, 'keydown', (e) => {
-      if (!(e.target instanceof HTMLInputElement)) this.keys.add(e.code);
+      this.modifier = e.ctrlKey || e.altKey || e.metaKey;
+      if (!typing(e.target)) this.keys.add(e.code);
     });
-    this.on(window, 'keyup', (e) => this.keys.delete(e.code));
-    this.on(window, 'blur', () => this.keys.clear());
+    this.on(window, 'keyup', (e) => {
+      this.modifier = e.ctrlKey || e.altKey || e.metaKey;
+      this.keys.delete(e.code);
+    });
+    this.on(window, 'blur', () => {
+      this.keys.clear();
+      this.modifier = false;
+    });
     this.on(dom, 'wheel', (e) => {
       e.preventDefault();
       this.distance = THREE.MathUtils.clamp(this.distance * Math.exp(e.deltaY * 0.001), MIN_DIST, MAX_DIST);
@@ -98,11 +121,12 @@ export class RtsCamera {
     const k = this.keys;
     let fx = 0;
     let fz = 0;
-    // Letter keys are unit hotkeys (A attack-move, S stop, H hold...), so panning uses arrows.
-    if (k.has('ArrowUp')) fz -= 1;
-    if (k.has('ArrowDown')) fz += 1;
-    if (k.has('ArrowLeft')) fx -= 1;
-    if (k.has('ArrowRight')) fx += 1;
+    const p = this.panKeys();
+    const letters = !this.modifier;
+    if (k.has('ArrowUp') || (letters && k.has(p.up))) fz -= 1;
+    if (k.has('ArrowDown') || (letters && k.has(p.down))) fz += 1;
+    if (k.has('ArrowLeft') || (letters && k.has(p.left))) fx -= 1;
+    if (k.has('ArrowRight') || (letters && k.has(p.right))) fx += 1;
     if (k.has('PageUp')) this.yaw += dt * 1.5;
     if (k.has('PageDown')) this.yaw -= dt * 1.5;
     const m = this.mouse;

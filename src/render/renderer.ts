@@ -2,21 +2,24 @@ import * as THREE from 'three';
 import type { Command } from '../shared/commands';
 import structuresJson from '../../data/structures.json';
 import weaponsJson from '../../data/weapons.json';
-import type { UnitDef } from '../shared/data';
+import type { MapDef, UnitDef } from '../shared/data';
+import { TerrainModel } from '../shared/terrain';
 import type { SimView, SimViewExt } from '../shared/entities';
 import type { SimEvent } from '../shared/events';
 import { TICK_SECONDS, type EntityId, type PlayerId, type PlayerSlot, type Vec2 } from '../shared/types';
 import type { Picker } from '../shared/view';
 import { RtsCamera } from './camera';
 import { DecalKind, DecalMap } from './decals';
-import { Environment } from './environment';
+import { atmosphereFor, Environment } from './environment';
+import { Scenery } from './scenery';
+import { MISSILE_ARC, TacticalLayer } from './tactical';
 import { FogOfWar, LocalVisionSource, SimFogSource, type VisibilitySource } from './fog';
 import { CommandMarkers, HealthBars } from './overlay';
 import { PostStack } from './post';
 import { LodInstancer } from './lod';
 import { gpuName, initialQuality, QUALITY, type QualityLevel, type QualitySettings } from './quality';
 import { CapturePointView } from './points';
-import { Terrain, WATER_LEVEL, type MapFeatures } from './terrain';
+import { Terrain, WATER_LEVEL } from './terrain';
 import { UnitView, type ViewDef } from './units';
 import { Vfx, type MuzzleSize } from './vfx';
 import { Water } from './water';
@@ -29,12 +32,10 @@ export interface RenderSetup {
   players: PlayerSlot[];
   /** Whose eyes the fog of war uses. Defaults to the first human slot. */
   localPlayer?: PlayerId;
-  /** Terrain seed. TODO(sim): should come from MapDef once maps carry terrain. */
-  terrainSeed?: number;
   /** Structure models and footprints, keyed like data/structures.json. Defaults to that file. */
   structures?: Record<string, RenderStructureDef>;
-  /** The map's water and obstacle shapes (SimMapDef.water / .obstacles) so the ground matches the sim. */
-  map?: MapFeatures;
+  /** The map: terrain, water, forests, bridges, props and atmosphere, exactly as the sim plays it. */
+  map?: MapDef;
 }
 
 /** What the renderer needs per structure type (a subset of data/structures.json entries). */
@@ -86,6 +87,7 @@ function simExt(sim: SimView): SimViewExt | null {
 }
 
 const _v = new THREE.Vector3();
+const NEUTRAL_EDGE = new THREE.Color('#d8d8d0');
 const _v2 = new THREE.Vector3();
 const _dir = new THREE.Vector3();
 const _frustum = new THREE.Frustum();
@@ -102,6 +104,8 @@ export class GameRenderer implements Picker {
   readonly decals: DecalMap;
   readonly vfx: Vfx;
   readonly fog: FogOfWar;
+  readonly scenery: Scenery;
+  private readonly tactical: TacticalLayer;
   private readonly post: PostStack;
   private readonly overlay = new THREE.Scene();
   private readonly healthBars = new HealthBars();
@@ -141,13 +145,22 @@ export class GameRenderer implements Picker {
     this.cam.camera.far = 3000;
     this.cam.setBounds(setup.mapSize / 2);
 
-    this.env = new Environment(this.scene, r);
+    const atmosphere = atmosphereFor(setup.map?.atmosphere);
+    this.env = new Environment(this.scene, r, atmosphere);
     this.structureDefs = setup.structures ?? (structuresJson as unknown as Record<string, RenderStructureDef>);
-    this.terrain = new Terrain({ mapSize: setup.mapSize, seed: setup.terrainSeed ?? 1, features: setup.map });
+    const model = new TerrainModel(setup.map ?? { size: setup.mapSize });
+    this.terrain = new Terrain({ model });
     this.scene.add(this.terrain.mesh);
     this.cam.groundHeight = (x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL);
     this.water = new Water(this.terrain, this.env.sunDir, this.env.sun.color);
+    if (atmosphere.water) {
+      (this.water.uniforms.uShallow.value as THREE.Color).set(atmosphere.water[0]);
+      (this.water.uniforms.uDeep.value as THREE.Color).set(atmosphere.water[1]);
+    }
     this.scene.add(this.water.mesh);
+    this.quality = QUALITY[initialQuality(gpuName(r.getContext()))];
+    this.scenery = new Scenery(setup.map ?? { id: '', name: '', size: setup.mapSize, spawns: [] }, model, (x, z) => this.terrain.heightAt(x, z), this.quality.level !== 'low');
+    this.scene.add(this.scenery.group);
     this.decals = new DecalMap(setup.mapSize * 1.3, this.quality.decalResolution);
     this.terrain.setDecals(this.decals.texture, this.decals.bounds);
     this.water.setDecals(this.decals.texture, this.decals.bounds);
@@ -169,6 +182,8 @@ export class GameRenderer implements Picker {
     this.overlay.add(this.healthBars.mesh);
 
     for (const p of setup.players) this.teamColors.set(p.id, new THREE.Color(p.color));
+    this.tactical = new TacticalLayer((x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL), (o) => this.teamColors.get(o) ?? new THREE.Color('#ffffff'));
+    this.overlay.add(this.tactical.group);
     this.localPlayer = setup.localPlayer ?? setup.players.find((p) => p.kind === 'human')?.id ?? 0;
     this.fog = new FogOfWar(this.makeVisionSource());
     if (this.localPlayer < 0) this.fog.enabled = false;
@@ -223,6 +238,8 @@ export class GameRenderer implements Picker {
     this.wrecks.length = 0;
     this.points.clear();
     this.decals.dispose();
+    this.scenery.dispose();
+    this.tactical.dispose();
     this.vfx.dispose();
     this.post.dispose();
     this.renderer.dispose();
@@ -237,6 +254,7 @@ export class GameRenderer implements Picker {
     this.quality = q;
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, q.pixelRatio));
     this.env.setShadowMapSize(q.shadowMapSize);
+    this.scenery?.setShadows(level === 'high' || level === 'ultra');
     this.vfx.setQuality(q);
     this.post.apply(q);
     this.resize();
@@ -341,11 +359,34 @@ export class GameRenderer implements Picker {
           break;
         case 'incoming':
           // Shown to everyone (the sim reveals it so targets can dodge).
-          this.markers.incoming(ev.at.x, ev.at.z, ev.radius, Math.max(0.5, (ev.arrive - sim.tick) * TICK_SECONDS));
+          this.markers.incoming(ev.at.x, ev.at.z, ev.radius, Math.max(0.5, (ev.arrive - (sim.gameTick ?? sim.tick)) * TICK_SECONDS));
           break;
         case 'smoke':
-          this.vfx.smokeScreen(ev.at.x, ev.at.z, ev.radius, Math.max(1, (ev.until - sim.tick) * TICK_SECONDS));
+          this.vfx.smokeScreen(ev.at.x, ev.at.z, ev.radius, Math.max(1, (ev.until - (sim.gameTick ?? sim.tick)) * TICK_SECONDS));
           break;
+        case 'superweaponLaunched': {
+          // Early warning for everyone: a big marker with a countdown, and the missile itself.
+          const secs = Math.max(1, (ev.arrive - (sim.gameTick ?? sim.tick)) * TICK_SECONDS);
+          this.markers.incoming(ev.at.x, ev.at.z, ev.radius, secs);
+          const site = sim.get(ev.site);
+          const from = site ? new THREE.Vector3(site.pos.x, this.terrain.heightAt(site.pos.x, site.pos.z) + 14, site.pos.z) : new THREE.Vector3(ev.at.x, 200, ev.at.z + 900);
+          const to = new THREE.Vector3(ev.at.x, this.terrain.heightAt(ev.at.x, ev.at.z), ev.at.z);
+          this.tactical.launch(from, to, secs, this.time);
+          this.vfx.rocket(from, to, from.distanceTo(to) / secs, MISSILE_ARC);
+          break;
+        }
+        case 'superweaponImpact': {
+          const { x, z } = ev.at;
+          this.vfx.explosion(x, z, 3.5);
+          for (let i = 0; i < 7; i++) {
+            const a = (i / 7) * Math.PI * 2;
+            const r = ev.radius * (0.35 + Math.random() * 0.45);
+            this.vfx.explosion(x + Math.cos(a) * r, z + Math.sin(a) * r, 2 + Math.random());
+          }
+          this.vfx.smokeColumn(new THREE.Vector3(x, this.terrain.heightAt(x, z), z), 2.5, 60);
+          this.shake(2.5, x, z);
+          break;
+        }
         case 'placed':
         case 'built':
           this.ensureView(sim, ev.id);
@@ -363,7 +404,9 @@ export class GameRenderer implements Picker {
   }
 
   private onFired(sim: SimView, id: EntityId, weapon: string, at: Vec2, target?: EntityId): void {
-    const v = this.views.get(id);
+    // Garrisons fire out of their building.
+    const inside = sim.get(id)?.inside;
+    const v = this.views.get(inside || id);
     if (!v || !v.root.visible) return;
     v.playFire();
     const e = sim.get(id);
@@ -525,6 +568,7 @@ export class GameRenderer implements Picker {
     this.fog.update(sim, dt);
 
     this.updateUnits(sim, alpha, dt);
+    this.updateTactical(sim);
     this.updatePoints(sim);
     this.updateWrecks(dt);
     this.updateOverlays(dt);
@@ -538,6 +582,28 @@ export class GameRenderer implements Picker {
     this.renderer.autoClear = false;
     this.renderer.render(this.overlay, camera);
     this.renderer.autoClear = true;
+  }
+
+  /** Rank chevrons, garrison counts, frontline ribbons and missiles. */
+  private updateTactical(sim: SimView): void {
+    const t = this.tactical;
+    t.begin();
+    for (const e of sim.entities()) {
+      const v = this.views.get(e.id);
+      if (!v || !v.root.visible || !v.isAlive) continue;
+      const rank = e.rank ?? 0;
+      // Garrisons and loaded transports show how many are inside (own and allied only for transports).
+      const garrison = e.kind === 'structure' || this.allies.has(e.owner) ? (e.cargo?.length ?? 0) : 0;
+      if (!rank && !garrison) continue;
+      _v.copy(v.root.position);
+      _v.y += v.height + (v.cls === 'infantry' ? 1.6 : v.cls === 'structure' ? 4 : 3);
+      if (!_frustum.containsPoint(_v)) continue;
+      if (garrison) t.badge(e.id, `g${garrison}`, _v, 4.5);
+      else t.badge(e.id, `r${rank}`, _v, v.cls === 'infantry' ? 1.3 : 2.4);
+    }
+    t.end();
+    if (this.ext && this.frameNo % 10 === 0) t.setLines(this.localPlayer >= 0 ? this.ext.lines(this.localPlayer) : []);
+    t.update(this.time);
   }
 
   /** Use the sim's own fog of war once we see a sim that has one. */
@@ -587,12 +653,14 @@ export class GameRenderer implements Picker {
     for (const e of sim.entities()) {
       const v = this.ensureView(sim, e.id);
       if (!v) continue;
-      let visible = v.dying || this.canSee(e.id, e.owner, e.pos.x, e.pos.z);
+      // Passengers and garrisons are hidden inside their transport or building.
+      let visible = !e.inside && (v.dying || this.canSee(e.id, e.owner, e.pos.x, e.pos.z));
       if (v.cls === 'structure') {
         // Buildings stay on the map (as last seen) once discovered.
         if (visible) v.seenOnce = true;
         else visible = v.seenOnce && this.fog.isExplored(e.pos.x, e.pos.z);
         v.build = this.ext ? this.ext.buildProgress(e.id) : 1;
+        v.setEdgeColor(this.teamColors.get(e.owner) ?? NEUTRAL_EDGE);
       }
       v.root.visible = visible;
       const d = camPos.distanceTo(v.root.position);

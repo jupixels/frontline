@@ -80,7 +80,7 @@ function stepPoint(world: World, pt: Entity, team: TeamId, perPlayer: number[], 
   }
 }
 
-/** Ticket bleed, sudden death, defeat and victory. */
+/** Morale drain, sudden death, defeat and victory. */
 export function victorySystem(world: World): void {
   if (world.over) return;
   const rules = world.content.rules;
@@ -98,12 +98,27 @@ export function victorySystem(world: World): void {
     for (const e of world.entities.values()) if (e.kind === 'point' && e.team >= 0) held.set(e.team, (held.get(e.team) ?? 0) + 1);
     let lead = 0;
     for (const n of held.values()) if (n > lead) lead = n;
+    let total = 0;
+    for (const e of world.entities.values()) if (e.kind === 'point') total++;
     const late = secs >= rules.lateBleedSeconds ? rules.lateBleedMult : 1;
+    // A team holding every point pushes harder: the match closes out instead of dragging on.
+    const sweep = total > 0 && lead === total ? (rules.sweepBleedMult ?? 1) : 1;
+    // Sudden death escalates the longer it lasts.
+    const sd = world.suddenDeath ? rules.suddenDeathBleed + (rules.suddenDeathRamp ?? 0) * Math.max(0, secs - rules.suddenDeathSeconds) : 0;
     for (const t of world.teams.values()) {
       if (t.defeated) continue;
-      let bleed = rules.bleedPerPointDiff * (lead - (held.get(t.id) ?? 0)) * late;
-      if (world.suddenDeath) bleed += rules.suddenDeathBleed;
-      t.tickets -= bleed / SIM_HZ;
+      const bleed = rules.bleedPerPointDiff * (lead - (held.get(t.id) ?? 0)) * late * sweep + sd;
+      t.morale -= bleed / SIM_HZ;
+    }
+  }
+  // Shaken sides: announced when crossing the threshold (both ways), so it's readable.
+  const lowAt = rules.startingMorale * (rules.moraleLowFraction ?? 0.25);
+  for (const t of world.teams.values()) {
+    if (t.defeated || !frontline) continue;
+    const low = t.morale < lowAt;
+    if (low !== t.moraleLow) {
+      t.moraleLow = low;
+      world.emit({ type: 'morale', team: t.id, low });
     }
   }
 
@@ -121,14 +136,14 @@ export function victorySystem(world: World): void {
   for (const p of world.players.values()) {
     const team = world.teams.get(p.team)!;
     if (p.defeated) {
-      p.tickets = team.tickets;
+      p.morale = team.morale;
       continue;
     }
     let lost = !hasAnything.has(p.id);
-    if (frontline) lost ||= team.tickets <= 0 || (p.hadHq && !hasHq.has(p.id));
+    if (frontline) lost ||= team.morale <= 0 || (p.hadHq && !hasHq.has(p.id));
     else lost ||= !hasProduction.has(p.id);
     if (lost) defeat(world, p.id);
-    p.tickets = Math.max(0, team.tickets);
+    p.morale = Math.max(0, team.morale);
   }
 
   const alive = new Set<TeamId>();
@@ -149,7 +164,20 @@ export function defeat(world: World, player: PlayerId): void {
   world.emit({ type: 'defeated', player });
   for (const e of world.entities.values()) {
     if (e.owner !== player) continue;
-    if (e.kind === 'point') {
+    if (e.kind === 'structure' && e.homeOwner === NEUTRAL) {
+      // A garrisoned neutral ruin goes back to neutral; its occupants are lost with their player.
+      for (const id of e.cargo) {
+        const u = world.entities.get(id);
+        if (u) {
+          u.dead = true;
+          u.hp = 0;
+          u.inside = 0;
+        }
+      }
+      e.cargo = [];
+      e.owner = NEUTRAL;
+      e.team = -1;
+    } else if (e.kind === 'point') {
       e.owner = NEUTRAL;
       e.team = -1;
       e.captureProgress = 0;
