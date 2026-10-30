@@ -19,12 +19,14 @@ import {
   type Pass,
 } from 'postprocessing';
 import { N8AOPostPass } from 'n8ao';
+import type { Atmosphere } from './environment';
 import type { QualitySettings } from './quality';
+import { noiseTexture } from './terrain';
 
 /**
- * Darkens never-seen ground to near black and desaturates explored-but-not-visible ground,
- * by reconstructing each pixel's world position from depth and sampling the fog texture.
- * Sky pixels (no depth) are left alone.
+ * World-space pass over the depth buffer (sky pixels left alone):
+ * - cloud shadows: drifting noise darkens the ground and everything on it (kept mild so teams read);
+ * - fog of war: dims never-seen ground and desaturates explored-but-not-visible ground.
  */
 class FogOfWarEffect extends Effect {
   constructor(fogTexture: THREE.Texture, bounds: THREE.Vector4) {
@@ -35,8 +37,22 @@ class FogOfWarEffect extends Effect {
         ['uFogBounds', new THREE.Uniform(bounds)],
         ['uInvViewProj', new THREE.Uniform(new THREE.Matrix4())],
         ['uEnabled', new THREE.Uniform(1)],
+        ['tCloudNoise', new THREE.Uniform(noiseTexture())],
+        // x: threshold, y: darkness, z: 1/scale, w: on
+        ['uCloud', new THREE.Uniform(new THREE.Vector4(0, 0, 1, 0))],
+        ['uCloudOffset', new THREE.Uniform(new THREE.Vector2())],
       ]),
     });
+  }
+
+  setClouds(cover: number, darkness: number, scale: number, on: boolean): void {
+    (this.uniforms.get('uCloud')!.value as THREE.Vector4).set(THREE.MathUtils.lerp(0.72, 0.3, cover), darkness, 1 / scale, on ? 1 : 0);
+  }
+
+  moveClouds(dx: number, dz: number): void {
+    const o = this.uniforms.get('uCloudOffset')!.value as THREE.Vector2;
+    o.x += dx;
+    o.y += dz;
   }
 
   setCamera(cam: THREE.Camera): void {
@@ -53,10 +69,21 @@ uniform sampler2D tFog;
 uniform vec4 uFogBounds;
 uniform mat4 uInvViewProj;
 uniform float uEnabled;
+uniform sampler2D tCloudNoise;
+uniform vec4 uCloud;
+uniform vec2 uCloudOffset;
 void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth, out vec4 outputColor) {
-  if (uEnabled < 0.5 || depth >= 0.99999) { outputColor = inputColor; return; }
+  if (depth >= 0.99999 || (uEnabled < 0.5 && uCloud.w < 0.5)) { outputColor = inputColor; return; }
   vec4 wp = uInvViewProj * vec4(vec3(uv, depth) * 2.0 - 1.0, 1.0);
   wp /= wp.w;
+  vec3 shaded = inputColor.rgb;
+  if (uCloud.w > 0.5) {
+    vec2 cp = (wp.xz - uCloudOffset) * uCloud.z;
+    float n = texture2D(tCloudNoise, cp).r * 0.7 + texture2D(tCloudNoise, cp * 2.3 + 0.31).g * 0.3;
+    float shadow = smoothstep(uCloud.x - 0.07, uCloud.x + 0.09, n);
+    shaded *= 1.0 - shadow * uCloud.y;
+  }
+  if (uEnabled < 0.5) { outputColor = vec4(shaded, inputColor.a); return; }
   vec2 fuv = (wp.xz - uFogBounds.xy) / uFogBounds.zw;
   // Outside the playable map: treat as explored scenery.
   vec2 f;
@@ -69,7 +96,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
       + (texture2D(tFog, fuv + vec2(t.x, 0.0)).rg + texture2D(tFog, fuv - vec2(t.x, 0.0)).rg
       + texture2D(tFog, fuv + vec2(0.0, t.y)).rg + texture2D(tFog, fuv - vec2(0.0, t.y)).rg) * 0.15;
   }
-  vec3 c = inputColor.rgb;
+  vec3 c = shaded;
   float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
   // Kept fairly bright on purpose: the battlefield should still read; fog mostly drains color.
   vec3 explored = mix(vec3(lum) * vec3(0.85, 0.9, 1.0), c, 0.5) * 0.7;
@@ -81,10 +108,50 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
 `;
 
 /**
+ * Heat shimmer: wobbles the image a few pixels with scrolling noise, stronger toward the top of the
+ * screen (the distance). Runs in its own pass because it moves UVs for everything after it.
+ */
+class HeatShimmerEffect extends Effect {
+  constructor(strength: number) {
+    super('HeatShimmerEffect', SHIMMER_FRAG, {
+      uniforms: new Map<string, THREE.Uniform>([
+        ['tShimmerNoise', new THREE.Uniform(noiseTexture())],
+        ['uShimmerTime', new THREE.Uniform(0)],
+        ['uShimmer', new THREE.Uniform(strength)],
+      ]),
+    });
+  }
+
+  set time(t: number) {
+    this.uniforms.get('uShimmerTime')!.value = t;
+  }
+}
+
+const SHIMMER_FRAG = /* glsl */ `
+uniform sampler2D tShimmerNoise;
+uniform float uShimmerTime;
+uniform float uShimmer;
+void mainUv(inout vec2 uv) {
+  float n = texture2D(tShimmerNoise, uv * vec2(9.0, 4.0) + vec2(0.0, uShimmerTime * 0.11)).g
+          - texture2D(tShimmerNoise, uv * vec2(5.0, 7.0) - vec2(uShimmerTime * 0.05, 0.0)).b;
+  uv.x += n * uShimmer * 0.0035 * smoothstep(0.15, 0.85, uv.y);
+}
+`;
+
+/** Grade knobs per map mood (see Atmosphere.grade). */
+export interface Grade {
+  warmth: number;
+  saturation: number;
+  contrast: number;
+}
+
+const DEFAULT_GRADE: Grade = { warmth: 0.3, saturation: 1, contrast: 0.32 };
+
+/**
  * Display-referred color grade baked into a 3D LUT: gentle S-curve, slightly lower saturation in
  * the greens, warm highlights and cool shadows. Input/output are sRGB values in [0,1].
  */
-function buildGradeLut(size = 32): LookupTexture {
+function buildGradeLut(grade: Grade = DEFAULT_GRADE, size = 32): LookupTexture {
   const lut = LookupTexture.createNeutral(size);
   const data = lut.image.data as Float32Array;
   for (let i = 0; i < data.length; i += 4) {
@@ -95,7 +162,7 @@ function buildGradeLut(size = 32): LookupTexture {
     const curve = (x: number) => {
       const t = Math.min(Math.max(x, 0), 1);
       const s = t * t * (3 - 2 * t);
-      return t + (s - t) * 0.32;
+      return t + (s - t) * grade.contrast;
     };
     r = curve(r);
     g = curve(g);
@@ -103,16 +170,19 @@ function buildGradeLut(size = 32): LookupTexture {
     const l = r * 0.2126 + g * 0.7152 + b * 0.0722;
     // Saturation 0.9, pulling greens down a touch more for a dustier, military palette.
     const greenness = Math.max(0, g - Math.max(r, b));
-    const sat = 0.92 - greenness * 0.6;
+    // Team colors are saturated reds/blues; only greens are pulled down, so units stay readable.
+    const sat = (0.92 - greenness * 0.6) * grade.saturation;
     r = l + (r - l) * sat;
     g = l + (g - l) * sat;
     b = l + (b - l) * sat;
     // Split tone.
     const hi = Math.min(Math.max((l - 0.45) / 0.55, 0), 1);
     const lo = 1 - Math.min(Math.max(l / 0.45, 0), 1);
-    r += hi * 0.035 - lo * 0.02;
-    g += hi * 0.015 - lo * 0.003;
-    b += -hi * 0.03 + lo * 0.035;
+    // Split tone: warm moods push highlights amber, cool moods push them steel blue.
+    const w = grade.warmth;
+    r += hi * 0.05 * w - lo * 0.02;
+    g += hi * 0.02 * w - lo * 0.003;
+    b += -hi * 0.045 * w + lo * 0.035;
     data[i] = Math.min(Math.max(r, 0), 1);
     data[i + 1] = Math.min(Math.max(g, 0), 1);
     data[i + 2] = Math.min(Math.max(b, 0), 1);
@@ -125,8 +195,11 @@ function buildGradeLut(size = 32): LookupTexture {
 export class PostStack {
   readonly composer: EffectComposer;
   readonly fog: FogOfWarEffect;
-  private readonly lut = buildGradeLut();
+  private lut = buildGradeLut();
   private tiltShift?: TiltShiftEffect;
+  private shimmer?: HeatShimmerEffect;
+  private mood?: Atmosphere;
+  private time = 0;
   private passes: Pass[] = [];
   private disposables: { dispose(): void }[] = [];
   private quality?: QualitySettings;
@@ -151,6 +224,7 @@ export class PostStack {
     this.passes = [];
     this.disposables = [];
     this.tiltShift = undefined;
+    this.shimmer = undefined;
 
     const add = (p: Pass, disposable = true) => {
       this.passes.push(p);
@@ -180,6 +254,12 @@ export class PostStack {
       add(new EffectPass(this.camera, this.tiltShift));
     }
 
+    // Heat shimmer (hot maps, high presets): bends UVs, so it gets its own pass before the grade.
+    if (this.mood && this.mood.shimmer > 0 && (q.level === 'high' || q.level === 'ultra')) {
+      this.shimmer = new HeatShimmerEffect(this.mood.shimmer);
+      add(new EffectPass(this.camera, this.shimmer));
+    }
+
     const effects: Effect[] = [this.fog];
     if (q.bloom) {
       effects.push(
@@ -204,8 +284,24 @@ export class PostStack {
     this.composer.setSize(w, h, false);
   }
 
+  /** Map mood: cloud shadows, heat shimmer and color grade. Call before apply(). */
+  setMood(a: Atmosphere): void {
+    this.mood = a;
+    this.lut.dispose();
+    this.lut = buildGradeLut(a.grade);
+    this.fog.setClouds(a.clouds.cover, a.clouds.darkness, a.clouds.scale, a.clouds.cover > 0);
+    if (this.quality) this.apply(this.quality);
+  }
+
   /** `zoom` in [0,1]: 0 = fully zoomed in. Tilt-shift fades out as the camera pulls back. */
   render(dt: number, zoom: number): void {
+    this.time += dt;
+    if (this.mood) {
+      // Clouds drift downwind at 4-14 m/s.
+      const speed = 4 + this.mood.wind.strength * 10;
+      this.fog.moveClouds(Math.sin(this.mood.wind.heading) * speed * dt, Math.cos(this.mood.wind.heading) * speed * dt);
+    }
+    if (this.shimmer) this.shimmer.time = this.time;
     this.fog.setCamera(this.camera);
     if (this.tiltShift) this.tiltShift.blendMode.opacity.value = THREE.MathUtils.clamp(1 - zoom * 2.2, 0, 1);
     this.composer.render(dt);

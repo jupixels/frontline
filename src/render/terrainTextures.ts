@@ -3,7 +3,7 @@ import { assetUrl } from '../shared/view';
 import { fbm, ridged, smoothstep, valueNoise } from './noise';
 
 /** Splat layers, in texture-array order. The terrain shader indexes them by position. */
-export const TERRAIN_LAYERS = ['grass', 'dirt', 'rock', 'sand', 'mud'] as const;
+export const TERRAIN_LAYERS = ['grass', 'dirt', 'rock', 'sand', 'mud', 'gravel'] as const;
 export type TerrainLayer = (typeof TERRAIN_LAYERS)[number];
 
 /**
@@ -78,6 +78,21 @@ const RECIPES: Record<TerrainLayer, LayerRecipe> = {
     color: (u, v, h) => mix3(hex('#a08a63'), hex('#c8b38b'), h * 0.6 + fbm(u * 3, v * 3, 43, 2, 3) * 0.4),
     rough: () => 0.88,
     normalStrength: 1.2,
+  },
+  gravel: {
+    // Packed stones of a few sizes over grit.
+    height: (u, v) => {
+      const big = smoothstep(0.55, 0.72, valueNoise(u * 22, v * 22, 61, 22));
+      const small = smoothstep(0.5, 0.7, valueNoise(u * 56, v * 56, 62, 56));
+      return Math.max(big * 0.9, small * 0.6) + fbm(u * 12, v * 12, 63, 2, 12) * 0.25;
+    },
+    color: (u, v, h) => {
+      const tone = valueNoise(u * 22, v * 22, 64, 22);
+      const stone = mix3(hex('#6b665d'), hex('#a39d90'), tone);
+      return mix3(hex('#4a4337'), stone, smoothstep(0.25, 0.6, h));
+    },
+    rough: () => 0.9,
+    normalStrength: 2.6,
   },
   mud: {
     height: (u, v) => fbm(u * 5, v * 5, 51, 5, 5),

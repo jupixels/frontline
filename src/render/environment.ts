@@ -4,7 +4,7 @@ import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { assetUrl } from '../shared/view';
 import { assetExists } from './terrainTextures';
 
-/** Time-of-day look. Maps will pick one of these once MapDef carries it. */
+/** Per-map light and weather. Picked by `MapDef.atmosphere`. */
 export interface Atmosphere {
   sunElevationDeg: number;
   sunAzimuthDeg: number;
@@ -16,80 +16,187 @@ export interface Atmosphere {
   fogDensity: number;
   hemiSky: THREE.ColorRepresentation;
   hemiGround: THREE.ColorRepresentation;
+  hemiIntensity?: number;
   envIntensity: number;
   /** Light the scene with the shipped HDRI (it's a sunny sky, so only clear presets use it). */
   hdri?: boolean;
   /** Water tint (shallow, deep). */
   water?: [THREE.ColorRepresentation, THREE.ColorRepresentation];
-  /** Color grade multiplier applied to the sky turbidity look. */
-  exposure?: number;
+  /** Ground under this weather: bleached grass and rain-wet soil. */
+  ground: { dry: number; wet: number };
+  /** Cloud shadows drifting over the land: cover 0..1, darkness 0..1, size in meters. */
+  clouds: { cover: number; darkness: number; scale: number };
+  /** Wind heading (radians, 0 = +z) and strength 0..1: clouds, grass sway, rain slant, waves. */
+  wind: { heading: number; strength: number };
+  /** Rain intensity 0..1. */
+  rain: number;
+  /** Heat shimmer 0..1 (post distortion near the ground). */
+  shimmer: number;
+  /** Wave height/choppiness multiplier for water (1 = moderate). */
+  waves: number;
+  /** Color grade: warmth (-1 cool .. 1 warm), saturation multiplier, contrast 0..1. */
+  grade: { warmth: number; saturation: number; contrast: number };
 }
 
-/** Late-afternoon "golden hour lite": warm low sun, long shadows, hazy distance. */
+/** Valley Pass: late-afternoon golden light, long shadows, scattered fair-weather clouds. */
 export const GOLDEN_HOUR: Atmosphere = {
-  sunElevationDeg: 30,
+  sunElevationDeg: 28,
   sunAzimuthDeg: 215,
-  sunColor: 0xffe2bd,
-  sunIntensity: 3.1,
+  sunColor: 0xffd9a8,
+  sunIntensity: 3.2,
   turbidity: 7,
   rayleigh: 1.6,
-  fogColor: 0xc3c4bd,
-  fogDensity: 0.0011,
+  fogColor: 0xc9c2b0,
+  fogDensity: 0.0009,
   hemiSky: 0xcfdcf0,
   hemiGround: 0x5a5236,
   envIntensity: 1,
   hdri: true,
+  ground: { dry: 0.55, wet: 0 },
+  clouds: { cover: 0.42, darkness: 0.32, scale: 260 },
+  wind: { heading: 0.9, strength: 0.35 },
+  rain: 0,
+  shimmer: 0,
+  waves: 0.7,
+  grade: { warmth: 0.6, saturation: 1.02, contrast: 0.36 },
 };
 
-/** Grey North Sea afternoon: flat light, soft shadows, thick haze. */
-export const OVERCAST: Atmosphere = {
-  sunElevationDeg: 52,
+/** Coastal Strait: low grey overcast, drifting rain, wet dark ground, choppy grey-green sea. */
+export const RAIN: Atmosphere = {
+  sunElevationDeg: 48,
   sunAzimuthDeg: 160,
-  sunColor: 0xdfe6ee,
-  sunIntensity: 1.55,
+  // A brighter diffuse sun than real overcast so shapes keep their shading; thin haze so the
+  // islands and units stay crisp at RTS zoom. The rain and wet ground carry the mood.
+  sunColor: 0xdde4ec,
+  sunIntensity: 2.1,
   turbidity: 14,
-  rayleigh: 3.2,
-  fogColor: 0x9aa4ab,
-  fogDensity: 0.0017,
-  hemiSky: 0xb9c4cf,
-  hemiGround: 0x4a4f4a,
-  envIntensity: 1.35,
-  water: [0x3d6a6c, 0x142c33],
+  rayleigh: 3.0,
+  fogColor: 0x7d878e,
+  fogDensity: 0.0008,
+  hemiSky: 0xb2bdc8,
+  hemiGround: 0x464b46,
+  hemiIntensity: 0.45,
+  envIntensity: 1.2,
+  water: [0x3f6b6a, 0x13282d],
+  ground: { dry: 0.05, wet: 0.6 },
+  clouds: { cover: 0.65, darkness: 0.2, scale: 220 },
+  wind: { heading: -0.6, strength: 0.65 },
+  rain: 0.8,
+  shimmer: 0,
+  waves: 1.25,
+  grade: { warmth: -0.3, saturation: 1.08, contrast: 0.44 },
 };
 
-/** Desert noon: high harsh sun, short shadows, pale dusty haze. */
-export const NOON: Atmosphere = {
-  sunElevationDeg: 68,
+/** Plain overcast (no rain), for maps that ask for it by name. */
+export const OVERCAST: Atmosphere = { ...RAIN, rain: 0, ground: { dry: 0.15, wet: 0.2 }, waves: 1 };
+
+/** Desert Oilfields: hot noon, short hard shadows, pale dust haze and heat shimmer. */
+export const HAZE: Atmosphere = {
+  sunElevationDeg: 66,
   sunAzimuthDeg: 190,
-  sunColor: 0xfff3dc,
-  sunIntensity: 3.6,
-  turbidity: 9,
-  rayleigh: 1.1,
-  fogColor: 0xd9c8a6,
-  fogDensity: 0.0009,
+  sunColor: 0xfff0d2,
+  sunIntensity: 3.5,
+  turbidity: 11,
+  rayleigh: 1.0,
+  fogColor: 0xd7c39d,
+  fogDensity: 0.0012,
   hemiSky: 0xd6e2f0,
   hemiGround: 0x8a7350,
-  envIntensity: 1.1,
+  envIntensity: 1.05,
+  water: [0x4f9a8c, 0x1b4a4e],
+  ground: { dry: 1, wet: 0 },
+  clouds: { cover: 0.18, darkness: 0.25, scale: 320 },
+  wind: { heading: 2.2, strength: 0.4 },
+  rain: 0,
+  shimmer: 0.8,
+  waves: 0.6,
+  grade: { warmth: 0.75, saturation: 0.95, contrast: 0.32 },
+};
+export const NOON = HAZE;
+
+/** Inland Sea: windy, steel-grey sky with fast broken clouds, whitecaps on a dark sea. */
+export const WINDY: Atmosphere = {
+  sunElevationDeg: 38,
+  sunAzimuthDeg: 300,
+  sunColor: 0xe6ebf2,
+  sunIntensity: 2.4,
+  turbidity: 12,
+  rayleigh: 2.8,
+  fogColor: 0x97a3ad,
+  fogDensity: 0.0011,
+  hemiSky: 0xb9c6d4,
+  hemiGround: 0x4a4f4a,
+  hemiIntensity: 0.45,
+  envIntensity: 1.25,
+  water: [0x3e6f78, 0x0f2530],
+  ground: { dry: 0.25, wet: 0.15 },
+  clouds: { cover: 0.55, darkness: 0.36, scale: 300 },
+  wind: { heading: 2.6, strength: 1 },
+  rain: 0,
+  shimmer: 0,
+  waves: 1.6,
+  grade: { warmth: -0.3, saturation: 0.9, contrast: 0.38 },
 };
 
-/** Dusk: low orange sun, long shadows, blue haze. */
+/** Iron Gulf: industrial dusk, low orange sun, smoky violet haze. Kept bright enough for teams to read. */
 export const DUSK: Atmosphere = {
-  sunElevationDeg: 11,
+  sunElevationDeg: 13,
   sunAzimuthDeg: 250,
-  sunColor: 0xffb27a,
-  sunIntensity: 2.6,
+  sunColor: 0xffae70,
+  sunIntensity: 3.0,
   turbidity: 10,
   rayleigh: 2.4,
-  fogColor: 0x8d8fa0,
-  fogDensity: 0.0014,
-  hemiSky: 0x9fb2d6,
+  fogColor: 0x9a8f98,
+  fogDensity: 0.0012,
+  hemiSky: 0xa9b8d8,
   hemiGround: 0x4a3c30,
-  envIntensity: 0.8,
+  hemiIntensity: 0.65,
+  envIntensity: 1.15,
+  water: [0x3c6a70, 0x14262f],
+  ground: { dry: 0.4, wet: 0.1 },
+  clouds: { cover: 0.35, darkness: 0.28, scale: 280 },
+  wind: { heading: 1.6, strength: 0.45 },
+  rain: 0,
+  shimmer: 0,
+  waves: 0.9,
+  grade: { warmth: 0.5, saturation: 1.0, contrast: 0.4 },
 };
 
-/** Atmosphere preset by MapDef.atmosphere name. */
+/** Sandbox: crisp clear morning, neutral grade (a reference look for testing). */
+export const CLEAR: Atmosphere = {
+  ...GOLDEN_HOUR,
+  sunElevationDeg: 42,
+  sunAzimuthDeg: 140,
+  sunColor: 0xfff4e4,
+  sunIntensity: 3.0,
+  turbidity: 5,
+  fogColor: 0xbfcad3,
+  fogDensity: 0.0008,
+  ground: { dry: 0.3, wet: 0 },
+  clouds: { cover: 0.3, darkness: 0.25, scale: 240 },
+  wind: { heading: 0.4, strength: 0.25 },
+  grade: { warmth: 0.1, saturation: 1.05, contrast: 0.32 },
+};
+
+/** Atmosphere preset by MapDef.atmosphere name (older names map onto the nearest preset). */
 export function atmosphereFor(name: string | undefined): Atmosphere {
-  return name === 'overcast' ? OVERCAST : name === 'noon' ? NOON : name === 'dusk' ? DUSK : GOLDEN_HOUR;
+  switch (name) {
+    case 'rain':
+      return RAIN;
+    case 'overcast':
+      return OVERCAST;
+    case 'haze':
+    case 'noon':
+      return HAZE;
+    case 'windy':
+      return WINDY;
+    case 'dusk':
+      return DUSK;
+    case 'clear':
+      return CLEAR;
+    default:
+      return GOLDEN_HOUR;
+  }
 }
 
 /**
@@ -146,7 +253,7 @@ export class Environment {
     this.sun.shadow.radius = 3;
     scene.add(this.sun, this.sun.target);
 
-    this.hemi = new THREE.HemisphereLight(a.hemiSky, a.hemiGround, 0.35);
+    this.hemi = new THREE.HemisphereLight(a.hemiSky, a.hemiGround, a.hemiIntensity ?? 0.35);
     scene.add(this.hemi);
 
     this.lightToWorld.lookAt(new THREE.Vector3(), this.sunDir.clone().negate(), new THREE.Vector3(0, 1, 0));
