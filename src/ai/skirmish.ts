@@ -100,6 +100,7 @@ export class SkirmishAi {
   private pendingBuild = 0;
   /** The unit production is saving up for, and since when. */
   private saveFor: { unit: string; since: number } | null = null;
+  private engineerAt = -1e9;
   /** Outmatched at home: gathering at the HQ until strong enough to break out. */
   private turtling = false;
   /** Water spot near our base, if the map has sea within reach (naval yard / transport pickup). */
@@ -249,8 +250,10 @@ export class SkirmishAi {
     if (!eco || !hq) return;
     const engineers = this.k.ownByType('engineer');
     // Keep the engineer count up.
-    if (engineers.length < this.p.engineers && eco.supply > 150 && this.sim.queue(hq.id).length === 0) {
+    // (Replacements are rate-limited so engineers lost at the front don't drain the economy.)
+    if (engineers.length < this.p.engineers && eco.supply > 150 && this.sim.queue(hq.id).length === 0 && now - this.engineerAt > 60) {
       this.send({ type: 'produce', factory: hq.id, unit: 'engineer', count: 1 });
+      this.engineerAt = now;
     }
     // Finished or stale jobs free the engineer.
     for (const [id, job] of this.engineerJobs) {
@@ -352,6 +355,8 @@ export class SkirmishAi {
     const e = this.enemyBase();
     held.sort((a, b) => dist(a.pos, e) - dist(b.pos, e));
     const pt = held[0];
+    // Only dig where it's quiet: engineers are precious.
+    if (this.k.enemyStrength(pt.pos, 200) > 0 || this.k.recentEnemyStrength(pt.pos, 200, 30) > 0) return;
     const trenches = this.k.own.filter((s) => s.type === 'trench' && dist(s.pos, pt.pos) < 40).length;
     if (trenches >= 2) return;
     const d = dist(e, pt.pos) || 1;
