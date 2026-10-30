@@ -1,0 +1,40 @@
+{
+  "id": "submarine",
+  "date": "2026-10-30",
+  "batch": 4,
+  "replaces": "the previous models/submarine.glb",
+  "style": "tools/generated/STYLE.md, naval variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Nuclear attack submarine: long cylindrical hull in matte dark grey with slight weathering, a tall sail with dive planes, cruciform tail fins and a shrouded propeller.",
+    "taskId": "01a18b39-a76c-763a-a8db-66bdf2842e79",
+    "file": "raw/submarine/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 10000,
+    "texture": true,
+    "taskId": "01a18b3a-cbb9-7265-a0c5-d611d27d6229",
+    "file": "raw/submarine/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/submarine.json",
+    "output": "submarine.glb"
+  },
+  "movingParts": [],
+  "clips": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: submarine.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

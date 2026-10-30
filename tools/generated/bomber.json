@@ -1,0 +1,42 @@
+{
+  "id": "bomber",
+  "date": "2026-10-30",
+  "batch": 3,
+  "replaces": "the previous models/bomber.glb",
+  "style": "tools/generated/STYLE.md, aircraft variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Large strategic jet bomber in flight: long fuselage, wide swept wings with four jet engines in pods under the wings, tall tail fin, landing gear retracted.",
+    "taskId": "01a18b39-7a05-7687-a231-dd8f61438a10",
+    "file": "raw/bomber/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 10000,
+    "texture": true,
+    "taskId": "01a18b3a-ace1-750d-9d11-e8ccb197b3a9",
+    "file": "raw/bomber/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/bomber.json",
+    "output": "bomber.glb"
+  },
+  "movingParts": [],
+  "clips": [
+    "Crash (roll and nose-down while the renderer drops it)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: bomber.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

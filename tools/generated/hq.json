@@ -1,0 +1,44 @@
+{
+  "id": "hq",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/hq.glb",
+  "footprint": [
+    20,
+    20
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Command headquarters: two-story fortified concrete building with a flat roof, sandbagged entrance, a tall radio antenna mast and a satellite dish on the roof, square footprint.",
+    "taskId": "01a18b5e-e3da-7676-856c-1679bb84c393",
+    "file": "raw/hq/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 12000,
+    "texture": true,
+    "taskId": "01a18b60-2960-776a-8d9e-a5007ba616f4",
+    "file": "raw/hq/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/hq.json",
+    "output": "buildings/hq.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/hq.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

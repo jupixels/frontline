@@ -1,0 +1,45 @@
+{
+  "id": "patrol_boat",
+  "date": "2026-10-30",
+  "batch": 4,
+  "replaces": "the previous models/patrol_boat.glb",
+  "style": "tools/generated/STYLE.md, naval variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Fast naval patrol boat: sleek planing hull, small enclosed bridge with a radar mast, an automatic gun turret on the bow, machine guns on the sides.",
+    "taskId": "01a18b39-8b67-7320-bb6c-0fbcc27b253d",
+    "file": "raw/patrol_boat/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 12000,
+    "texture": true,
+    "taskId": "01a18b3a-b917-719b-8a9c-b76bc528a80e",
+    "file": "raw/patrol_boat/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/patrol_boat.json",
+    "output": "patrol_boat.glb"
+  },
+  "movingParts": [
+    "P_turret pivot [0,3.1,4.1]"
+  ],
+  "clips": [
+    "TurretScan (keeps P_turret animated)",
+    "Death (turret lifts)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: patrol_boat.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

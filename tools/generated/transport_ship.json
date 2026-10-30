@@ -1,0 +1,40 @@
+{
+  "id": "transport_ship",
+  "date": "2026-10-30",
+  "batch": 4,
+  "replaces": "the previous models/transport_ship.glb",
+  "style": "tools/generated/STYLE.md, naval variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Military amphibious transport ship: tall boxy hull with a bow ramp, superstructure with bridge and mast at the stern, open cargo deck in the middle carrying olive vehicles and crates, two deck cranes.",
+    "taskId": "01a18b39-afe7-7562-b67c-995d9543ffca",
+    "file": "raw/transport_ship/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 20000,
+    "texture": true,
+    "taskId": "01a18b3a-d10d-762f-abd6-abacaaea8949",
+    "file": "raw/transport_ship/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/transport_ship.json",
+    "output": "transport_ship.glb"
+  },
+  "movingParts": [],
+  "clips": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: transport_ship.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

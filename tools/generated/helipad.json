@@ -1,0 +1,44 @@
+{
+  "id": "helipad",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/helipad.glb",
+  "footprint": [
+    14,
+    14
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Military helipad: square raised concrete landing pad with a painted white circle, perimeter lights at the corners, a small fuel bladder and a windsock pole at one corner.",
+    "taskId": "01a18b5f-05c8-717d-a88e-1670273436be",
+    "file": "raw/helipad/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 4000,
+    "texture": true,
+    "taskId": "01a18b60-40f7-72f2-a50d-f9737c2cc3a5",
+    "file": "raw/helipad/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/helipad.json",
+    "output": "buildings/helipad.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/helipad.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

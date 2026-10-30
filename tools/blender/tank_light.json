@@ -1,0 +1,62 @@
+{
+  "input": "raw/tank_light/smart.glb",
+  "output": "tank_light.glb",
+  "rotateY": 90,
+  "length": 6.8,
+  "triangles": 12000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 35,
+    "hueMax": 90,
+    "smooth": 2,
+    "detailBelow": 0.6
+  },
+  "parts": [
+    {
+      "name": "P_turret",
+      "box": [
+        -1.35,
+        1.35,
+        1.8,
+        3.3,
+        -2.6,
+        3.7
+      ],
+      "pivot": [
+        0,
+        1.8,
+        -0.85
+      ]
+    },
+    {
+      "name": "P_barrel",
+      "from": "P_turret",
+      "parent": "P_turret",
+      "box": [
+        -0.25,
+        0.25,
+        1.95,
+        2.4,
+        0.5,
+        3.7
+      ],
+      "pivot": [
+        0,
+        2.17,
+        0.55
+      ]
+    }
+  ],
+  "cap": {
+    "radius": 1.1,
+    "center": [
+      0,
+      1.76,
+      -0.85
+    ]
+  },
+  "recoil": 0.35,
+  "deathLift": 0.5
+}

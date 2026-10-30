@@ -1,0 +1,66 @@
+{
+  "input": "raw/scout_car/smart.glb",
+  "output": "scout_car.glb",
+  "rotateY": 90,
+  "length": 5.6,
+  "triangles": 8000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 35,
+    "hueMax": 90,
+    "smooth": 2,
+    "detailBelow": 0.6
+  },
+  "parts": [
+    {
+      "name": "P_turret",
+      "box": [
+        -0.9,
+        0.9,
+        2.38,
+        3.5,
+        -1.05,
+        1.95
+      ],
+      "pivot": [
+        0,
+        2.38,
+        -0.3
+      ]
+    },
+    {
+      "name": "P_barrel",
+      "from": "P_turret",
+      "parent": "P_turret",
+      "box": [
+        -0.15,
+        0.15,
+        2.5,
+        2.75,
+        0.45,
+        1.95
+      ],
+      "pivot": [
+        0,
+        2.61,
+        0.45
+      ]
+    }
+  ],
+  "cap": {
+    "radius": 0.7,
+    "center": [
+      0,
+      2.34,
+      -0.3
+    ]
+  },
+  "recoil": 0.12,
+  "deathLift": 0.4,
+  "accent": {
+    "minHeight": 0.5,
+    "normalZ": 0.6
+  }
+}

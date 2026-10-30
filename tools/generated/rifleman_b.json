@@ -1,0 +1,60 @@
+{
+  "id": "rifleman_b",
+  "date": "2026-10-30",
+  "batch": "2 (variants)",
+  "usedBy": "render/units.ts VARIANTS: rifle squads pick models/rifleman.glb, rifleman_b or rifleman_c by entity id (the far LOD uses rifleman.glb)",
+  "style": "tools/generated/STYLE.md, infantry prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "poseMode": "t-pose",
+    "prompt": "<infantry prefix> Rifleman with a small olive assault backpack, a short radio antenna and a headset under the helmet.",
+    "taskId": "01a18ac3-8b38-745d-99eb-a682de3f0018",
+    "file": "raw/rifleman_b/ref_a.png",
+    "credits": 0,
+    "note": "reused from the batch 0 candidate b (already paid)"
+  },
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 4000,
+      "texture": true,
+      "poseMode": "t-pose",
+      "taskId": "01a18b7c-4be7-7003-8ef5-161a30fb92a8",
+      "credits": 15
+    },
+    "rig": {
+      "tool": "meshy_rig",
+      "heightMeters": 1.8,
+      "taskId": "01a18b7d-4bea-7268-b46c-a0334d4bc464",
+      "credits": 5
+    },
+    "animate": {
+      "tool": "meshy_animate",
+      "actionIds": {
+        "0": "Idle",
+        "183": "Shot_and_Fall_Backward",
+        "184": "Shot_and_Fall_Forward",
+        "654": "Rifle_Charge_inplace",
+        "690": "Walk_Forward_While_Shooting_inplace"
+      },
+      "taskId": "01a18b7d-a873-76fd-b9d2-106650026aac",
+      "file": "raw/rifleman_b/smart_animations.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/infantry.py",
+    "config": "tools/blender/rifleman_b.json",
+    "output": "rifleman_b.glb"
+  },
+  "credits": {
+    "reference": 0,
+    "final": 15,
+    "rig": 5,
+    "animate": 15,
+    "total": 35
+  }
+}

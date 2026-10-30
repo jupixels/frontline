@@ -1,0 +1,44 @@
+{
+  "id": "ruin",
+  "date": "2026-10-30",
+  "batch": 6,
+  "replaces": "models/buildings/props/gatehouse.glb",
+  "footprint": [
+    10,
+    10
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Ruined two-story stone farmhouse: half-collapsed tiled roof with exposed rafters, broken walls with empty window openings, rubble piles around it, square footprint.",
+    "taskId": "01a18b5f-4ebd-707f-acf9-5dab86b2e557",
+    "file": "raw/ruin/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 10000,
+    "texture": true,
+    "taskId": "01a18b60-f33d-749b-9f7f-84e7fe47ede3",
+    "file": "raw/ruin/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/ruin.json",
+    "output": "buildings/ruin.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs (none: neutral building)"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/ruin.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

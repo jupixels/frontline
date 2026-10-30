@@ -1,0 +1,44 @@
+{
+  "id": "hospital",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/hospital.glb",
+  "footprint": [
+    12,
+    12
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Field hospital: a cluster of connected large olive canvas tents with arched roofs, a small prefab medical container unit and stretchers outside, square layout.",
+    "taskId": "01a18b5f-331a-70b1-851b-46fe6d8a7640",
+    "file": "raw/hospital/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 10000,
+    "texture": true,
+    "taskId": "01a18b60-5f06-7799-9bc8-676884101c4d",
+    "file": "raw/hospital/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/hospital.json",
+    "output": "buildings/hospital.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/hospital.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "heli_transport",
+  "date": "2026-10-30",
+  "batch": 3,
+  "replaces": "the previous models/heli_transport.glb",
+  "style": "tools/generated/STYLE.md, aircraft variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Medium utility transport helicopter: large boxy cabin with open sliding side doors, four-blade main rotor on top, tail boom with tail rotor, door machine gun on the side, wheeled landing gear.",
+    "taskId": "01a18b39-67b5-77dd-ad11-0918f25b1d69",
+    "file": "raw/heli_transport/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 10000,
+    "texture": true,
+    "taskId": "01a18b3a-a087-74ab-87a5-c473e25ee957",
+    "file": "raw/heli_transport/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/heli_transport.json",
+    "output": "heli_transport.glb"
+  },
+  "movingParts": [
+    "P_rotor (spins in Idle/Move) pivot [0,3.8,2]"
+  ],
+  "clips": [
+    "Crash (roll and nose-down while the renderer drops it)",
+    "Idle (rotor spin)",
+    "Move (rotor spin)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: heli_transport.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

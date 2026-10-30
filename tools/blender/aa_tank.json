@@ -1,0 +1,85 @@
+{
+  "input": "raw/aa_tank/smart.glb",
+  "output": "aa_tank.glb",
+  "rotateY": 90,
+  "length": 7.6,
+  "triangles": 12000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 35,
+    "hueMax": 90,
+    "smooth": 2,
+    "detailBelow": 0.6
+  },
+  "parts": [
+    {
+      "name": "P_turret",
+      "box": [
+        -1.7,
+        1.7,
+        2.0,
+        5.1,
+        -2.7,
+        3.4
+      ],
+      "pivot": [
+        0,
+        2.0,
+        -0.3
+      ]
+    },
+    {
+      "name": "turret_radar",
+      "from": "P_turret",
+      "parent": "P_turret",
+      "box": [
+        -0.7,
+        0.7,
+        3.75,
+        5.1,
+        -2.7,
+        -1.2
+      ],
+      "pivot": [
+        0,
+        3.75,
+        -1.85
+      ],
+      "spin": 1.6
+    },
+    {
+      "name": "P_barrel",
+      "from": "P_turret",
+      "parent": "P_turret",
+      "box": [
+        -1.7,
+        1.7,
+        2.45,
+        3.05,
+        1.5,
+        3.4
+      ],
+      "pivot": [
+        0,
+        2.76,
+        1.5
+      ]
+    }
+  ],
+  "cap": {
+    "radius": 1.2,
+    "center": [
+      0,
+      1.95,
+      -0.3
+    ]
+  },
+  "recoil": 0.12,
+  "deathLift": 0.5,
+  "accent": {
+    "minHeight": 0.42,
+    "normalZ": 0.6
+  }
+}

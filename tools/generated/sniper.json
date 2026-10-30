@@ -1,0 +1,72 @@
+{
+  "id": "sniper",
+  "date": "2026-10-30",
+  "batch": "2 (core)",
+  "replaces": "the previous models/sniper.glb",
+  "style": "tools/generated/STYLE.md, infantry prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "poseMode": "t-pose",
+    "prompt": "<infantry prefix> Sniper: wide-brimmed olive boonie hat instead of a helmet, a shaggy olive ghillie scarf over the shoulders, a long slim drag bag on the back, binoculars on the chest.",
+    "taskId": "01a18af1-0a05-755d-a37a-ff0ce4f48833",
+    "file": "raw/sniper/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model (STYLE.md: 1 candidate when the reference is clear)",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 4000,
+      "texture": true,
+      "poseMode": "t-pose",
+      "taskId": "01a18af2-0bf1-725a-b94e-ce56e6e2355e",
+      "file": "raw/sniper/smart.glb",
+      "credits": 15
+    },
+    "rig": {
+      "tool": "meshy_rig",
+      "heightMeters": 1.8,
+      "taskId": "01a18af3-99e2-7178-955f-a935df105547",
+      "credits": 5
+    },
+    "animate": {
+      "tool": "meshy_animate",
+      "actionIds": {
+        "0": "Idle",
+        "183": "Shot_and_Fall_Backward",
+        "184": "Shot_and_Fall_Forward",
+        "654": "Rifle_Charge_inplace",
+        "690": "Walk_Forward_While_Shooting_inplace"
+      },
+      "taskId": "01a18af9-c94d-71be-9329-d68b4b4ac027",
+      "file": "raw/sniper/smart_animations.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/infantry.py",
+    "config": "tools/blender/sniper.json",
+    "output": "sniper.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: sniper.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "rig": 5,
+    "animate": 15,
+    "total": 38
+  },
+  "weapon": "Sniper_rifle (built in Blender from boxes/tubes, on the RightHand bone)",
+  "clips": {
+    "Idle": "Idle + aim-pose arms",
+    "Walk01_Forward": "Walk_Forward_While_Shooting_inplace",
+    "Run01_Forward": "Rifle_Charge_inplace",
+    "Fire": "built upper-body kick",
+    "Death01": "Shot_and_Fall_Backward",
+    "Death02": "Shot_and_Fall_Forward"
+  }
+}

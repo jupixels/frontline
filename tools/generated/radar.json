@@ -1,0 +1,46 @@
+{
+  "id": "radar",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/radar.glb",
+  "footprint": [
+    10,
+    10
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Radar station: a small square concrete equipment building with a steel lattice tower on its roof carrying a large rectangular rotating radar antenna on top.",
+    "taskId": "01a18b5f-2929-702c-9bdc-1db515ebbd89",
+    "file": "raw/radar/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 8000,
+    "texture": true,
+    "taskId": "01a18b60-5989-77af-be54-f47e880d5e5b",
+    "file": "raw/radar/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/radar.json",
+    "output": "buildings/radar.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [
+    "turret_radar (spins in Idle)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/radar.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

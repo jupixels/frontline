@@ -1,0 +1,39 @@
+{
+  "input": "raw/rocket_truck/smart.glb",
+  "output": "rocket_truck.glb",
+  "rotateY": 90,
+  "length": 10,
+  "triangles": 8000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 35,
+    "hueMax": 90,
+    "smooth": 2,
+    "detailBelow": 0.6
+  },
+  "parts": [
+    {
+      "name": "P_barrel",
+      "box": [
+        -1.8,
+        1.8,
+        2.1,
+        5.7,
+        -5.2,
+        0.4
+      ],
+      "pivot": [
+        0,
+        2.05,
+        -2.3
+      ]
+    }
+  ],
+  "recoil": 0.2,
+  "accent": {
+    "minHeight": 0.5,
+    "normalZ": 0.6
+  }
+}

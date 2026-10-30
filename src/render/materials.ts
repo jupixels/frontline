@@ -1,7 +1,16 @@
 import * as THREE from 'three';
 
 /** How a source material is treated on a team's unit. */
-export type MaterialRole = 'camo' | 'accent' | 'stripe' | 'keep';
+export type MaterialRole = 'camo' | 'accent' | 'stripe' | 'tint' | 'tintAccent' | 'keep';
+
+/**
+ * Textured team materials of the Meshy-generated models: `TeamPaint` (most of the paint) gets a faint team
+ * tint and keeps its olive weathering; `TeamAccent` (turret roofs, upper decks, helmet and vest) carries the
+ * team color.
+ */
+export const TEAM_PAINT = 'TeamPaint';
+export const TEAM_ACCENT = 'TeamAccent';
+const TINT_STRENGTH = { tint: 0.07, tintAccent: 0.8 };
 
 /**
  * Classify glTF materials. The main hull (or an untextured/default material) gets team camo,
@@ -10,6 +19,8 @@ export type MaterialRole = 'camo' | 'accent' | 'stripe' | 'keep';
 export function materialRole(mat: THREE.Material, isPrimary: boolean): MaterialRole {
   const m = mat as THREE.MeshStandardMaterial;
   const name = mat.name.toLowerCase();
+  if (mat.name === TEAM_PAINT && m.map) return 'tint';
+  if (mat.name === TEAM_ACCENT && m.map) return 'tintAccent';
   if (/glass|window|light|lamp|wheel|tyre|tire|track|black|metal|barrel|bolt|sign/.test(name)) return 'keep';
   // Textured hulls keep their paint and get a team-color stripe instead.
   if (m.map) return isPrimary ? 'stripe' : 'keep';
@@ -173,6 +184,52 @@ float stripe = smoothstep(uBand.x - 0.02, uBand.x, vObjPos.y) * smoothstep(uBand
 diffuseColor.rgb = mix(diffuseColor.rgb, uTeam * 0.8, stripe);
 `;
 
+/**
+ * Team paint that keeps the texture: the paint's luminance (weathering, dirt, panel lines) is kept and its
+ * hue is pulled toward the team color, faintly for `TeamPaint` and strongly for `TeamAccent`.
+ */
+export function createTintMaterial(
+  source: THREE.Material,
+  team: THREE.Color,
+  role: 'tint' | 'tintAccent',
+  instanced = false,
+): THREE.MeshStandardMaterial {
+  const m = (source as THREE.MeshStandardMaterial).clone();
+  const uniforms = { uTeam: { value: team.clone() }, uTint: { value: TINT_STRENGTH[role] } };
+  m.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+uniform vec3 uTeam;
+uniform float uTint;
+${TINT_HEAD}`)
+      .replace('#include <color_fragment>', instanced ? TINT_INSTANCED : 'diffuseColor.rgb = teamTint(diffuseColor.rgb, uTeam);');
+  };
+  m.customProgramCacheKey = () => `team-tint-${instanced ? 'i' : 'u'}`;
+  m.userData.tintUniforms = uniforms;
+  return m;
+}
+
+const TINT_HEAD = /* glsl */ `
+vec3 teamTint(vec3 c, vec3 team) {
+  const vec3 W = vec3(0.2126, 0.7152, 0.0722);
+  float l = dot(c, W);
+  // Team hue at the paint's own brightness, so wear and grime still show through.
+  vec3 hue = mix(vec3(1.0), team / max(dot(team, W), 0.04), 0.85);
+  vec3 tinted = min(hue * l * 0.9, vec3(1.0));
+  return mix(c, tinted, uTint);
+}
+`;
+
+// three maps instance color to USE_COLOR / vColor; use it as the team color instead of multiplying.
+const TINT_INSTANCED = /* glsl */ `
+#ifdef USE_COLOR
+diffuseColor.rgb = teamTint(diffuseColor.rgb, vColor.rgb);
+#else
+diffuseColor.rgb = teamTint(diffuseColor.rgb, uTeam);
+#endif
+`;
+
 const cache = new Map<string, THREE.Material>();
 
 /**
@@ -193,6 +250,7 @@ export function teamMaterial(
     if (role === 'camo') m = createCamoMaterial({ team, burnt, base: source as THREE.MeshStandardMaterial, scale: camoScale });
     else if (role === 'accent') m = createAccentMaterial(team, source, burnt);
     else if (role === 'stripe') m = burnt ? createBurntMaterial(source) : createStripeMaterial(source, team, stripeBand);
+    else if (role === 'tint' || role === 'tintAccent') m = burnt ? createBurntMaterial(source) : createTintMaterial(source, team, role);
     else m = burnt ? createBurntMaterial(source) : source;
     cache.set(key, m);
   }

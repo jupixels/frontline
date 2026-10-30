@@ -1,0 +1,68 @@
+{
+  "id": "tank_mbt",
+  "date": "2026-10-29",
+  "batch": 0,
+  "brief": {
+    "role": "Main battle tank (tier 2 heavy armor)",
+    "inspiration": "generic 2010s NATO MBT with a slab-sided turret and a long 120 mm gun",
+    "size": "9.5 m long incl. gun, like the model it replaces",
+    "triangles": 12000,
+    "movingParts": ["P_turret (yaw, pivot on the turret ring)", "P_barrel (child of P_turret, recoil along -z)"],
+    "teamPaint": "hull and turret paint (material Paint); running gear below 0.95 m stays textured"
+  },
+  "style": "tools/generated/STYLE.md, vehicle prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<vehicle prefix> Main battle tank: low wide hull, seven road wheels per side with rubber tracks and side skirts, wedge-shaped composite armor turret front with a large rear bustle, very long 120 mm smoothbore gun, commander sight and roof machine gun.",
+    "taskId": "01a18ac3-7273-71af-9c53-89789907afd4",
+    "file": "raw/tank_mbt/ref_a.png",
+    "credits": 3
+  },
+  "candidates": [
+    { "name": "a", "reference": "ref_a", "tool": "meshy_image_to_3d", "model": "meshy-6-lite", "texture": false, "taskId": "01a18ac4-1f27-7392-a88a-e5fffe30c045", "file": "raw/tank_mbt/cand_a.glb", "credits": 5, "chosen": true },
+    {
+      "name": "b",
+      "reference": { "taskId": "01a18ac3-7c10-746c-85d3-ee81c077c215", "file": "raw/tank_mbt/ref_b.png", "credits": 3, "prompt": "<vehicle prefix> Main battle tank: long flat hull with sloped glacis, six large road wheels per side with rubber tracks, flat angular slab-sided turret, very long 120 mm smoothbore gun with thermal sleeve, smoke grenade launchers on the turret sides." },
+      "tool": "meshy_image_to_3d", "model": "meshy-6-lite", "texture": false, "taskId": "01a18ac4-2499-7779-ad52-ffb1a7cbb017", "file": "raw/tank_mbt/cand_b.glb", "credits": 5
+    }
+  ],
+  "choice": "a: the turret reads as a separate volume from above, which helps the split and the silhouette, and the gun is longer.",
+  "superseded": [
+    {
+      "what": "meshy_retexture of candidate a (multiview_image_urls = ref_a, ai_model latest) then Blender decimation 30.7k -> 12k triangles",
+      "taskId": "01a18ac7-629d-7728-9fb5-41d865d8e74e",
+      "file": "raw/tank_mbt/textured.glb",
+      "credits": 10,
+      "why": "meshy-6-lite geometry decimated to budget looked lumpy and melted up close. Replaced by smart topology."
+    }
+  ],
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "input": "reference ref_a (input_task_id)",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 12000,
+    "texture": true,
+    "taskId": "01a18ad9-2ebc-73c9-a658-85e4a922746a",
+    "file": "raw/tank_mbt/smart.glb",
+    "triangles": 11315,
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/tank_mbt.json",
+    "command": "blender -b --factory-startup -P tools/blender/vehicle.py -- tools/blender/tank_mbt.json",
+    "steps": [
+      "rotate 90° so the gun faces +Z, scale to 9.5 m, center, sit on y=0",
+      "paint by texture color (light olive) into untextured Paint; faces below 0.95 m stay Detail",
+      "cut P_turret and P_barrel by box, pivots on the turret ring and the gun trunnion, cap disk under the turret",
+      "clips: Fire (barrel recoil 0.45 m), TurretScan (keeps P_turret animated so the renderer doesn't merge it into the hull), Death (turret lifts)",
+      "1024² texture"
+    ],
+    "output": "tank_mbt.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: tank_mbt.glb",
+  "credits": { "references": 6, "candidates": 10, "superseded": 10, "final": 15, "total": 41 }
+}

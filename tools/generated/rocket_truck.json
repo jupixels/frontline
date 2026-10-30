@@ -1,0 +1,44 @@
+{
+  "id": "rocket_truck",
+  "date": "2026-10-30",
+  "batch": "1",
+  "replaces": "the previous models/rocket_truck.glb",
+  "style": "tools/generated/STYLE.md, vehicle prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<vehicle prefix> Multiple rocket launcher truck: 6x6 military truck with an armored cab, and on the rear bed a large rectangular launcher box with a grid of many round rocket tubes, raised at a slight angle facing forward over the cab.",
+    "taskId": "01a18af1-511e-753b-bc4b-c669cdfe96d4",
+    "file": "raw/rocket_truck/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model (STYLE.md: 1 candidate when the reference is clear)",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 8000,
+      "texture": true,
+      "taskId": "01a18af2-37e1-76eb-9be7-b7ec48b11d20",
+      "file": "raw/rocket_truck/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/rocket_truck.json",
+    "output": "rocket_truck.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: rocket_truck.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  },
+  "movingParts": [
+    "P_barrel pivot [0,2.05,-2.3]"
+  ]
+}

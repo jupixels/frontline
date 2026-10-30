@@ -1,0 +1,25 @@
+{
+  "input": "raw/power_plant/smart.glb",
+  "output": "buildings/power_plant.glb",
+  "rotateY": 0,
+  "fit": [
+    12.6,
+    12.6
+  ],
+  "triangles": 12000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.27,
+    "sMax": 0.3,
+    "hueMin": 35,
+    "hueMax": 90,
+    "smooth": 2,
+    "detailBelow": 0
+  },
+  "accent": {
+    "minHeight": 0.55,
+    "normalZ": 0.8
+  },
+  "parts": [],
+  "heightScale": 1.5
+}

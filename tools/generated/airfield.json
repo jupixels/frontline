@@ -1,0 +1,44 @@
+{
+  "id": "airfield",
+  "date": "2026-10-30",
+  "batch": 5,
+  "replaces": "the previous models/buildings/airfield.glb",
+  "footprint": [
+    30,
+    24
+  ],
+  "style": "tools/generated/STYLE.md, building prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<building prefix> Small military airfield: a short concrete runway apron, an open-front aircraft hangar with an arched roof, and a small control tower, compact rectangular layout.",
+    "taskId": "01a18b5e-fcf2-70a7-8e6d-9a54639c0729",
+    "file": "raw/airfield/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 12000,
+    "texture": true,
+    "taskId": "01a18b60-3b19-722d-93b8-1539faa4740c",
+    "file": "raw/airfield/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/airfield.json",
+    "output": "buildings/airfield.glb",
+    "notes": "uniform scale to fit 96% of the footprint (fit), TeamAccent on roofs"
+  },
+  "movingParts": [],
+  "pipeline": "tools/assets.manifest.json entry with generated: buildings/airfield.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

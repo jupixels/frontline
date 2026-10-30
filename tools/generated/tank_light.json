@@ -1,0 +1,45 @@
+{
+  "id": "tank_light",
+  "date": "2026-10-30",
+  "batch": "1",
+  "replaces": "the previous models/tank_light.glb",
+  "style": "tools/generated/STYLE.md, vehicle prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<vehicle prefix> Light tank: compact low tracked hull, five road wheels per side, small angular turret set forward with a medium-length 105 mm gun, smoke grenade launchers on the turret sides.",
+    "taskId": "01a18af1-2854-77c3-9233-f85cf9e479e1",
+    "file": "raw/tank_light/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model (STYLE.md: 1 candidate when the reference is clear)",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 12000,
+      "texture": true,
+      "taskId": "01a18af2-1f42-752a-93a1-270bdb5f20a1",
+      "file": "raw/tank_light/smart.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/tank_light.json",
+    "output": "tank_light.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: tank_light.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  },
+  "movingParts": [
+    "P_turret pivot [0,1.8,-0.85]",
+    "P_barrel pivot [0,2.17,0.55]"
+  ]
+}

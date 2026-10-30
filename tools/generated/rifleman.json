@@ -1,0 +1,77 @@
+{
+  "id": "rifleman",
+  "date": "2026-10-29",
+  "batch": 0,
+  "brief": {
+    "role": "Rifle squad member (also used by the engineer until batch 2)",
+    "inspiration": "generic NATO infantryman: helmet with goggles, plate carrier, knee pads",
+    "size": "1.8 m (the renderer draws infantry at 1.6x)",
+    "triangles": 4000,
+    "movingParts": ["Meshy auto-rig (24 bones)", "Rifle on the RightHand bone, lined up toward the left hand in the aim pose"],
+    "teamPaint": "uniform, helmet and vest (material Uniform); skin, boots, gloves and goggles stay textured (Gear)"
+  },
+  "style": "tools/generated/STYLE.md, infantry prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "poseMode": "t-pose",
+    "prompt": "<infantry prefix> Rifleman with protective goggles on the helmet and knee pads.",
+    "taskId": "01a18ac3-83a4-769c-bbcc-dd58944376f4",
+    "file": "raw/rifleman/ref_a.png",
+    "credits": 3
+  },
+  "candidates": [
+    { "name": "a", "reference": "ref_a", "tool": "meshy_image_to_3d", "model": "meshy-6-lite", "texture": false, "poseMode": "t-pose", "taskId": "01a18ac4-28ae-7103-a533-d9cbd48b6d47", "file": "raw/rifleman/cand_a.glb", "credits": 5, "chosen": true },
+    {
+      "name": "b",
+      "reference": { "taskId": "01a18ac3-8b38-745d-99eb-a682de3f0018", "file": "raw/rifleman/ref_b.png", "credits": 3, "prompt": "<infantry prefix> Rifleman with a small olive assault backpack, a short radio antenna and a headset under the helmet." },
+      "tool": "meshy_image_to_3d", "model": "meshy-6-lite", "texture": false, "poseMode": "t-pose", "taskId": "01a18ac4-2d88-7272-9943-f0ce71f67780", "file": "raw/rifleman/cand_b.glb", "credits": 5
+    }
+  ],
+  "choice": "a: cleaner T-pose and hands; b's antenna reads as a radio operator (a good batch 2 variant).",
+  "superseded": [
+    {
+      "what": "meshy_retexture of candidate a, meshy_rig, meshy_animate (same 7 clips), Blender decimation 31k -> 4k",
+      "taskIds": { "retexture": "01a18ac7-85bf-7149-8606-3a8aa457dbfd", "rig": "01a18aca-96df-76c3-9e87-24d7b968de87", "animate": "01a18acb-4d8b-7584-b3cd-ec1784d4d4df" },
+      "files": ["raw/rifleman/textured.glb", "raw/rifleman/lite_rigged.glb", "raw/rifleman/lite_animations.glb"],
+      "credits": 36,
+      "why": "meshy-6-lite geometry decimated to 4k triangles looked lumpy. Replaced by smart topology, which needs its own rig."
+    }
+  ],
+  "final": {
+    "generate": { "tool": "meshy_image_to_3d", "input": "reference ref_a (input_task_id)", "model": "meshy-t2.5", "modelType": "smart-topology", "targetPolycount": 4000, "texture": true, "poseMode": "t-pose", "taskId": "01a18ad9-3457-70f0-bb4a-f72e19fccd5e", "file": "raw/rifleman/smart.glb", "triangles": 3858, "credits": 15 },
+    "rig": { "tool": "meshy_rig", "heightMeters": 1.8, "taskId": "01a18ada-a615-7155-b55c-18f3c746a2e2", "credits": 5 },
+    "animate": {
+      "tool": "meshy_animate",
+      "actionIds": { "0": "Idle", "690": "Walk_Forward_While_Shooting_inplace", "654": "Rifle_Charge_inplace", "170": "Standing_Reload", "178": "Hit_Reaction", "183": "Shot_and_Fall_Backward", "184": "Shot_and_Fall_Forward" },
+      "taskId": "01a18adb-65bc-7501-a08c-612c8bccf2d2",
+      "file": "raw/rifleman/smart_animations.glb",
+      "credits": 21
+    }
+  },
+  "clips": {
+    "Idle": "Meshy Idle with the arms baked into the aim pose (holds the rifle)",
+    "Walk01_Forward": "Walk_Forward_While_Shooting_inplace",
+    "Run01_Forward": "Rifle_Charge_inplace (the renderer's move clip)",
+    "Fire": "built in Blender: 0.25 s upper-body kick from the aim pose (plays blended over idle/move)",
+    "Reload": "Standing_Reload",
+    "Hit": "Hit_Reaction",
+    "Death01": "Shot_and_Fall_Backward",
+    "Death02": "Shot_and_Fall_Forward"
+  },
+  "post": {
+    "script": "tools/blender/infantry.py",
+    "config": "tools/blender/rifleman.json",
+    "command": "blender -b --factory-startup -P tools/blender/infantry.py -- tools/blender/rifleman.json",
+    "steps": [
+      "decimate to 4000 triangles (smart topology is already under budget, so this is a no-op)",
+      "uniform = everything except skin/tan boots (hue 0-40°, sat ≥ 0.15) and black (v ≤ 0.16) -> untextured Uniform",
+      "rifle from 6 boxes (Weapon_metal), parented to RightHand, grip 5 cm past the wrist, barrel toward the left hand in Walk_Forward_While_Shooting frame 10",
+      "Idle arms baked to that aim pose; Fire built; clips renamed",
+      "512² texture"
+    ],
+    "output": "rifleman.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: rifleman.glb, scale 1, center false",
+  "credits": { "references": 6, "candidates": 10, "superseded": 36, "final": 41, "total": 93 }
+}

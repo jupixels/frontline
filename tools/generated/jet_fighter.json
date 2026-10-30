@@ -1,0 +1,42 @@
+{
+  "id": "jet_fighter",
+  "date": "2026-10-30",
+  "batch": 3,
+  "replaces": "the previous models/jet_fighter.glb",
+  "style": "tools/generated/STYLE.md, aircraft variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Modern twin-engine multirole fighter jet in flight: single-seat bubble canopy, swept wings with missiles under them, twin vertical tails, landing gear retracted.",
+    "taskId": "01a18b39-70a0-7045-8aa7-df7d280fede2",
+    "file": "raw/jet_fighter/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 10000,
+    "texture": true,
+    "taskId": "01a18b3a-a6e5-73af-94e6-9e53927fc5ed",
+    "file": "raw/jet_fighter/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/jet_fighter.json",
+    "output": "jet_fighter.glb"
+  },
+  "movingParts": [],
+  "clips": [
+    "Crash (roll and nose-down while the renderer drops it)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: jet_fighter.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

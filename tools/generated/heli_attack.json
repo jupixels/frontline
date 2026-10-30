@@ -1,0 +1,46 @@
+{
+  "id": "heli_attack",
+  "date": "2026-10-30",
+  "batch": 3,
+  "replaces": "the previous models/heli_attack.glb",
+  "style": "tools/generated/STYLE.md, aircraft variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Modern attack helicopter: narrow fuselage with tandem two-seat cockpit, stub wings carrying rocket pods and missiles, chin-mounted cannon turret, four-blade main rotor and tail rotor, wheeled landing gear.",
+    "taskId": "01a18b39-5ef7-749d-83d9-28d623275174",
+    "file": "raw/heli_attack/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 10000,
+    "texture": true,
+    "taskId": "01a18b3a-9b7b-73ef-8935-f8d732e953a3",
+    "file": "raw/heli_attack/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/heli_attack.json",
+    "output": "heli_attack.glb"
+  },
+  "movingParts": [
+    "P_rotor (spins in Idle/Move) pivot [0,4.5,1.08]"
+  ],
+  "clips": [
+    "Crash (roll and nose-down while the renderer drops it)",
+    "Idle (rotor spin)",
+    "Move (rotor spin)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: heli_attack.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

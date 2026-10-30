@@ -1,0 +1,45 @@
+{
+  "id": "destroyer",
+  "date": "2026-10-30",
+  "batch": 4,
+  "replaces": "the previous models/destroyer.glb",
+  "style": "tools/generated/STYLE.md, naval variant of the vehicle prefix (haze grey / grey-green paint; see the prompt)",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "aspectRatio": "4:3",
+    "prompt": "<prefix> Modern guided-missile destroyer: long sleek hull, one gun turret on the bow, vertical missile launch cells, angular stealthy superstructure with a tall mast and flat radar panels, helicopter deck at the stern.",
+    "taskId": "01a18b39-954e-7681-8d08-af4fdebc8d3a",
+    "file": "raw/destroyer/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none (reference clearly right)",
+  "final": {
+    "tool": "meshy_image_to_3d",
+    "model": "meshy-t2.5",
+    "modelType": "smart-topology",
+    "targetPolycount": 20000,
+    "texture": true,
+    "taskId": "01a18b3a-bfa3-738b-a48e-0d31f236059e",
+    "file": "raw/destroyer/smart.glb",
+    "credits": 15
+  },
+  "post": {
+    "script": "tools/blender/vehicle.py",
+    "config": "tools/blender/destroyer.json",
+    "output": "destroyer.glb"
+  },
+  "movingParts": [
+    "P_turret pivot [0,18,50]"
+  ],
+  "clips": [
+    "TurretScan (keeps P_turret animated)",
+    "Death (turret lifts)"
+  ],
+  "pipeline": "tools/assets.manifest.json entry with generated: destroyer.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "total": 18
+  }
+}

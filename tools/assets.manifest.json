@@ -90,6 +90,10 @@
     "kenney_city-kit-industrial.zip": {
       "author": "Kenney (kenney.nl)",
       "license": "CC0"
+    },
+    "meshy": {
+      "author": "Frontline (models made with Meshy AI, Pro plan)",
+      "license": "owned (Meshy Pro output)"
     }
   },
   "palettes": {
@@ -108,523 +112,373 @@
   },
   "models": [
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/soldiers/Rifleman.glb",
+      "generated": "rifleman.glb",
       "out": "models/rifleman.glb",
       "kind": "unit",
-      "credit": "kevin-iglesias",
+      "credit": "meshy",
       "scale": 1,
       "center": false,
-      "clips": [
-        "MilitaryIdle01",
-        "Idle01",
-        "AssaultRifle_Aim01",
-        "AssaultRifle_Aim01_Shoot01",
-        "AssaultRifle_Reload01",
-        "Run01_Forward",
-        "Walk01_Forward",
-        "Damage01",
-        "Death01",
-        "Death02"
-      ],
-      "meshMaterials": {
-        "HumanM_BodyMesh": {
-          "name": "Uniform",
-          "color": "#5b6347"
-        },
-        "Human_SoldierHelmet": {
-          "name": "Helmet",
-          "color": "#4a5238"
-        },
-        "Human_AssaultRifle": {
-          "name": "Weapon",
-          "color": "#2e2e2c",
-          "metallic": 0.4,
-          "roughness": 0.5
-        }
-      },
+      "textureSize": 512,
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       },
-      "animTolerance": 0.0005,
-      "animPrune": {
-        "dropBones": "jaw"
+      "animTolerance": 0.0005
+    },
+    {
+      "generated": "rifleman_b.glb",
+      "out": "models/rifleman_b.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "scale": 1,
+      "center": false,
+      "textureSize": 512,
+      "materials": {
+        "team": "TeamAccent"
       },
-      "holdPose": {
-        "clip": "WeaponHold_AssaultRifle01",
-        "into": [
-          "Idle01",
-          "MilitaryIdle01",
-          "Walk01_Forward",
-          "Run01_Forward"
-        ],
-        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
+      "animTolerance": 0.0005
+    },
+    {
+      "generated": "rifleman_c.glb",
+      "out": "models/rifleman_c.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "scale": 1,
+      "center": false,
+      "textureSize": 512,
+      "materials": {
+        "team": "TeamAccent"
       },
-      "reparent": {
-        "Human_AssaultRifle": "B-handProp.R"
+      "animTolerance": 0.0005
+    },
+    {
+      "generated": "supply_truck.glb",
+      "out": "models/supply_truck.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "length": 7,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
       }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/soldiers/Sniper.glb",
+      "generated": "engineer.glb",
+      "out": "models/engineer.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "scale": 1,
+      "center": false,
+      "textureSize": 512,
+      "materials": {
+        "team": "TeamPaint"
+      },
+      "animTolerance": 0.0005
+    },
+    {
+      "generated": "sniper.glb",
       "out": "models/sniper.glb",
       "kind": "unit",
-      "credit": "kevin-iglesias",
+      "credit": "meshy",
       "scale": 1,
       "center": false,
-      "clips": [
-        "MilitaryIdle01",
-        "Idle01",
-        "Rifle_Aim01",
-        "Rifle_Aim01_Shoot01",
-        "Rifle_Reload01",
-        "Run01_Forward",
-        "Walk01_Forward",
-        "Damage01",
-        "Death01",
-        "Death02"
-      ],
-      "meshMaterials": {
-        "HumanM_BodyMesh": {
-          "name": "Uniform",
-          "color": "#5b6347"
-        },
-        "Human_SoldierHelmet": {
-          "name": "Helmet",
-          "color": "#4a5238"
-        },
-        "Human_Rifle": {
-          "name": "Weapon",
-          "color": "#2e2e2c",
-          "metallic": 0.4,
-          "roughness": 0.5
-        }
-      },
+      "textureSize": 512,
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       },
-      "animTolerance": 0.0005,
-      "animPrune": {
-        "dropBones": "jaw"
-      },
-      "holdPose": {
-        "clip": "WeaponHold_Rifle01",
-        "into": [
-          "Idle01",
-          "MilitaryIdle01",
-          "Walk01_Forward",
-          "Run01_Forward"
-        ],
-        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
-      },
-      "reparent": {
-        "Human_Rifle": "B-handProp.R"
-      }
+      "animTolerance": 0.0005
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/soldiers/AntiTank_Bazooka.glb",
+      "generated": "at_soldier.glb",
       "out": "models/at_soldier.glb",
       "kind": "unit",
-      "credit": "kevin-iglesias",
+      "credit": "meshy",
       "scale": 1,
       "center": false,
-      "clips": [
-        "MilitaryIdle01",
-        "Idle01",
-        "Bazooka_Aim01",
-        "Bazooka_Aim01_Shoot01",
-        "Bazooka_Reload01",
-        "Run01_Forward",
-        "Walk01_Forward",
-        "Damage01",
-        "Death01",
-        "Death02"
-      ],
-      "meshMaterials": {
-        "HumanM_BodyMesh": {
-          "name": "Uniform",
-          "color": "#5b6347"
-        },
-        "Human_SoldierHelmet": {
-          "name": "Helmet",
-          "color": "#4a5238"
-        },
-        "Human_Bazooka": {
-          "name": "Weapon",
-          "color": "#2e2e2c",
-          "metallic": 0.4,
-          "roughness": 0.5
-        }
-      },
+      "textureSize": 512,
       "materials": {
-        "team": "Uniform"
+        "team": "TeamPaint"
       },
-      "animTolerance": 0.0005,
-      "animPrune": {
-        "dropBones": "jaw"
-      },
-      "holdPose": {
-        "clip": "WeaponHold_Bazooka01",
-        "into": [
-          "Idle01",
-          "MilitaryIdle01",
-          "Walk01_Forward",
-          "Run01_Forward"
-        ],
-        "bones": "^B-(shoulder|upperArm|forearm|hand|handProp|indexFinger\\d+|middleFinger\\d+|ringFinger\\d+|pinky\\d+|thumb\\d+)\\.[LR]$|^HandProp\\.[LR]$"
-      },
-      "reparent": {
-        "Human_Bazooka": "B-handProp.R"
+      "animTolerance": 0.0005
+    },
+    {
+      "generated": "jeep.glb",
+      "out": "models/jeep.glb",
+      "kind": "unit",
+      "credit": "meshy",
+      "length": 4.6,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
       }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Jeep_zsky_CC-BY.glb",
-      "out": "models/jeep.glb",
-      "kind": "unit",
-      "credit": "zsky",
-      "length": 4.6
-    },
-    {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/ScoutCar_zsky_CC-BY.glb",
+      "generated": "scout_car.glb",
       "out": "models/scout_car.glb",
       "kind": "unit",
-      "credit": "zsky",
-      "length": 5.6
+      "credit": "meshy",
+      "length": 5.6,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/IFV_MechInfantry.glb",
+      "generated": "ifv.glb",
       "out": "models/ifv.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 7.5
+      "credit": "meshy",
+      "length": 7.5,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Tank_Light_zsky_CC-BY.glb",
+      "generated": "tank_light.glb",
       "out": "models/tank_light.glb",
       "kind": "unit",
-      "credit": "zsky",
-      "length": 6.8
+      "credit": "meshy",
+      "length": 6.8,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Tank_MBT.glb",
+      "generated": "tank_mbt.glb",
       "out": "models/tank_mbt.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 9.5
+      "credit": "meshy",
+      "length": 9.5,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
+      "generated": "aa_tank.glb",
       "out": "models/aa_tank.glb",
       "kind": "unit",
-      "kitbash": [
-        {
-          "zip": "Modern-RTS-Animations.zip",
-          "path": "Modern-RTS-Animations/vehicles/ground/Tank_MBT.glb",
-          "credit": "freeciv-yd",
-          "length": 7.6,
-          "stripMeshesUnder": "P_turret",
-          "name": "hull"
-        },
-        {
-          "box": [
-            2.3,
-            1.15,
-            2.7
-          ],
-          "color": "#5c6631",
-          "name": "aa_turret",
-          "center": false,
-          "at": [
-            0.02,
-            2.0,
-            -0.16
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            0.4,
-            0.55,
-            1.5
-          ],
-          "color": "#5c6631",
-          "name": "aa_gunpod_l",
-          "center": false,
-          "at": [
-            -1.33,
-            2.45,
-            0.19
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            0.4,
-            0.55,
-            1.5
-          ],
-          "color": "#5c6631",
-          "name": "aa_gunpod_r",
-          "center": false,
-          "at": [
-            1.37,
-            2.45,
-            0.19
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            0.13,
-            0.13,
-            2.4
-          ],
-          "color": "#2b2d28",
-          "name": "aa_barrel_l",
-          "center": false,
-          "at": [
-            -1.33,
-            2.65,
-            2.04
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            0.13,
-            0.13,
-            2.4
-          ],
-          "color": "#2b2d28",
-          "name": "aa_barrel_r",
-          "center": false,
-          "at": [
-            1.37,
-            2.65,
-            2.04
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "cylinder": [
-            0.38,
-            0.38,
-            0.45
-          ],
-          "color": "#3e4436",
-          "name": "aa_track_radar",
-          "center": false,
-          "at": [
-            0.02,
-            3.15,
-            0.84
-          ],
-          "parent": "P_turret",
-          "segments": 12
-        },
-        {
-          "box": [
-            0.18,
-            0.7,
-            0.18
-          ],
-          "color": "#2b2d28",
-          "name": "aa_radar_mast",
-          "center": false,
-          "at": [
-            0.02,
-            3.15,
-            -1.21
-          ],
-          "parent": "P_turret"
-        },
-        {
-          "box": [
-            1.9,
-            0.5,
-            0.14
-          ],
-          "color": "#3e4436",
-          "name": "aa_search_radar",
-          "center": false,
-          "at": [
-            0.02,
-            3.85,
-            -1.21
-          ],
-          "parent": "P_turret"
-        }
-      ]
+      "credit": "meshy",
+      "length": 7.6,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Rocket_Artillery_Truck_toon.glb",
+      "generated": "rocket_truck.glb",
       "out": "models/rocket_truck.glb",
       "kind": "unit",
-      "credit": "cptdrunkbear",
+      "credit": "meshy",
       "length": 10,
-      "colors": {
-        "*": "#9aa07e"
-      },
-      "rotateY": 90
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/ground/Artillery_Gun_toon.glb",
+      "generated": "artillery.glb",
       "out": "models/artillery.glb",
       "kind": "unit",
-      "credit": "cptdrunkbear",
+      "credit": "meshy",
       "length": 9,
-      "colors": {
-        "*": "#9aa07e"
-      },
-      "rotateY": 90
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Helicopter_Gunship_zsky_CC-BY.glb",
+      "generated": "heli_attack.glb",
       "out": "models/heli_attack.glb",
       "kind": "unit",
-      "credit": "zsky",
-      "length": 17
+      "credit": "meshy",
+      "length": 17,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Helicopter_Transport.glb",
+      "generated": "heli_transport.glb",
       "out": "models/heli_transport.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 19
+      "credit": "meshy",
+      "length": 19,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Jet_StealthFighter.glb",
+      "generated": "jet_fighter.glb",
       "out": "models/jet_fighter.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 18
+      "credit": "meshy",
+      "length": 18,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Jet_StealthBomber.glb",
+      "generated": "bomber.glb",
       "out": "models/bomber.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 52
+      "credit": "meshy",
+      "length": 52,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/air/Missile_Cruise.glb",
+      "generated": "cruise_missile.glb",
       "out": "models/cruise_missile.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
-      "length": 6
+      "credit": "meshy",
+      "length": 6,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      }
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Patrol_Boat_zsky_CC-BY.glb",
+      "generated": "patrol_boat.glb",
       "out": "models/patrol_boat.glb",
       "kind": "unit",
-      "credit": "zsky",
+      "credit": "meshy",
       "length": 20,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 1.2
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Destroyer.glb",
+      "generated": "destroyer.glb",
       "out": "models/destroyer.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
+      "credit": "meshy",
       "length": 155,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 8
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Cruiser_AEGIS.glb",
+      "generated": "cruiser.glb",
       "out": "models/cruiser.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
+      "credit": "meshy",
       "length": 173,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 9
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Submarine.glb",
+      "generated": "submarine.glb",
       "out": "models/submarine.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
+      "credit": "meshy",
       "length": 110,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 13
     },
     {
-      "zip": "Modern-RTS-Animations.zip",
-      "path": "Modern-RTS-Animations/vehicles/naval/Transport_Ship.glb",
+      "generated": "transport_ship.glb",
       "out": "models/transport_ship.glb",
       "kind": "unit",
-      "credit": "freeciv-yd",
+      "credit": "meshy",
       "length": 140,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamPaint"
+      },
       "draft": 9
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Quarter.obj",
+      "generated": "buildings/hq.glb",
       "out": "models/buildings/hq.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Refectory.obj",
+      "generated": "buildings/barracks.glb",
       "out": "models/buildings/barracks.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/HelicopterBase.obj",
+      "generated": "buildings/helipad.glb",
       "out": "models/buildings/helipad.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/RadioStation.obj",
+      "generated": "buildings/radar.glb",
       "out": "models/buildings/radar.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Storage.obj",
+      "generated": "buildings/supply_depot.glb",
       "out": "models/buildings/supply_depot.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/MedicTent.obj",
+      "generated": "buildings/hospital.glb",
       "out": "models/buildings/hospital.glb",
       "kind": "building",
-      "credit": "zsky",
-      "length": 10
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
-      "zip": "Modern-RTS-Models.zip",
-      "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/SniperTower.obj",
+      "generated": "buildings/watchtower.glb",
       "out": "models/buildings/watchtower.glb",
       "kind": "building",
-      "credit": "zsky",
-      "scale": 1
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
       "zip": "Modern-RTS-Models.zip",
@@ -704,7 +558,7 @@
       "out": "models/buildings/props/wooden_box.glb",
       "kind": "prop",
       "credit": "zsky",
-      "height": 1.0
+      "height": 1
     },
     {
       "zip": "Modern-RTS-Models.zip",
@@ -739,484 +593,48 @@
       "height": 3.5
     },
     {
+      "generated": "buildings/war_factory.glb",
       "out": "models/buildings/war_factory.glb",
       "kind": "building",
-      "kitbash": [
-        {
-          "box": [
-            28,
-            0.3,
-            22
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/building-k.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 20,
-          "at": [
-            0,
-            0.3,
-            -2
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/chimney-medium.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "height": 14,
-          "at": [
-            10,
-            0.3,
-            -8
-          ]
-        },
-        {
-          "zip": "Modern-RTS-Models.zip",
-          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_01.obj",
-          "credit": "zsky",
-          "rotateY": 90,
-          "at": [
-            -11.6,
-            0.3,
-            4
-          ],
-          "length": 12.2
-        },
-        {
-          "zip": "Modern-RTS-Models.zip",
-          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/Container_02.obj",
-          "credit": "zsky",
-          "rotateY": 90,
-          "at": [
-            -7.2,
-            0.3,
-            4
-          ],
-          "length": 12.2
-        },
-        {
-          "zip": "Modern-RTS-Models.zip",
-          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/BarrierParking.obj",
-          "credit": "zsky",
-          "at": [
-            6,
-            0.3,
-            10
-          ],
-          "length": 5
-        }
-      ]
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
+      "generated": "buildings/airfield.glb",
       "out": "models/buildings/airfield.glb",
       "kind": "building",
-      "kitbash": [
-        {
-          "box": [
-            44,
-            0.2,
-            30
-          ],
-          "color": "#55575a",
-          "name": "slab",
-          "center": false
-        },
-        {
-          "box": [
-            1,
-            0.04,
-            7
-          ],
-          "color": "#d6d3c4",
-          "name": "marking",
-          "center": false,
-          "at": [
-            8,
-            0.2,
-            -9
-          ]
-        },
-        {
-          "box": [
-            1,
-            0.04,
-            7
-          ],
-          "color": "#d6d3c4",
-          "name": "marking",
-          "center": false,
-          "at": [
-            8,
-            0.2,
-            0
-          ]
-        },
-        {
-          "box": [
-            1,
-            0.04,
-            7
-          ],
-          "color": "#d6d3c4",
-          "name": "marking",
-          "center": false,
-          "at": [
-            8,
-            0.2,
-            9
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/building-j.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 18,
-          "at": [
-            -11,
-            0.2,
-            -3
-          ]
-        },
-        {
-          "cylinder": [
-            1.4,
-            1.2,
-            10
-          ],
-          "color": "#8d8b80",
-          "name": "tower",
-          "center": false,
-          "at": [
-            18,
-            0.2,
-            -11
-          ]
-        },
-        {
-          "box": [
-            5,
-            3,
-            5
-          ],
-          "color": "#3a4a52",
-          "name": "tower_cab",
-          "center": false,
-          "at": [
-            18,
-            10.2,
-            -11
-          ]
-        },
-        {
-          "zip": "Modern-RTS-Models.zip",
-          "path": "Modern-RTS-Assets/models/base_buildings/zsky_military_base_CC-BY/MilitaryBase/OBJ/GasTank.obj",
-          "credit": "zsky",
-          "at": [
-            -18,
-            0.2,
-            11
-          ],
-          "length": 7
-        }
-      ]
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
+      "generated": "buildings/power_plant.glb",
       "out": "models/buildings/power_plant.glb",
       "kind": "building",
-      "kitbash": [
-        {
-          "box": [
-            24,
-            0.3,
-            24
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/chimney-large.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "height": 16,
-          "at": [
-            -5,
-            0.3,
-            -5
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/chimney-large.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "height": 13,
-          "at": [
-            6,
-            0.3,
-            -6
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/building-c.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 12,
-          "at": [
-            3,
-            0.3,
-            6
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/detail-tank-large.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 6,
-          "at": [
-            -7,
-            0.3,
-            6
-          ]
-        }
-      ]
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
+      "generated": "buildings/naval_yard.glb",
       "out": "models/buildings/naval_yard.glb",
       "kind": "building",
-      "kitbash": [
-        {
-          "box": [
-            36,
-            1.2,
-            16
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false,
-          "at": [
-            0,
-            0,
-            -6
-          ]
-        },
-        {
-          "box": [
-            6,
-            1.2,
-            16
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false,
-          "at": [
-            -12,
-            0,
-            10
-          ]
-        },
-        {
-          "box": [
-            6,
-            1.2,
-            16
-          ],
-          "color": "#85847b",
-          "name": "slab",
-          "center": false,
-          "at": [
-            12,
-            0,
-            10
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/building-s.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 18,
-          "at": [
-            -4,
-            1.2,
-            -8
-          ]
-        },
-        {
-          "box": [
-            0.8,
-            14,
-            0.8
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            -12,
-            1.2,
-            4
-          ]
-        },
-        {
-          "box": [
-            0.8,
-            14,
-            0.8
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            -12,
-            1.2,
-            14
-          ]
-        },
-        {
-          "box": [
-            0.8,
-            14,
-            0.8
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            12,
-            1.2,
-            4
-          ]
-        },
-        {
-          "box": [
-            0.8,
-            14,
-            0.8
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            12,
-            1.2,
-            14
-          ]
-        },
-        {
-          "box": [
-            25,
-            1.2,
-            1.2
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            0,
-            15.2,
-            4
-          ]
-        },
-        {
-          "box": [
-            25,
-            1.2,
-            1.2
-          ],
-          "color": "#c9a227",
-          "name": "crane",
-          "center": false,
-          "at": [
-            0,
-            15.2,
-            14
-          ]
-        },
-        {
-          "box": [
-            3,
-            2,
-            11
-          ],
-          "color": "#4b4b48",
-          "name": "crane_trolley",
-          "center": false,
-          "at": [
-            3,
-            13.2,
-            9
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/shipping-container-a.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 6,
-          "at": [
-            10,
-            1.2,
-            -9
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/shipping-container-b.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 6,
-          "at": [
-            10,
-            3.8,
-            -9
-          ]
-        },
-        {
-          "zip": "kenney_city-kit-industrial.zip",
-          "path": "Models/GLB format/shipping-container-c.glb",
-          "textureAdjust": {
-            "saturation": 0.25,
-            "brightness": 0.78
-          },
-          "length": 6,
-          "at": [
-            14,
-            1.2,
-            -4
-          ],
-          "rotateY": 90
-        }
-      ]
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     },
     {
       "zip": "kenney_nature-kit.zip",
@@ -1345,6 +763,36 @@
       "kind": "env",
       "height": 3,
       "palette": "nature"
+    },
+    {
+      "generated": "buildings/trench.glb",
+      "out": "models/buildings/trench.glb",
+      "kind": "building",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
+    },
+    {
+      "generated": "buildings/ruin.glb",
+      "out": "models/buildings/ruin.glb",
+      "kind": "building",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024
+    },
+    {
+      "generated": "buildings/strategic_command.glb",
+      "out": "models/buildings/strategic_command.glb",
+      "kind": "building",
+      "credit": "meshy",
+      "scale": 1,
+      "textureSize": 1024,
+      "materials": {
+        "team": "TeamAccent"
+      }
     }
   ],
   "textures": [

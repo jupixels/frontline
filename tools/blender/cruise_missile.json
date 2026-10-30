@@ -1,0 +1,22 @@
+{
+  "input": "raw/cruise_missile/smart.glb",
+  "output": "cruise_missile.glb",
+  "rotateY": 90,
+  "length": 6,
+  "triangles": 2000,
+  "textureSize": 1024,
+  "paint": {
+    "vMin": 0.22,
+    "sMax": 0.35,
+    "hueMin": 35,
+    "hueMax": 180,
+    "smooth": 2,
+    "detailBelow": 0
+  },
+  "accent": {
+    "minHeight": 0.25,
+    "normalZ": 0.55
+  },
+  "parts": [],
+  "crash": true
+}

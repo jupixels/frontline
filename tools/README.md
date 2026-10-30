@@ -1,6 +1,6 @@
 # Asset pipeline
 
-`npm run assets` builds `public/assets/` from two kinds of input:
+`npm run assets` builds `public/assets/` from three kinds of input:
 
 1. **The raw asset zips** (not committed, ~360 MB together):
    - `Modern-RTS-Animations.zip`: animated GLBs (soldiers, vehicles, aircraft, ships)
@@ -14,13 +14,17 @@
    `npm run assets` runs it first, so there's no separate download step. If an upstream file changes,
    the build stops; look at the new file, then run `node tools/fetch-sources.mjs --update-hashes`.
 
+3. **Generated models** (Meshy AI, post-processed in Blender), read from `~/Downloads/frontline-generated/`
+   (`--generated <dir>` or `FRONTLINE_GENERATED_SRC`). See [Generated models](#generated-models-meshy--blender).
+
 ```bash
 npm run assets                        # everything
 npm run assets -- --only tank         # just entries whose output path contains "tank"
 node tools/fetch-sources.mjs          # only download / verify the free sources
 ```
 
-No Blender needed: OBJ files are converted by `lib/obj.mjs`, GLB/glTF by glTF-Transform.
+No Blender needed for the zips and free sources: OBJ files are converted by `lib/obj.mjs`, GLB/glTF by
+glTF-Transform. Generated models need Blender once, to turn the raw Meshy download into the GLB the build reads.
 
 ## What it produces
 
@@ -43,6 +47,7 @@ The red arrow under each model points to +Z. The viewer isn't part of the build.
 Model entries:
 
 - `zip`, `path`: the source file inside a zip (`.glb`, `.gltf` or `.obj`). Zips are found in `--src`, then the download cache.
+- `generated`: instead of `zip`/`path`, a GLB in the generated folder written by a `tools/blender/` script.
 - `out`: output path under `public/assets/`. `kind`: `unit | building | prop | env` (for the catalog).
 - `credit`: key into `credits` (defaults to the zip name). The catalog's license and credits come from here.
 - Size: `length` (longest horizontal side, m), `height`, or `scale` (explicit factor; skinned characters need `scale: 1`
@@ -86,17 +91,48 @@ with WebP textures. three.js loads it via `GLTFLoader` + `MeshoptDecoder`, as `s
 
 The processed output **is** committed: GitHub Pages can't serve Git LFS files, so they can't go there.
 
+## Generated models (Meshy + Blender)
+
+Frontline's own models are made with the Meshy AI MCP and cleaned up in headless Blender 5.2. The plan, budgets
+and batches are in `docs/MODEL_GEN_PLAN.md`; the fixed style and prompt prefixes are in `tools/generated/STYLE.md`.
+
+- Raw Meshy downloads (reference images, candidates, the final textured model, rig and animation GLBs) go in
+  `~/Downloads/frontline-generated/raw/<id>/`. They're not committed, like the zips.
+- `tools/generated/<id>.json` records everything needed to redo a model: prompts, Meshy task ids, the chosen
+  candidate, what was thrown away and why, post-processing steps and credits.
+- `tools/blender/` has one script per category, driven by a per-model JSON config:
+
+```bash
+blender -b --factory-startup -P tools/blender/vehicle.py  -- tools/blender/tank_mbt.json [--preview <dir>]
+blender -b --factory-startup -P tools/blender/infantry.py -- tools/blender/rifleman.json [--preview <dir>]
+npm run assets -- --only tank_mbt
+```
+
+  - `vehicle.py`: orientation and size, team-paint split by texture color (`TeamPaint`, same texture, which the
+    renderer tints toward the team color; the rest stays `Detail`), moving parts cut out by box with pivots
+    (`P_turret`, `P_barrel`, spinning `turret_radar`/`P_rotor`), and `Fire`/`TurretScan`/`Death`/`Idle`/`Move`/
+    `Crash` clips. `TeamPaint` vs `TeamAccent`: upward-facing paint above `accent.minHeight` x height gets the
+    team color; `remove` boxes delete stray generator geometry. `TurretScan` is never played; it keeps `P_turret` animated so
+    `render/models.ts` doesn't merge the turret into the hull.
+  - `infantry.py`: uniform split (`TeamPaint` vs `Gear`), a weapon built from boxes and tubes on the right hand bone lined up with the
+    left hand in the aim pose, the aim pose baked into the idle's arms, a built `Fire` kick, and clip renames to
+    the names `render/units.ts` looks up.
+  - `--preview <dir>` writes workbench renders for checking cuts (debug colors, not what the game shows).
+- Check raw files in the viewer before building: `/tools/viewer.html?files=/a.glb,/b.glb&len=9.5&rts=110`
+  (files must be served by Vite, e.g. copied under `public/`; `rts` frames like the game camera).
+
 ## Sources and licenses
 
 | Source | Used for | License |
 |---|---|---|
-| Modern-RTS-Animations.zip, Zsky vehicles (`*_zsky_CC-BY`) | jeep, scout_car, tank_light, heli_attack, patrol_boat | **CC-BY 4.0**, Zsky (zsky2000.itch.io) |
-| Modern-RTS-Models.zip, Zsky military base | hq, barracks, helipad, radar, supply_depot, hospital, watchtower, props, parts of the kitbashes | **CC-BY 4.0**, Zsky |
-| Modern-RTS-Animations.zip, Freeciv units by yd | ifv, tank_mbt, aa_tank (MBT hull + primitive twin-cannon turret), heli_transport, jet_fighter, bomber, cruise_missile, destroyer, cruiser, submarine, transport_ship | CC0 |
-| Modern-RTS-Animations.zip, toon vehicles | rocket_truck, artillery (recolored). The pack README lists them as CC0; they look like CptDrunkBear's N64-style set, so they're credited to CptDrunkBear | CC0 |
-| Modern-RTS-Animations.zip, Kevin Iglesias soldiers | rifleman, sniper, at_soldier | Royalty-free, commercial use OK, no resale of the assets themselves |
+| Modern-RTS-Animations.zip, Zsky vehicles (`*_zsky_CC-BY`) | (no longer used) | **CC-BY 4.0**, Zsky (zsky2000.itch.io) |
+| Modern-RTS-Models.zip, Zsky military base | map props (sandbags, barrels, containers, gas tanks, walls) | **CC-BY 4.0**, Zsky |
+| Modern-RTS-Animations.zip, Freeciv units by yd | (no longer used) | CC0 |
+| Modern-RTS-Animations.zip, toon vehicles | (no longer used). The pack README lists them as CC0; they look like CptDrunkBear's N64-style set, so they're credited to CptDrunkBear | CC0 |
+| Generated with Meshy AI (Pro plan; the output is owned by the project) | all units and structures (incl. trench, ruin, strategic_command) | owned, no attribution needed (credited as "made with Meshy AI") |
+| Modern-RTS-Animations.zip, Kevin Iglesias soldiers | (no longer used) | Royalty-free, commercial use OK, no resale of the assets themselves |
 | [Kenney Nature Kit](https://kenney.nl/assets/nature-kit) | `models/env/*` | CC0 |
-| [Kenney City Kit (Industrial)](https://kenney.nl/assets/city-kit-industrial) | parts of war_factory, airfield, power_plant, naval_yard | CC0 |
+| [Kenney City Kit (Industrial)](https://kenney.nl/assets/city-kit-industrial) | (no longer used) | CC0 |
 | ambientCG [Grass004](https://ambientcg.com/view?id=Grass004), [Ground103](https://ambientcg.com/view?id=Ground103), [Rock030](https://ambientcg.com/view?id=Rock030), [Ground080](https://ambientcg.com/view?id=Ground080), [Ground048](https://ambientcg.com/view?id=Ground048) | grass, dirt, rock, sand, mud | CC0 |
 | Poly Haven [Kloppenheim 06 (Pure Sky)](https://polyhaven.com/a/kloppenheim_06_puresky) by Greg Zaal, Jarod Guest | sky.hdr | CC0 |
 

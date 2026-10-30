@@ -1,0 +1,72 @@
+{
+  "id": "at_soldier",
+  "date": "2026-10-30",
+  "batch": "2 (core)",
+  "replaces": "the previous models/at_soldier.glb",
+  "style": "tools/generated/STYLE.md, infantry prefix",
+  "reference": {
+    "tool": "meshy_text_to_image",
+    "model": "nano-banana-2-lite",
+    "poseMode": "t-pose",
+    "prompt": "<infantry prefix> Anti-tank soldier: a large rigid backpack frame carrying two spare olive rocket canisters sticking up above the shoulders, heavy shoulder pads.",
+    "taskId": "01a18af1-140b-7122-892e-1e90bb41a914",
+    "file": "raw/at_soldier/ref_a.png",
+    "credits": 3
+  },
+  "candidates": "none: the reference was clearly right, so it went straight to the final model (STYLE.md: 1 candidate when the reference is clear)",
+  "final": {
+    "generate": {
+      "tool": "meshy_image_to_3d",
+      "input": "reference (input_task_id)",
+      "model": "meshy-t2.5",
+      "modelType": "smart-topology",
+      "targetPolycount": 4000,
+      "texture": true,
+      "poseMode": "t-pose",
+      "taskId": "01a18af2-130f-75b4-80b4-e9b3b0dbf315",
+      "file": "raw/at_soldier/smart.glb",
+      "credits": 15
+    },
+    "rig": {
+      "tool": "meshy_rig",
+      "heightMeters": 1.8,
+      "taskId": "01a18af3-a665-7714-a89b-95b0242ce3b2",
+      "credits": 5
+    },
+    "animate": {
+      "tool": "meshy_animate",
+      "actionIds": {
+        "0": "Idle",
+        "183": "Shot_and_Fall_Backward",
+        "184": "Shot_and_Fall_Forward",
+        "654": "Rifle_Charge_inplace",
+        "690": "Walk_Forward_While_Shooting_inplace"
+      },
+      "taskId": "01a18af9-ccf7-7259-9be2-b3375b2033ce",
+      "file": "raw/at_soldier/smart_animations.glb",
+      "credits": 15
+    }
+  },
+  "post": {
+    "script": "tools/blender/infantry.py",
+    "config": "tools/blender/at_soldier.json",
+    "output": "at_soldier.glb"
+  },
+  "pipeline": "tools/assets.manifest.json entry with generated: at_soldier.glb",
+  "credits": {
+    "reference": 3,
+    "final": 15,
+    "rig": 5,
+    "animate": 15,
+    "total": 38
+  },
+  "weapon": "Launcher_tube (built in Blender from boxes/tubes, on the RightHand bone)",
+  "clips": {
+    "Idle": "Idle + aim-pose arms",
+    "Walk01_Forward": "Walk_Forward_While_Shooting_inplace",
+    "Run01_Forward": "Rifle_Charge_inplace",
+    "Fire": "built upper-body kick",
+    "Death01": "Shot_and_Fall_Backward",
+    "Death02": "Shot_and_Fall_Forward"
+  }
+}
