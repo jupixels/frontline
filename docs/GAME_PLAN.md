@@ -1,6 +1,6 @@
 # FRONTLINE — Modern Military RTS (working title)
 
-A 3D modern-warfare RTS that runs in the browser from GitHub Pages and supports online multiplayer (1v1, 2v2) plus solo play against an AI. One match takes **60–90 minutes** and always ends, because the victory system is built to force an outcome.
+A 3D modern-warfare RTS that runs in the browser from GitHub Pages and supports online multiplayer (1v1, 2v2) plus solo play against an AI. **Great gameplay comes first.** Match length is flexible (roughly 45–90 minutes is typical, never a hard target). The victory system still guarantees every match ends.
 
 ---
 
@@ -8,7 +8,7 @@ A 3D modern-warfare RTS that runs in the browser from GitHub Pages and supports 
 
 1. **It looks real.** PBR lighting, soft shadows, atmospheric fog, color grading, dust and smoke, tracers, craters. Everything sits in one grounded visual style (muted military palette). Toy-like assets get reskinned or left out.
 2. **Combined arms is how you win.** Infantry, armor, artillery, air and navy counter each other. No single unit spam wins.
-3. **Every minute matters.** Contested capture points, a ticket bleed and escalating tech tiers keep the pressure on, so the 60–90 minute match never stalls.
+3. **Every minute matters.** Contested capture points, a ticket bleed and escalating tech tiers keep the pressure on, so a match never stalls. Pacing serves fun, not a target duration.
 4. **Zero install.** Open a link, share a lobby code, play. No server to host or pay for.
 
 ---
@@ -82,7 +82,7 @@ Zsky (CC BY 4.0), dklon jet sound (CC BY 3.0), the five ww2 sound credits from t
 
 ## 4. Game design
 
-### Match flow (target 60–90 min)
+### Match flow (typical pacing; tune for fun, not for duration)
 | Phase | Time | What happens |
 |---|---|---|
 | Deploy | 0–5 min | HQ + 1 engineer truck + 2 rifle squads. Build the economy and grab the nearest capture points |
@@ -201,7 +201,7 @@ A–F don't overlap in files. Anything that must change `src/shared/` goes throu
 |---|---|---|
 | G | **Skirmish AI** (`src/ai/`) | Build orders, economy and attack waves, unit micro, 3 difficulties |
 | H | **Maps** (`public/assets/maps/`, map loader) | The 3 launch maps, with props and points |
-| I | **Balance & match pacing** (`data/`) | Headless AI-vs-AI sims to tune ticket drain so matches finish in 60–90 min |
+| I | **Balance & match pacing** (`data/`) | Playtests plus headless AI-vs-AI sims for balance: no dominant unit or strategy, real counters, comebacks possible, no stalled stalemates. Match length is a by-product |
 | J | **Drawn frontlines** (sim + ui + render; master adds the `holdLine` contract first) | Select units, hold **F** and draw a polyline; units spread along it facing away from your side and hold. Role-aware placement: infantry seek cover, tanks slightly back, AT on flanks, artillery behind. Gaps fill when units die, reinforcements sent to the line fill the weakest spots, and "advance line" pushes the whole line forward. Lines show on map and minimap in team color, and teammates see them in shared command |
 | — | **Master** | Integration, playtests, perf profiling, bug triage |
 
