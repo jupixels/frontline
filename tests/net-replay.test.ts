@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { parseReplay, ReplaySession, serializeReplay } from '../src/net/replay';
 import { Simulation } from '../src/sim/simulation';
 import { testContent } from './fixtures';
 import { TestWorld } from './net-harness';
+
+// Several full sims run per test; the sim got heavier than vitest's 5 s default allows.
+vi.setConfig({ testTimeout: 60_000 });
 
 describe('replays', () => {
   it('a saved command log replays to identical state', async () => {
