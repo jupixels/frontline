@@ -13,6 +13,11 @@ export interface NetSession {
   pollTurn(tick: Tick): Turn | null;
   /** Called periodically with the local state hash so peers can detect desyncs. */
   reportHash(tick: Tick, hash: number): void;
+  /**
+   * Ticks ready to apply right now. Large after a rejoin (the command log is replayed); the
+   * match loop should then step without its per-frame cap until it is small again.
+   */
+  backlogTicks?(currentTick: Tick): number;
   dispose(): void;
 }
 

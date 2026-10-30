@@ -1,0 +1,60 @@
+{
+  "smoke": {
+    "name": "Smoke Screen",
+    "target": "point",
+    "range": 60,
+    "cooldown": 45,
+    "cost": 0,
+    "radius": 12,
+    "duration": 20,
+    "single": true
+  },
+  "entrench": {
+    "name": "Entrench",
+    "target": "self",
+    "range": 0,
+    "cooldown": 2,
+    "cost": 0,
+    "deploySeconds": 3,
+    "packSeconds": 2,
+    "damageTaken": 0.6
+  },
+  "sprint": {
+    "name": "Sprint",
+    "target": "self",
+    "range": 0,
+    "cooldown": 40,
+    "cost": 0,
+    "duration": 8,
+    "speedMult": 1.5
+  },
+  "overdrive": {
+    "name": "Overdrive",
+    "target": "self",
+    "range": 0,
+    "cooldown": 60,
+    "cost": 0,
+    "duration": 6,
+    "speedMult": 1.35
+  },
+  "barrage": {
+    "name": "Barrage",
+    "target": "point",
+    "range": 0,
+    "cooldown": 60,
+    "cost": 100,
+    "radius": 25,
+    "shots": 6,
+    "interval": 0.75,
+    "requiresVision": true
+  },
+  "ambush": {
+    "name": "Ambush",
+    "target": "self",
+    "range": 0,
+    "cooldown": 10,
+    "cost": 0,
+    "revealRange": 15,
+    "firstShotMult": 1.5
+  }
+}
