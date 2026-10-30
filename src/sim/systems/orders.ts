@@ -11,6 +11,7 @@ import { setPath } from './movement';
 import { pauseVote } from './pause';
 import { orderSuperweapon, superweaponSite } from './superweapon';
 import { defeat } from './victory';
+import { orderDemolish } from './demolish';
 
 /**
  * Units in `ids` that exist and `player` may command, deduplicated, in the order given. Units riding in
@@ -244,6 +245,9 @@ export function applyCommands(world: World, commands: readonly AnyPlayerCommand[
         orderAbility(world, player, units, cmd.ability, cmd.at, cmd.targetId, !!cmd.queue);
         break;
       }
+      case 'demolish':
+        orderDemolish(world, player, cmd.structures);
+        break;
       case 'surrender':
         defeat(world, player);
         break;

@@ -34,6 +34,11 @@ export type Command =
   | { type: 'superweapon'; at: Vec2 }
   /** Online pause vote: true asks to pause (passes with half the human players), false resumes. */
   | { type: 'pauseVote'; paused: boolean }
+  /**
+   * Demolish own buildings: unfinished sites are cancelled at once with a full refund; finished ones
+   * come down after a short countdown for half their cost. Sending it again during the countdown cancels.
+   */
+  | { type: 'demolish'; structures: EntityId[] }
   | { type: 'surrender' };
 
 

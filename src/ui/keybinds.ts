@@ -13,6 +13,7 @@ export type ActionId =
   | 'drawLine'
   | 'advanceLine'
   | 'disbandLine'
+  | 'demolish'
   | 'rotateStructure'
   | 'panUp'
   | 'panDown'
@@ -67,6 +68,7 @@ export const ACTIONS: readonly ActionInfo[] = [
   { id: 'drawLine', label: 'Draw frontline (hold + drag)', group: 'Orders', key: 'KeyF' },
   { id: 'advanceLine', label: 'Advance frontline', group: 'Orders', key: 'KeyV' },
   { id: 'disbandLine', label: 'Disband frontline', group: 'Orders', key: 'KeyN' },
+  { id: 'demolish', label: 'Demolish building / cancel construction', group: 'Orders', key: 'Delete' },
   { id: 'rotateStructure', label: 'Rotate structure', group: 'Orders', key: 'KeyR' },
   { id: 'slot1', label: 'Slot 1', group: 'Command card', key: 'KeyE' },
   { id: 'slot2', label: 'Slot 2', group: 'Command card', key: 'KeyR' },
@@ -108,7 +110,9 @@ export function defaultKeybinds(): Keybinds {
 }
 
 /** Bump when the default layout changes in a way saved binds can't merge with (settings reset them). */
-export const KEYBINDS_VERSION = 2;
+export const KEYBINDS_VERSION = 3;
+/** Oldest saved layout that still merges (newer versions only added actions). */
+export const KEYBINDS_COMPATIBLE_FROM = 2;
 
 /**
  * Actions that are live at the same time, so they must not share a key. Unit cards show orders and
@@ -118,7 +122,7 @@ export const KEYBINDS_VERSION = 2;
 function contextOf(id: ActionId): 'orders' | 'slots' | 'place' | 'global' {
   if (id.startsWith('slot')) return 'slots';
   if (id === 'rotateStructure') return 'place';
-  if (['attackMove', 'stop', 'hold', 'patrol', 'build', 'enter', 'unload', 'drawLine', 'advanceLine', 'disbandLine'].includes(id)) return 'orders';
+  if (['attackMove', 'stop', 'hold', 'patrol', 'build', 'enter', 'unload', 'drawLine', 'advanceLine', 'disbandLine', 'demolish'].includes(id)) return 'orders';
   return 'global';
 }
 
