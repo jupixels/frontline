@@ -3,7 +3,7 @@
 // tanks a little behind, AA further back, artillery well behind. Spacing follows the threat in front,
 // so gaps close when units die and reinforcements go where the line is weakest.
 
-import { TICK_SECONDS, type PlayerId, type Vec2 } from '../../shared/types';
+import { SIM_HZ, TICK_SECONDS, type PlayerId, type Vec2 } from '../../shared/types';
 import { dcos, dsin, headingTo, turnToward } from '../math/dmath';
 import { FLAG_FOREST } from '../path/navgrid';
 import type { Entity, Frontline, World } from '../world';
@@ -28,6 +28,8 @@ const LAG_WAIT = 9;
 /** ...unless it's so far behind (stuck, rerouting) that waiting would stall the whole line. */
 const LAG_GIVE_UP = 60;
 const CONTACT_TICKS = 4;
+/** Longest the march waits on stragglers in one go before carrying on. */
+const MAX_WAIT_TICKS = SIM_HZ * 3;
 /** Depth between ranks when a line is too short for everyone. */
 const RANK_DEPTH = 7;
 
@@ -222,7 +224,7 @@ export function advanceLine(world: World, player: PlayerId, lineId: number, dist
     if (u?.unit && u.domain !== 'air' && u.unit.speed < speed) speed = u.unit.speed;
   }
   if (speed === Infinity) speed = 10;
-  line.march = { dx: fx * sign, dz: fz * sign, left: sign * d, speed: speed * MARCH_PACE };
+  line.march = { dx: fx * sign, dz: fz * sign, left: sign * d, speed: speed * MARCH_PACE, waited: 0 };
   line.target = shifted(world, line.points, line.march.dx * line.march.left, line.march.dz * line.march.left);
   // Units in trenches climb out to move up with the line.
   for (const id of line.units) {
@@ -273,13 +275,23 @@ function marchTick(world: World, line: Frontline, members: Entity[]): void {
       }
     }
   }
-  // Wait for stragglers so the line arrives together (units hopelessly far behind don't hold it up).
+  // Wait for stragglers so the line arrives together, but not forever: after a few seconds the line
+  // carries on, and a unit that's stuck or far behind (rerouting round an obstacle) catches up.
+  let lagging = false;
   for (const u of members) {
     if (!u.lineSlot || u.domain === 'air' || u.inside) continue;
     const dx = u.lineSlot.x - u.pos.x;
     const dz = u.lineSlot.z - u.pos.z;
     const d2 = dx * dx + dz * dz;
-    if (d2 > LAG_WAIT * LAG_WAIT && d2 < LAG_GIVE_UP * LAG_GIVE_UP) return;
+    if (d2 > LAG_WAIT * LAG_WAIT && d2 < LAG_GIVE_UP * LAG_GIVE_UP) {
+      lagging = true;
+      break;
+    }
+  }
+  if (!lagging) m.waited = 0;
+  else if (m.waited < MAX_WAIT_TICKS) {
+    m.waited++;
+    return;
   }
   const step = Math.min(m.left, m.speed * TICK_SECONDS);
   const sx = m.dx * step;
@@ -287,7 +299,8 @@ function marchTick(world: World, line: Frontline, members: Entity[]): void {
   line.points = shifted(world, line.points, sx, sz);
   for (const u of members) {
     if (!u.lineSlot) continue;
-    u.lineSlot = { x: u.lineSlot.x + sx, z: u.lineSlot.z + sz };
+    // Keep each slot on ground the unit can stand on (the line may slide over rocks or water).
+    u.lineSlot = world.nav.snap({ x: u.lineSlot.x + sx, z: u.lineSlot.z + sz }, u.domain);
   }
   m.left -= step;
   if (m.left <= 1e-6) {
