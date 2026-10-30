@@ -1,5 +1,6 @@
 import { h } from '../dom';
 import { icon, type IconId } from '../icons';
+import { canInstall, onInstallChange, promptInstall } from '../install';
 import { normalizeRoomCode } from '../lobbyApi';
 import { loadRecord, ACHIEVEMENTS } from '../records';
 import type { SettingsStore } from '../settings';
@@ -25,6 +26,7 @@ export class MenuScreen implements Screen {
   private readonly codeInput: HTMLInputElement;
   private readonly joinError: HTMLElement;
   private busy = false;
+  private readonly offInstall: () => void;
 
   constructor(
     private readonly actions: MenuActions,
@@ -86,6 +88,12 @@ export class MenuScreen implements Screen {
         extra,
       );
 
+    // Shown only while the browser offers to install the game as its own app window.
+    const installItem = item('download', 'Install app', 'own window · desktop and start-menu shortcut', () => void promptInstall());
+    const syncInstall = () => (installItem.style.display = canInstall() ? '' : 'none');
+    syncInstall();
+    this.offInstall = onInstallChange(syncInstall);
+
     const rec = loadRecord();
     const unlocked = ACHIEVEMENTS.filter((a) => rec.achievements[a.id]).length;
     const firstVisit = rec.matches === 0 && !rec.tutorialDone;
@@ -113,6 +121,7 @@ export class MenuScreen implements Screen {
           item('medal', 'Service record', rec.matches ? `${rec.wins}/${rec.matches} won · ${unlocked}/${ACHIEVEMENTS.length} medals` : 'stats and medals', () => actions.record()),
           item('gear', 'Settings', 'graphics · audio · controls · accessibility', () => actions.settings()),
           item('credits', 'Credits', 'models · sound · music', () => actions.credits()),
+          installItem,
         ),
         h('label', { class: 'callsign' }, h('span', { class: 'label' }, 'Callsign'), nameInput),
       ),
@@ -176,6 +185,7 @@ export class MenuScreen implements Screen {
   }
 
   dispose(): void {
+    this.offInstall();
     // Keep a name typed but not yet committed with blur.
     const input = this.el.querySelector<HTMLInputElement>('.callsign-input');
     if (input && input.value.trim() && input.value !== this.settings.get().playerName) this.settings.update({ playerName: input.value });
