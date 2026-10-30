@@ -115,6 +115,7 @@ const app = new UiApp({
     for (const bus of ['master', 'music', 'sfx', 'voice'] as const) setVolume(bus, s.volume[bus]);
     document.documentElement.dataset.quality = s.graphics;
     match?.renderer.setQuality(s.graphics);
+    match?.renderer.setPathLines(s.allPaths ? 'all' : 'selected');
   },
 });
 app.start();

@@ -19,6 +19,7 @@ import { PostStack } from './post';
 import { LodInstancer } from './lod';
 import { gpuName, initialQuality, QUALITY, type QualityLevel, type QualitySettings } from './quality';
 import { CapturePointView } from './points';
+import { PathLines, type PathLineMode } from './paths';
 import { Terrain, WATER_LEVEL } from './terrain';
 import { UnitView, type ViewDef } from './units';
 import { Vfx, type MuzzleSize } from './vfx';
@@ -115,6 +116,7 @@ export class GameRenderer implements Picker {
   private readonly structureDefs: Record<string, RenderStructureDef>;
   private simFogAttached = false;
   private ext: SimViewExt | null = null;
+  private readonly paths: PathLines;
   private readonly listeners: [EventTarget, string, EventListener][] = [];
   private readonly wrecks: UnitView[] = [];
   /** Far-LOD instancers per unit type. */
@@ -179,6 +181,8 @@ export class GameRenderer implements Picker {
     this.scene.add(this.vfx.group);
     this.markers = new CommandMarkers((x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL));
     this.scene.add(this.markers.group);
+    this.paths = new PathLines((x, z) => Math.max(this.terrain.heightAt(x, z), WATER_LEVEL));
+    this.scene.add(this.paths.mesh);
     this.overlay.add(this.healthBars.mesh);
 
     for (const p of setup.players) this.teamColors.set(p.id, new THREE.Color(p.color));
@@ -503,6 +507,11 @@ export class GameRenderer implements Picker {
     return p;
   }
 
+  /** Path lines for the selection only (default), or for every own unit with orders. */
+  setPathLines(mode: PathLineMode): void {
+    this.paths.mode = mode;
+  }
+
   setSelection(ids: Iterable<EntityId>): void {
     this.selection = new Set(ids);
     for (const [id, v] of this.views) v.setSelected(this.selection.has(id));
@@ -513,6 +522,8 @@ export class GameRenderer implements Picker {
    * rally lines). TODO(ui): call this from the input controller right after submitting a command.
    */
   markCommand(cmd: Command): void {
+    if ('units' in cmd) this.paths.flash(cmd.units, this.time, 'queue' in cmd && !!cmd.queue);
+    else if (cmd.type === 'build') this.paths.flash([cmd.builder], this.time);
     switch (cmd.type) {
       case 'move':
         this.markers.ground(cmd.target.x, cmd.target.z, cmd.attackMove ? 'attackMove' : 'move');
@@ -761,6 +772,20 @@ export class GameRenderer implements Picker {
     }
     this.markers.hideRallies(shown);
     this.markers.update(dt, this.time);
+
+    const width = THREE.MathUtils.clamp(this.cam.viewDistance * 0.006, 0.4, 2.6);
+    this.paths.update(
+      this.ext,
+      this.localPlayer,
+      this.selection,
+      () => this.views.keys(),
+      (id) => {
+        const v = this.views.get(id);
+        return v && v.isAlive && v.cls !== 'structure' ? v.root.position : null;
+      },
+      this.time,
+      width,
+    );
   }
 
   // --- Picker ---

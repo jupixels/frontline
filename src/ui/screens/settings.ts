@@ -77,6 +77,7 @@ export class SettingsScreen implements Screen {
         slider(s.edgePanSpeed, 0, 2.5, 0.05, (v) => this.store.update({ edgePanSpeed: v }), (v) => (v === 0 ? 'Off' : `${v.toFixed(2)}×`)),
       ),
       row('Tooltips', 'Costs, counters, cooldowns and hotkeys when hovering buttons.', toggle(s.tooltips, (v) => this.store.update({ tooltips: v }))),
+      row('Path lines for all units', 'Show where every unit of yours is headed, not only the selected ones.', toggle(s.allPaths, (v) => this.store.update({ allPaths: v }))),
       row('Show FPS', 'Frame rate and sim tick in the top bar.', toggle(s.showFps, (v) => this.store.update({ showFps: v }))),
     );
   }
