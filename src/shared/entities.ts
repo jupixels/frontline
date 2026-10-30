@@ -44,6 +44,8 @@ export interface FrontlineView {
   readonly units: readonly EntityId[];
   /** Per point segment, 0..1 relative strength (weak spots get reinforcements first). */
   readonly strength: readonly number[];
+  /** While the line advances: where its points will be when the march ends. */
+  readonly target?: readonly Vec2[] | null;
 }
 
 /** Strategic superweapon of a player (cruise missile from the Strategic Command). */

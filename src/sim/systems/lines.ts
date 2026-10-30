@@ -3,7 +3,7 @@
 // tanks a little behind, AA further back, artillery well behind. Spacing follows the threat in front,
 // so gaps close when units die and reinforcements go where the line is weakest.
 
-import { TICK_SECONDS, type PlayerId, type Vec2 } from '../../shared/types';
+import { SIM_HZ, TICK_SECONDS, type PlayerId, type Vec2 } from '../../shared/types';
 import { dcos, dsin, headingTo, turnToward } from '../math/dmath';
 import { FLAG_FOREST } from '../path/navgrid';
 import type { Entity, Frontline, World } from '../world';
@@ -19,6 +19,24 @@ const THREAT_RANGE = 160;
 const MAX_POINTS = 32;
 /** Infantry look this far from their slot for woods or a trench. */
 const COVER_SEARCH = 14;
+/** Longest single advance order, meters. */
+const MAX_ADVANCE = 600;
+/** A marching line moves at this share of its slowest member's top speed (slopes and woods eat the rest). */
+const MARCH_PACE = 0.85;
+/** The march pauses while a member is more than this far behind its slot... */
+const LAG_WAIT = 9;
+/** ...unless it's so far behind (stuck, rerouting) that waiting would stall the whole line. */
+const LAG_GIVE_UP = 60;
+const CONTACT_TICKS = 4;
+/** Longest the march waits on stragglers in one go before carrying on. */
+const MAX_WAIT_TICKS = SIM_HZ * 3;
+/** Depth between ranks when a line is too short for everyone. */
+const RANK_DEPTH = 7;
+
+/** Room each unit needs along a line, by footprint: infantry spread out, vehicles get wide gaps. */
+function spacingOf(u: Entity): number {
+  return u.armor === 'infantry' ? 3.2 : Math.max(7, u.radius * 3);
+}
 
 type Role = 'inf' | 'at' | 'heavy' | 'light' | 'aa' | 'artillery' | 'air';
 
@@ -159,7 +177,7 @@ export function orderHoldLine(world: World, player: PlayerId, units: Entity[], p
       cz += u.pos.z / units.length;
     }
     const owner = units[0].owner;
-    line = { id: world.nextLineId++, owner, team: world.teamOf(owner), points: pts, facing: facingFor(world, owner, pts, { x: cx, z: cz }), units: [], strength: [], dirty: true };
+    line = { id: world.nextLineId++, owner, team: world.teamOf(owner), points: pts, facing: facingFor(world, owner, pts, { x: cx, z: cz }), units: [], strength: [], dirty: true, march: null, target: null };
     world.lines.set(line.id, line);
     change = 'formed';
   }
@@ -181,14 +199,33 @@ export function orderHoldLine(world: World, player: PlayerId, units: Entity[], p
   return line;
 }
 
+/**
+ * Advance (or pull back, negative) a whole line by `distance` meters along its facing. The line
+ * marches: it moves at the pace of its slowest member, waits for stragglers, keeps its spacing,
+ * and halts where it makes contact. Another advance during a march extends it.
+ */
 export function advanceLine(world: World, player: PlayerId, lineId: number, distance: number): void {
   const line = world.lines.get(lineId);
   if (!line || line.team !== world.teamOf(player) || !Number.isFinite(distance)) return;
-  const d = Math.max(-200, Math.min(200, distance));
-  const fx = dsin(line.facing) * d;
-  const fz = dcos(line.facing) * d;
-  const half = world.map.size / 2 - 2;
-  line.points = line.points.map((p) => ({ x: Math.max(-half, Math.min(half, p.x + fx)), z: Math.max(-half, Math.min(half, p.z + fz)) }));
+  const fx = dsin(line.facing);
+  const fz = dcos(line.facing);
+  // Carry on from a march in progress (signed along the facing).
+  const prior = line.march ? line.march.left * (line.march.dx * fx + line.march.dz * fz >= 0 ? 1 : -1) : 0;
+  const d = Math.max(-MAX_ADVANCE, Math.min(MAX_ADVANCE, prior + distance));
+  if (d * d < 1) {
+    line.march = null;
+    line.target = null;
+    return;
+  }
+  const sign = d > 0 ? 1 : -1;
+  let speed = Infinity;
+  for (const id of line.units) {
+    const u = world.entities.get(id);
+    if (u?.unit && u.domain !== 'air' && u.unit.speed < speed) speed = u.unit.speed;
+  }
+  if (speed === Infinity) speed = 10;
+  line.march = { dx: fx * sign, dz: fz * sign, left: sign * d, speed: speed * MARCH_PACE, waited: 0 };
+  line.target = shifted(world, line.points, line.march.dx * line.march.left, line.march.dz * line.march.left);
   // Units in trenches climb out to move up with the line.
   for (const id of line.units) {
     const u = world.entities.get(id);
@@ -201,8 +238,76 @@ export function advanceLine(world: World, player: PlayerId, lineId: number, dist
       }
     }
   }
-  line.dirty = true;
   world.emit({ type: 'line', line: line.id, owner: line.owner, change: 'advanced' });
+}
+
+/** The polyline moved by (dx, dz), kept inside the map. */
+function shifted(world: World, points: Vec2[], dx: number, dz: number): Vec2[] {
+  const half = world.map.size / 2 - 2;
+  return points.map((p) => ({ x: Math.max(-half, Math.min(half, p.x + dx)), z: Math.max(-half, Math.min(half, p.z + dz)) }));
+}
+
+/**
+ * One tick of a marching line: if nobody is lagging, slide the line (and every slot) forward at the
+ * line's pace; stop at the end, or as soon as an enemy is visible within weapon range of a member.
+ */
+function marchTick(world: World, line: Frontline, members: Entity[]): void {
+  const m = line.march!;
+  // Contact: halt and fight where we stand (checked every few ticks, staggered by line id).
+  if ((world.tick + line.id) % CONTACT_TICKS === 0) {
+    for (const u of members) {
+      let range = 0;
+      for (const w of u.weapons) if (w.def.range > range && w.def.delivery !== 'indirect') range = w.def.range;
+      if (range <= 0 || u.inside) continue;
+      let contact = false;
+      world.spatial.query(u.pos.x, u.pos.z, range, (o) => {
+        // Any enemy in reach counts, buildings too: the line stops and shoots rather than walk past.
+        if (o.dead || o.kind === 'point' || !world.areEnemies(line.team, o.team) || o.inside) return;
+        if (!world.fog.teamVisible(line.team, o.pos.x, o.pos.z)) return;
+        contact = true;
+        return true;
+      });
+      if (contact) {
+        line.march = null;
+        line.target = null;
+        line.dirty = true;
+        return;
+      }
+    }
+  }
+  // Wait for stragglers so the line arrives together, but not forever: after a few seconds the line
+  // carries on, and a unit that's stuck or far behind (rerouting round an obstacle) catches up.
+  let lagging = false;
+  for (const u of members) {
+    if (!u.lineSlot || u.domain === 'air' || u.inside) continue;
+    const dx = u.lineSlot.x - u.pos.x;
+    const dz = u.lineSlot.z - u.pos.z;
+    const d2 = dx * dx + dz * dz;
+    if (d2 > LAG_WAIT * LAG_WAIT && d2 < LAG_GIVE_UP * LAG_GIVE_UP) {
+      lagging = true;
+      break;
+    }
+  }
+  if (!lagging) m.waited = 0;
+  else if (m.waited < MAX_WAIT_TICKS) {
+    m.waited++;
+    return;
+  }
+  const step = Math.min(m.left, m.speed * TICK_SECONDS);
+  const sx = m.dx * step;
+  const sz = m.dz * step;
+  line.points = shifted(world, line.points, sx, sz);
+  for (const u of members) {
+    if (!u.lineSlot) continue;
+    // Keep each slot on ground the unit can stand on (the line may slide over rocks or water).
+    u.lineSlot = world.nav.snap({ x: u.lineSlot.x + sx, z: u.lineSlot.z + sz }, u.domain);
+  }
+  m.left -= step;
+  if (m.left <= 1e-6) {
+    line.march = null;
+    line.target = null;
+    line.dirty = true;
+  }
 }
 
 export function disbandLine(world: World, player: PlayerId, lineId: number): void {
@@ -320,6 +425,31 @@ function assignSlots(world: World, line: Frontline, members: Entity[]): void {
     const free = q.filter((_, i) => !taken.has(i));
     rest.forEach((u, k) => ts.set(u, free[k]));
   }
+  // Anti-clumping: every unit gets room for its footprint along the line. A line too short for
+  // everyone gets extra ranks behind it; within a rank, units are pushed apart to their spacing.
+  const rankOf = new Map<Entity, number>();
+  const L = lengthOf(line.points);
+  if (along.length && L > 0) {
+    const order = [...along].sort((a, b) => ts.get(a)! - ts.get(b)! || a.id - b.id);
+    let need = 0;
+    for (const u of order) need += spacingOf(u);
+    const ranks = Math.max(1, Math.ceil(need / L));
+    for (let r = 0; r < ranks; r++) {
+      const row = order.filter((_, i) => i % ranks === r);
+      if (!row.length) continue;
+      const sp = row.map(spacingOf);
+      const at = row.map((u) => ts.get(u)! * L);
+      at[0] = Math.max(at[0], sp[0] / 2);
+      for (let i = 1; i < row.length; i++) at[i] = Math.max(at[i], at[i - 1] + (sp[i - 1] + sp[i]) / 2);
+      const last = row.length - 1;
+      at[last] = Math.min(at[last], L - sp[last] / 2);
+      for (let i = last - 1; i >= 0; i--) at[i] = Math.min(at[i], at[i + 1] - (sp[i] + sp[i + 1]) / 2);
+      row.forEach((u, i) => {
+        ts.set(u, Math.max(0, Math.min(1, at[i] / L)));
+        rankOf.set(u, r);
+      });
+    }
+  }
   const spread = (list: Entity[], lo: number, hi: number) => {
     list.sort((a, b) => a.id - b.id);
     list.forEach((u, k) => ts.set(u, lo + ((hi - lo) * (k + 0.5)) / list.length));
@@ -333,7 +463,8 @@ function assignSlots(world: World, line: Frontline, members: Entity[]): void {
   for (const u of members) {
     const role = roles.get(u)!;
     const p = pointAt(line.points, ts.get(u) ?? 0.5);
-    let slot = { x: p.x - fx * BACK[role], z: p.z - fz * BACK[role] };
+    const back = BACK[role] + (rankOf.get(u) ?? 0) * RANK_DEPTH;
+    let slot = { x: p.x - fx * back, z: p.z - fz * back };
     if ((role === 'inf' || role === 'at') && !u.inside) {
       const cover = coverNear(world, u, slot);
       if (cover) slot = { x: cover.at.x, z: cover.at.z };
@@ -364,9 +495,14 @@ export function lineSystem(world: World): void {
       removeLine(world, line);
       continue;
     }
-    if (line.dirty || (world.tick + line.id) % UPDATE_TICKS === 0) {
+    // Re-plan slots when membership or shape changes, and now and then while holding (threat shifts).
+    if (line.dirty || (!line.march && (world.tick + line.id) % UPDATE_TICKS === 0)) {
       assignSlots(world, line, members);
       line.dirty = false;
+    }
+    if (line.march) {
+      marchTick(world, line, members);
+      line.target = line.march ? shifted(world, line.points, line.march.dx * line.march.left, line.march.dz * line.march.left) : null;
     }
   }
 }
@@ -378,11 +514,18 @@ export function lineTick(world: World, e: Entity): void {
   if (!slot || !line || e.inside) return;
   const dx = slot.x - e.pos.x;
   const dz = slot.z - e.pos.z;
-  if (dx * dx + dz * dz > 4) {
-    if (!e.path) setPath(world, e, slot);
-    if (!followPath(world, e, 1.2)) return;
+  // On the march the slot keeps moving: follow it closely so the line stays straight.
+  const marching = !!line.march;
+  if (dx * dx + dz * dz > (marching ? 0.36 : 4)) {
+    const g = e.path?.goal;
+    if (!g || (g.x - slot.x) * (g.x - slot.x) + (g.z - slot.z) * (g.z - slot.z) > 16) setPath(world, e, slot);
+    if (!followPath(world, e, marching ? 0.4 : 1.2)) return;
   }
   e.path = null;
+  if (marching) {
+    if (e.unit) e.heading = turnToward(e.heading, line.facing, e.unit.turnRate * TICK_SECONDS);
+    return;
+  }
   // In position: get into the trench/ruin at the slot if there is one, else face the enemy.
   if (e.armor === 'infantry') {
     let shelter: Entity | null = null;

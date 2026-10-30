@@ -197,7 +197,7 @@ export class CommandCard {
       );
       if (lines.length) {
         buttons.push(
-          order('advance', 'advance', 'Advance line', k.advanceLine, 'Push the whole line 40 m toward the enemy.', (shift) => {
+          order('advance', 'advance', 'Advance line', k.advanceLine, `Push the whole line 40 m toward the enemy. It marches together at its slowest unit's pace, shoots on the way, and halts to fight where it meets the enemy. To attack somewhere specific, attack-move (${keyLabel(k.attackMove)}) or right-click the ground in front of the line: it advances level with that point.`, (shift) => {
             for (const line of lines) this.issue({ type: 'advanceLine', line, distance: shift ? -40 : 40 });
           }, false, { keys: [['Shift', 'Pull back 40 m']] } as Partial<CardButton>),
           order('disband', 'disband', 'Disband line', k.disbandLine, 'Units stop holding the line and stay where they are.', () => lines.forEach((line) => this.issue({ type: 'disbandLine', line }))),

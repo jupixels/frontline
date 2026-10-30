@@ -128,7 +128,7 @@ export class Simulation implements SimView, SimViewExt {
       if (e.lineSlot) h.num(e.lineSlot.x).num(e.lineSlot.z);
     }
     for (const l of w.lines.values()) {
-      h.num(l.id).num(l.owner).num(l.facing).num(l.units.length);
+      h.num(l.id).num(l.owner).num(l.facing).num(l.units.length).num(l.march ? l.march.left : -1);
       for (const p of l.points) h.num(p.x).num(p.z);
     }
     for (const m of w.missiles) h.num(m.player).num(m.at.x).num(m.at.z).num(m.arrive);

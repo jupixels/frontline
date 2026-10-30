@@ -48,6 +48,11 @@ export interface InputOptions {
   onPlacementHover?: (screen: { x: number; y: number } | null, world: Vec2 | null, valid: boolean) => void;
   /** Visible feedback for an issued order (click marker). */
   onOrderMarker?: (screen: { x: number; y: number }, kind: 'move' | 'attack' | 'rally' | 'build') => void;
+  /**
+   * Attack with a frontline: when the selection holds one line and `at` is in front of it, advance the
+   * line there in formation. Returns true if it did (then no move order is sent).
+   */
+  lineAttack?: (units: EntityId[], at: Vec2) => boolean;
   /** Can these units board/garrison `target`? (Right-click on a transport or building enters it.) */
   canEnter?: (units: EntityId[], target: EntityState) => boolean;
   /** The frontline being drawn (screen points), or null when the stroke ends. */
@@ -291,7 +296,9 @@ export class InputController {
       const units = this.units();
       if (p && units.length) {
         if (m.kind === 'patrol') this.issue({ type: 'patrol', units, target: p, queue: e.shiftKey });
-        else this.issue({ type: 'move', units, target: p, attackMove: true, queue: e.shiftKey });
+        else if (!e.shiftKey && this.opts.lineAttack?.(units, p)) {
+          // The whole line advanced there in formation.
+        } else this.issue({ type: 'move', units, target: p, attackMove: true, queue: e.shiftKey });
         this.opts.onOrderMarker?.(at, 'attack');
       }
       if (!e.shiftKey) this.setMode({ kind: 'none' });
@@ -506,6 +513,12 @@ export class InputController {
     }
     if (target && target.owner >= 0 && target.kind !== 'point' && this.hostile(target)) {
       this.issue({ type: 'attack', units, targetId: target.id, queue });
+      this.opts.onOrderMarker?.({ x: sx, y: sy }, 'attack');
+      return;
+    }
+    // Right-click ground in front of a selected frontline: the line attacks there together.
+    const ground = !queue ? this.picker.pickGround(sx, sy) : null;
+    if (ground && this.opts.lineAttack?.(units, ground)) {
       this.opts.onOrderMarker?.({ x: sx, y: sy }, 'attack');
       return;
     }
