@@ -109,7 +109,7 @@ export class LodInstancer {
     if (i >= CAPACITY) return;
     // root carries position + yaw, body carries terrain tilt/bank and scale.
     this.q.multiplyQuaternions(view.root.quaternion, view.body.quaternion);
-    this.s.setScalar(view.scale);
+    this.s.copy(view.body.scale);
     this.m.compose(this.p.copy(view.root.position).add(view.body.position), this.q, this.s);
     for (const part of this.poses[pose]) {
       part.mesh.setMatrixAt(i, this.m);

@@ -1,5 +1,5 @@
 /* Frontline UI.
-   Dark tactical glass: graphite panels with hairline borders, one brass accent for interaction,
+   Dark tactical glass: graphite panels with hairline borders, one green accent for interaction,
    condensed display type, tabular numbers. Tokens first; every component reads them. */
 
 :root {
@@ -24,12 +24,12 @@
   --text-bright: #f8faf4;
 
   /* Accent (interaction, selection, hotkeys) */
-  --accent: #e8b450;
-  --accent-2: #f7d07f;
-  --accent-ink: #1c1406;
-  --accent-soft: rgba(232, 180, 80, 0.13);
-  --accent-line: rgba(232, 180, 80, 0.55);
-  --accent-glow: rgba(232, 180, 80, 0.32);
+  --accent: #9dff7a;
+  --accent-2: #c8ffb2;
+  --accent-ink: #0b1a06;
+  --accent-soft: rgba(157, 255, 122, 0.13);
+  --accent-line: rgba(157, 255, 122, 0.55);
+  --accent-glow: rgba(157, 255, 122, 0.32);
 
   /* Status */
   --ok: #7cc96c;
@@ -41,7 +41,7 @@
   --info: #6db7e2;
   --info-soft: rgba(109, 183, 226, 0.15);
   --power: #7fd3f0;
-  --supply: #e8b450;
+  --supply: #e3b23c;
 
   --hp-good: #78c862;
   --hp-mid: #e7b546;
@@ -257,7 +257,7 @@ a { color: var(--accent); }
   inset: -1px;
   pointer-events: none;
   border-radius: inherit;
-  --b: rgba(232, 180, 80, 0.75);
+  --b: rgba(157, 255, 122, 0.75);
   background:
     linear-gradient(var(--b), var(--b)) top left / 12px 1.5px no-repeat,
     linear-gradient(var(--b), var(--b)) top left / 1.5px 12px no-repeat,
@@ -293,7 +293,7 @@ button.swatch:disabled { cursor: default; }
 .keycap:hover { border-color: var(--accent-line); color: var(--text-bright); }
 .keycap.capturing { color: var(--accent); border-color: var(--accent); animation: pulse 1s infinite; }
 .keycap.static { cursor: default; min-width: 0; min-height: 0; font-size: var(--fs-2xs); padding: 1px 6px; color: var(--text-2); }
-.kbd { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; font-family: var(--mono); font-size: 10px; line-height: 1; color: var(--accent); background: rgba(232, 180, 80, 0.1); border: 1px solid rgba(232, 180, 80, 0.4); border-radius: 3px; }
+.kbd { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; font-family: var(--mono); font-size: 10px; line-height: 1; color: var(--accent); background: rgba(157, 255, 122, 0.1); border: 1px solid rgba(157, 255, 122, 0.4); border-radius: 3px; }
 
 .spinner { width: 16px; height: 16px; border: 2px solid var(--line-3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; flex: none; }
 
@@ -309,7 +309,7 @@ button.swatch:disabled { cursor: default; }
 .slider { display: flex; align-items: center; gap: var(--sp-3); min-width: 280px; }
 .slider-val { width: 56px; text-align: right; color: var(--accent); font-size: var(--fs-sm); }
 .range { -webkit-appearance: none; appearance: none; flex: 1; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent) var(--fill, 50%), rgba(255, 255, 255, 0.12) var(--fill, 50%)); outline: none; cursor: pointer; }
-.range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--text-bright); border: 3px solid var(--accent); box-shadow: 0 0 0 4px rgba(232, 180, 80, 0.12); }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--text-bright); border: 3px solid var(--accent); box-shadow: 0 0 0 4px rgba(157, 255, 122, 0.12); }
 .range::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--text-bright); border: 3px solid var(--accent); }
 
 .segmented { display: inline-flex; padding: 3px; gap: 2px; background: rgba(4, 6, 7, 0.7); border: 1px solid var(--line-2); border-radius: var(--r-sm); }
@@ -378,7 +378,7 @@ button.swatch:disabled { cursor: default; }
 @keyframes pop { from { opacity: 0; transform: scale(0.96); } }
 @keyframes slide-in { from { opacity: 0; transform: translateX(-16px); } }
 @keyframes flash-red { 50% { background: rgba(239, 93, 72, 0.24); } }
-@keyframes card-flash { from { background: rgba(232, 180, 80, 0.4); } }
+@keyframes card-flash { from { background: rgba(157, 255, 122, 0.4); } }
 @keyframes marker { from { opacity: 1; transform: scale(1.5); } to { opacity: 0; transform: scale(0.4); } }
 @keyframes marker-diamond { from { opacity: 1; transform: rotate(45deg) scale(1.5); } to { opacity: 0; transform: rotate(45deg) scale(0.4); } }
 @keyframes banner-in { from { opacity: 0; letter-spacing: 0.7em; } }

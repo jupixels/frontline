@@ -306,7 +306,7 @@ export class MatchUi {
     const units = this.input.units();
     if (units.length) {
       this.ctx.issue({ type: 'move', units, target: p, queue: shift });
-      this.minimap.ping(p, '#e8b450');
+      this.minimap.ping(p, '#9dff7a');
     }
   }
 
@@ -431,7 +431,7 @@ export class MatchUi {
   }
 
   /** Flash a spot on the minimap. */
-  ping(pos: Vec2, color = '#e8b450'): void {
+  ping(pos: Vec2, color = '#9dff7a'): void {
     this.minimap.ping(pos, color);
   }
 
@@ -575,7 +575,7 @@ export class MatchUi {
   private alert(a: Alert): void {
     this.alerts.push(a);
     if (a.pos && (a.kind === 'attack' || a.kind === 'lost')) this.minimap.ping(a.pos, '#ef5d48');
-    else if (a.pos && a.kind === 'capture') this.minimap.ping(a.pos, '#e8b450');
+    else if (a.pos && a.kind === 'capture') this.minimap.ping(a.pos, '#9dff7a');
   }
 
   private attackAlert(at: Vec2, structure: boolean): void {

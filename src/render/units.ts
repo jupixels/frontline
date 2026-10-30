@@ -12,7 +12,9 @@ const VARIANTS: Record<string, string[]> = {
 };
 
 /** Infantry are drawn larger than life so they read at RTS zoom. */
-export const INFANTRY_SCALE = 1.6;
+export const INFANTRY_SCALE = 3.2;
+/** Extra width and depth on top of that, so soldiers read as sturdier figures. */
+export const INFANTRY_GIRTH = 1.2;
 
 /** Clip-name candidates per animation state, first match wins (vehicles vs soldiers differ). */
 const CLIPS = {
@@ -104,8 +106,9 @@ export class UnitView {
     this.height = this.cls === 'infantry' ? 1.8 * this.scale : def.radius;
     this.root.userData.entityId = id;
     this.root.add(this.body);
-    this.body.scale.setScalar(this.scale);
-    const r = def.radius * (this.cls === 'infantry' ? 1.3 : 1);
+    const girth = this.cls === 'infantry' ? INFANTRY_GIRTH : 1;
+    this.body.scale.set(this.scale * girth, this.scale, this.scale * girth);
+    const r = def.radius * (this.cls === 'infantry' ? 1.8 : 1);
     this.ring = new THREE.Mesh(
       new THREE.RingGeometry(r * 1.15, r * 1.35, 48).rotateX(-Math.PI / 2),
       new THREE.MeshBasicMaterial({ color: 0x9dff7a, transparent: true, opacity: 0.9, depthWrite: false, depthTest: false, toneMapped: false }),
