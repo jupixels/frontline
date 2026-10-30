@@ -112,6 +112,13 @@ export class UnitView {
     loadModel(def.model).then((m) => this.attach(m));
   }
 
+  private edgeMat: THREE.MeshBasicMaterial | null = null;
+
+  /** Neutral buildings change hands when garrisoned: recolor the ownership edge. */
+  setEdgeColor(c: THREE.Color): void {
+    if (this.edgeMat && !this.edgeMat.color.equals(c)) this.edgeMat.color.copy(c);
+  }
+
   /** Concrete pad under a building with a team-colored edge, so ownership reads from above. */
   private buildFoundation(): THREE.Object3D {
     const [w, d] = this.def.footprint ?? [this.def.radius * 2, this.def.radius * 2];
@@ -124,6 +131,7 @@ export class UnitView {
     slab.receiveShadow = true;
     g.add(slab);
     const edgeMat = new THREE.MeshBasicMaterial({ color: this.teamColor, transparent: true, opacity: 0.85, depthWrite: false, toneMapped: false });
+    this.edgeMat = edgeMat;
     const t = 0.5;
     for (const [sx, sz, ex, ez] of [[w, t, 0, d / 2], [w, t, 0, -d / 2], [t, d, w / 2, 0], [t, d, -w / 2, 0]]) {
       const bar = new THREE.Mesh(new THREE.PlaneGeometry(sx * 1.04, sz).rotateX(-Math.PI / 2), edgeMat);
@@ -153,6 +161,23 @@ export class UnitView {
     const model = cloneModel(prepared);
     const size = prepared.bounds.getSize(_v);
     this.height = size.y * this.scale;
+    // Small prop models standing in for buildings (ruins, trenches) are stretched to their footprint.
+    if (this.cls === 'structure' && this.def.footprint) {
+      const [fw, fd] = this.def.footprint;
+      const len = Math.max(size.x, size.z);
+      if (len < Math.max(fw, fd) * 0.6) {
+        const aspect = fw / fd;
+        if (aspect > 2 || aspect < 0.5) {
+          // A long low wall (trench): stretch along its length only.
+          const along = size.x >= size.z ? fw / size.x : fd / size.z;
+          this.body.scale.set(size.x >= size.z ? along : 1.4, 1.2, size.x >= size.z ? 1.4 : along);
+        } else {
+          const k = (Math.max(fw, fd) * 0.85) / len;
+          this.body.scale.multiplyScalar(k);
+          this.height = size.y * k;
+        }
+      }
+    }
     // Big warships come in at real-world length (140-170 m); draw them at a length that matches their
     // footprint in the game, or they cover half a strait.
     if (this.cls === 'ship') {

@@ -87,6 +87,7 @@ function simExt(sim: SimView): SimViewExt | null {
 }
 
 const _v = new THREE.Vector3();
+const NEUTRAL_EDGE = new THREE.Color('#d8d8d0');
 const _v2 = new THREE.Vector3();
 const _dir = new THREE.Vector3();
 const _frustum = new THREE.Frustum();
@@ -591,7 +592,8 @@ export class GameRenderer implements Picker {
       const v = this.views.get(e.id);
       if (!v || !v.root.visible || !v.isAlive) continue;
       const rank = e.rank ?? 0;
-      const garrison = e.kind === 'structure' ? (e.cargo?.length ?? 0) : 0;
+      // Garrisons and loaded transports show how many are inside (own and allied only for transports).
+      const garrison = e.kind === 'structure' || this.allies.has(e.owner) ? (e.cargo?.length ?? 0) : 0;
       if (!rank && !garrison) continue;
       _v.copy(v.root.position);
       _v.y += v.height + (v.cls === 'infantry' ? 1.6 : v.cls === 'structure' ? 4 : 3);
@@ -658,6 +660,7 @@ export class GameRenderer implements Picker {
         if (visible) v.seenOnce = true;
         else visible = v.seenOnce && this.fog.isExplored(e.pos.x, e.pos.z);
         v.build = this.ext ? this.ext.buildProgress(e.id) : 1;
+        v.setEdgeColor(this.teamColors.get(e.owner) ?? NEUTRAL_EDGE);
       }
       v.root.visible = visible;
       const d = camPos.distanceTo(v.root.position);
