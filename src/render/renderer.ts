@@ -11,6 +11,7 @@ import type { Picker } from '../shared/view';
 import { RtsCamera } from './camera';
 import { DecalKind, DecalMap } from './decals';
 import { atmosphereFor, Environment } from './environment';
+import { BattleScars } from './scars';
 import { Scenery } from './scenery';
 import { MISSILE_ARC, TacticalLayer } from './tactical';
 import { FogOfWar, LocalVisionSource, SimFogSource, type VisibilitySource } from './fog';
@@ -120,6 +121,7 @@ export class GameRenderer implements Picker {
   private readonly paths: PathLines;
   private readonly listeners: [EventTarget, string, EventListener][] = [];
   private readonly wrecks: UnitView[] = [];
+  private readonly scars: BattleScars;
   /** Far-LOD instancers per unit type. */
   private readonly lods = new Map<string, LodInstancer>();
   private readonly teamColors = new Map<number, THREE.Color>();
@@ -167,6 +169,8 @@ export class GameRenderer implements Picker {
     this.decals = new DecalMap(setup.mapSize * 1.3, this.quality.decalResolution);
     this.terrain.setDecals(this.decals.texture, this.decals.bounds);
     this.water.setDecals(this.decals.texture, this.decals.bounds);
+    this.scars = new BattleScars((x, z) => this.terrain.heightAt(x, z));
+    this.scene.add(this.scars.group);
     void this.terrain.loadTextures(this.quality.level === 'ultra' ? 1024 : 512);
     void this.env.loadHdri();
 
@@ -244,6 +248,7 @@ export class GameRenderer implements Picker {
     this.wrecks.length = 0;
     this.points.clear();
     this.decals.dispose();
+    this.scars.dispose();
     this.scenery.dispose();
     this.tactical.dispose();
     this.vfx.dispose();
@@ -262,6 +267,7 @@ export class GameRenderer implements Picker {
     this.env.setShadowMapSize(q.shadowMapSize);
     this.scenery?.setShadows(level === 'high' || level === 'ultra');
     this.vfx.setQuality(q);
+    this.decals.setTrackFade(this.scars.setQuality(level));
     this.post.apply(q);
     this.resize();
     try {
@@ -343,6 +349,8 @@ export class GameRenderer implements Picker {
           if (v.becomeWreck()) {
             this.onDeath(v);
             this.wrecks.push(v);
+            this.scars.keepWreck(v);
+            if (v.cls === 'structure') this.leaveRubble(v);
           } else v.dispose();
           break;
         }
@@ -612,6 +620,14 @@ export class GameRenderer implements Picker {
     this.renderer.autoClear = true;
   }
 
+  /** A destroyed building leaves a rubble pile and a wide burn mark that stay for the rest of the match. */
+  private leaveRubble(v: UnitView): void {
+    const [w, d] = v.def.footprint ?? [10, 10];
+    const p = v.root.position;
+    this.decals.stamp(DecalKind.Scorch, p.x, p.z, w * 1.1, d * 1.1, v.root.rotation.y, 0.9);
+    this.scars.addRubble(p.x, p.z, w, d, v.root.rotation.y);
+  }
+
   /** A demolished building folds down in a cloud of dust (no fire, no wreck: it wasn't destroyed). */
   private collapse(id: EntityId, x: number, z: number): void {
     if (!this.fog.isVisible(x, z) && !this.views.has(id)) return;
@@ -753,10 +769,10 @@ export class GameRenderer implements Picker {
     v.trackAcc += v.speed * dt;
     if (v.cls === 'vehicle') {
       const tracked = !!v.def.turretNode || v.def.armor === 'heavy';
-      if (v.trackAcc > 1.1) {
+      if (v.trackAcc > 1.6) {
         v.trackAcc = 0;
         if (!this.terrain.isWater(p.x, p.z)) {
-          this.decals.stamp(tracked ? DecalKind.Tracks : DecalKind.Wheels, p.x - fx * r * 0.4, p.z - fz * r * 0.4, 1.6, r * 1.25, yaw, tracked ? 0.85 : 0.55);
+          this.decals.stamp(tracked ? DecalKind.Tracks : DecalKind.Wheels, p.x - fx * r * 0.4, p.z - fz * r * 0.4, 1.9, r * 1.25, yaw, tracked ? 0.6 : 0.4);
         }
       }
       if (this.quality.dustTrails && v.speed > 1.5) this.vfx.dust(p.x - fx * r, p.z - fz * r, v.speed, r * 0.6, dt);
@@ -779,6 +795,7 @@ export class GameRenderer implements Picker {
       w.updateWreck(dt, this.animateThisFrame(w, camPos));
       if (!w.deathFxDone && w.crashed) this.onDeath(w);
       if (w.wreckDone) {
+        this.scars.forget(w);
         w.dispose();
         this.wrecks.splice(i, 1);
       }
