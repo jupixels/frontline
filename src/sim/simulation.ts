@@ -16,6 +16,7 @@ import { canEnter, cargoSystem } from './systems/containers';
 import { lineSystem } from './systems/lines';
 import { pauseSystem, votesNeeded } from './systems/pause';
 import { superweaponStatus, superweaponSystem } from './systems/superweapon';
+import { demolishSystem } from './systems/demolish';
 import { veterancySystem } from './systems/veterancy';
 import { captureSystem, victorySystem } from './systems/victory';
 import { canCommand, World, type SimContent } from './world';
@@ -99,6 +100,7 @@ export class Simulation implements SimView, SimViewExt {
     readinessSystem(w);
     captureSystem(w);
     victorySystem(w);
+    demolishSystem(w);
     deathSystem(w);
     w.tick++;
     this.proposedEvents = w.proposed;
@@ -122,7 +124,7 @@ export class Simulation implements SimView, SimViewExt {
       for (const a of e.abilities) h.num(a.cooldown);
       h.str(e.entrench).num(e.entrenchAt).num(e.boostUntil).num(e.ambush ? 1 : 0).num(e.readiness).num(e.stock).num(e.truck).num(e.truckReadyAt);
       if (e.haul) h.num(e.haul.source).str(e.haul.phase).num(e.haul.cargo);
-      h.num(e.inside).num(e.firedAt).num(e.cargo.length).num(e.suppression).num(e.xp).num(e.rank).num(e.maxHp).num(e.line);
+      h.num(e.inside).num(e.demolishAt).num(e.firedAt).num(e.cargo.length).num(e.suppression).num(e.xp).num(e.rank).num(e.maxHp).num(e.line);
       if (e.lineSlot) h.num(e.lineSlot.x).num(e.lineSlot.z);
     }
     for (const l of w.lines.values()) {

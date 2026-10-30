@@ -211,6 +211,15 @@ describe('keybinds & settings', () => {
     expect(s.keybindsVersion).toBe(KEYBINDS_VERSION);
   });
 
+  it('keeps custom binds saved with layout v2 and adds Demolish on Delete', () => {
+    const saved: Record<string, string> = { ...defaultKeybinds(), hold: 'KeyG', enter: 'KeyM' };
+    delete saved.demolish; // v2 had no Demolish action
+    const s = sanitizeSettings({ keybinds: saved, keybindsVersion: 2 });
+    expect(s.keybinds.hold).toBe('KeyG');
+    expect(s.keybinds.demolish).toBe('Delete');
+    expect(s.keybindsVersion).toBe(KEYBINDS_VERSION);
+  });
+
   it('resolves a stored clash with the pan keys back to the default', () => {
     const s = sanitizeSettings({ keybinds: { hold: 'KeyW' }, keybindsVersion: KEYBINDS_VERSION });
     expect(s.keybinds.panUp).toBe('KeyW');

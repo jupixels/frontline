@@ -1,5 +1,5 @@
 import type { TeamPalette } from './teamColors';
-import { ACTIONS, conflicts, defaultKeybinds, KEYBINDS_VERSION, rebind, type ActionId, type Keybinds } from './keybinds';
+import { ACTIONS, conflicts, defaultKeybinds, KEYBINDS_COMPATIBLE_FROM, KEYBINDS_VERSION, rebind, type ActionId, type Keybinds } from './keybinds';
 
 export type QualityPreset = 'low' | 'medium' | 'high' | 'ultra';
 
@@ -81,8 +81,10 @@ export function sanitizeSettings(raw: unknown): Settings {
   const r = raw as Partial<Settings>;
   const vol = (r.volume ?? {}) as Partial<VolumeSettings>;
   const keys = defaultKeybinds();
-  // Binds saved with an older layout start over from the new defaults (WASD became camera panning).
-  if (r.keybinds && typeof r.keybinds === 'object' && r.keybindsVersion === KEYBINDS_VERSION) {
+  // Binds saved before WASD became camera panning (v1) start over from the defaults. Later versions only
+  // added actions (v3: demolish on Delete), so they merge and new actions take their defaults.
+  const v = typeof r.keybindsVersion === 'number' ? r.keybindsVersion : 0;
+  if (r.keybinds && typeof r.keybinds === 'object' && v >= KEYBINDS_COMPATIBLE_FROM && v <= KEYBINDS_VERSION) {
     for (const a of ACTIONS) {
       const v = (r.keybinds as Record<string, unknown>)[a.id];
       if (typeof v === 'string' && v) keys[a.id] = v;

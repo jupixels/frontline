@@ -5,7 +5,7 @@ import type { CommandRole, MatchSetup, PlayerId, TeamId, VictoryMode } from '../
  * Wire protocol. Every message is plain JSON with a `t` tag. Bump PROTOCOL_VERSION on any
  * incompatible change; peers with a different version are rejected at the lobby.
  */
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 /** Transport-level peer id (random per page load). */
 export type PeerId = string;

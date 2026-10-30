@@ -395,6 +395,9 @@ export class GameRenderer implements Picker {
         case 'built':
           this.ensureView(sim, ev.id);
           break;
+        case 'demolish':
+          if (ev.state === 'done') this.collapse(ev.id, ev.at.x, ev.at.z);
+          break;
       }
     }
   }
@@ -595,6 +598,18 @@ export class GameRenderer implements Picker {
     this.renderer.autoClear = true;
   }
 
+  /** A demolished building folds down in a cloud of dust (no fire, no wreck: it wasn't destroyed). */
+  private collapse(id: EntityId, x: number, z: number): void {
+    if (!this.fog.isVisible(x, z) && !this.views.has(id)) return;
+    const v = this.views.get(id);
+    const [w, d] = v?.def.footprint ?? [10, 10];
+    const r = Math.max(w, d) * 0.55;
+    this.vfx.smokeScreen(x, z, r, 3);
+    for (let i = 0; i < 4; i++) this.vfx.groundHit(x + (Math.random() - 0.5) * w * 0.7, z + (Math.random() - 0.5) * d * 0.7);
+    this.decals.stamp(DecalKind.Scorch, x, z, w * 0.8, d * 0.8, 0, 0.35);
+    this.shake(0.25, x, z);
+  }
+
   /** Rank chevrons, garrison counts, frontline ribbons and missiles. */
   private updateTactical(sim: SimView): void {
     const t = this.tactical;
@@ -605,11 +620,14 @@ export class GameRenderer implements Picker {
       const rank = e.rank ?? 0;
       // Garrisons and loaded transports show how many are inside (own and allied only for transports).
       const garrison = e.kind === 'structure' || this.allies.has(e.owner) ? (e.cargo?.length ?? 0) : 0;
-      if (!rank && !garrison) continue;
+      // Buildings being demolished show their countdown to everyone who can see them.
+      const demolishIn = e.demolishAt ? Math.max(0, Math.ceil((e.demolishAt - (sim.gameTick ?? sim.tick)) * TICK_SECONDS)) : -1;
+      if (!rank && !garrison && demolishIn < 0) continue;
       _v.copy(v.root.position);
       _v.y += v.height + (v.cls === 'infantry' ? 1.6 : v.cls === 'structure' ? 4 : 3);
       if (!_frustum.containsPoint(_v)) continue;
-      if (garrison) t.badge(e.id, `g${garrison}`, _v, 4.5);
+      if (demolishIn >= 0) t.badge(e.id, `d${demolishIn}`, _v, 4.5);
+      else if (garrison) t.badge(e.id, `g${garrison}`, _v, 4.5);
       else t.badge(e.id, `r${rank}`, _v, v.cls === 'infantry' ? 1.3 : 2.4);
     }
     t.end();

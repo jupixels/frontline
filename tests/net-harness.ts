@@ -105,7 +105,25 @@ export class VirtualPeer {
   private issueCommands(net: LockstepSession, sim: Simulation): void {
     for (const player of net.controlledPlayers()) {
       if (this.script.next() < 0.5) continue;
-      const units = [...sim.entities()].filter((e) => e.owner === player && this.script.next() < 0.6).map((e) => e.id);
+      // Now and then: put up a power plant, or demolish/cancel what's standing (lockstep must agree on both).
+      const roll = this.script.next();
+      const own = [...sim.entities()].filter((e) => e.owner === player);
+      const eng = own.find((e) => e.type === 'engineer');
+      const hq = own.find((e) => e.type === 'hq');
+      if (roll < 0.08 && eng && hq) {
+        net.submit({ type: 'build', builder: eng.id, structure: 'power_plant', at: { x: hq.pos.x + this.script.range(-50, 50), z: hq.pos.z + this.script.range(-50, 50) }, rotation: 0 }, player);
+        this.submitted++;
+        continue;
+      }
+      if (roll < 0.14) {
+        const structures = own.filter((e) => e.kind === 'structure').map((e) => e.id);
+        if (structures.length) {
+          net.submit({ type: 'demolish', structures }, player);
+          this.submitted++;
+          continue;
+        }
+      }
+      const units = own.filter((e) => e.kind === 'unit' && this.script.next() < 0.6).map((e) => e.id);
       if (!units.length) continue;
       net.submit({ type: 'move', units, target: { x: this.script.range(-200, 200), z: this.script.range(-200, 200) } }, player);
       this.submitted++;
