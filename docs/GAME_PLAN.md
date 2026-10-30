@@ -197,7 +197,18 @@ Needs to land **before** fan-out, because everyone builds on it:
 A–F don't overlap in files. Anything that must change `src/shared/` goes through the master session, which keeps the contracts stable.
 
 ### Phase 2 — Content & integration (after A–F merge)
-| # | Session | Delivers |
+Built by **one session** on one branch (user decision, 2026-10-29), in this order: shared terrain → maps → Phase 1 gameplay gaps → drawn frontlines → skirmish AI → balance.
+
+**Phase 1 gaps carried into Phase 2.** §4 design features the Phase 1 sim didn't build:
+- one deterministic terrain shared by sim and render: elevation, height LOS and a range bonus, forest cover, and water from the map
+- suppression
+- veterancy
+- garrisoning buildings and trenches, and transports carrying squads (IFV, heli, transport ship)
+- Tier 3 superweapons (bomber run / cruise missile with early warning)
+- the patrol command
+- online pause votes
+
+| # | Workstream | Delivers |
 |---|---|---|
 | G | **Skirmish AI** (`src/ai/`) | Build orders, economy and attack waves, unit micro, 3 difficulties |
 | H | **Maps** (`public/assets/maps/`, map loader) | The 3 launch maps, with props and points |
