@@ -24,32 +24,52 @@ export class RtsCamera {
 
   constructor(dom: HTMLElement) {
     this.camera = new THREE.PerspectiveCamera(40, 1, 1, 4000);
-    addEventListener('keydown', (e) => {
+    this.on(window, 'keydown', (e) => {
       if (!(e.target instanceof HTMLInputElement)) this.keys.add(e.code);
     });
-    addEventListener('keyup', (e) => this.keys.delete(e.code));
-    addEventListener('blur', () => this.keys.clear());
-    dom.addEventListener('wheel', (e) => {
+    this.on(window, 'keyup', (e) => this.keys.delete(e.code));
+    this.on(window, 'blur', () => this.keys.clear());
+    this.on(dom, 'wheel', (e) => {
       e.preventDefault();
       this.distance = THREE.MathUtils.clamp(this.distance * Math.exp(e.deltaY * 0.001), MIN_DIST, MAX_DIST);
     }, { passive: false });
-    dom.addEventListener('pointermove', (e) => {
+    this.on(dom, 'pointermove', (e) => {
       if (this.rotating) {
         this.yaw -= e.movementX * 0.005;
         this.pitch = THREE.MathUtils.clamp(this.pitch + e.movementY * 0.004, 0.45, 1.35);
       }
       this.mouse = { x: e.clientX, y: e.clientY, inside: true };
     });
-    dom.addEventListener('pointerleave', () => (this.mouse.inside = false));
-    dom.addEventListener('pointerdown', (e) => {
+    this.on(dom, 'pointerleave', () => (this.mouse.inside = false));
+    this.on(dom, 'pointerdown', (e) => {
       if (e.button === 1) {
         this.rotating = true;
         e.preventDefault();
       }
     });
-    addEventListener('pointerup', (e) => {
+    this.on(window, 'pointerup', (e) => {
       if (e.button === 1) this.rotating = false;
     });
+  }
+
+  private readonly offs: (() => void)[] = [];
+
+  private on<K extends keyof WindowEventMap>(
+    target: Window | HTMLElement,
+    type: K,
+    fn: (e: WindowEventMap[K]) => void,
+    opts?: AddEventListenerOptions,
+  ): void {
+    const listener = fn as EventListener;
+    target.addEventListener(type, listener, opts);
+    this.offs.push(() => target.removeEventListener(type, listener, opts));
+  }
+
+  /** Remove every window/DOM listener this camera added. */
+  dispose(): void {
+    for (const off of this.offs) off();
+    this.offs.length = 0;
+    this.keys.clear();
   }
 
   /** Distance from the camera to its orbit target. */

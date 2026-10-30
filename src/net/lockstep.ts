@@ -91,6 +91,12 @@ const RESEND_BLOCKS = 100;
 const PING_MS = 1000;
 /** Extra ms of margin on top of one-way latency when choosing the input delay. */
 const DELAY_MARGIN_MS = 30;
+/** Poll gaps longer than this mean we're a throttled background tab, not a slow frame. */
+const THROTTLED_GAP_MS = 150;
+/** How long a large poll gap keeps the extra send-ahead in effect. */
+const GAP_WINDOW_MS = 3000;
+/** Never send more than this many blocks beyond the input delay. */
+const MAX_LEAD_BLOCKS = 30;
 
 export class LockstepSession implements NetSession {
   readonly events = new Emitter<SessionEvents>();
@@ -121,6 +127,12 @@ export class LockstepSession implements NetSession {
   private maxSeen = -1;
   private readonly rtt = new Map<PeerId, PeerRtt>();
   private lastPing = -Infinity;
+  /** Latest block each peer reported being at (from pings); the sync's applied block for a rejoiner. */
+  private readonly peerBlock = new Map<PeerId, number>();
+  private syncHead = -1;
+  private lastPollAt: number | null = null;
+  private recentGap = 0;
+  private recentGapAt = 0;
   private delayBlocks: number;
   private readonly minDelay: number;
   private readonly maxDelay: number;
@@ -161,6 +173,7 @@ export class LockstepSession implements NetSession {
       }
       for (const raw of sync.inputs) this.storeInput(raw[0], raw[1], raw[2], raw[3]);
       this.maxSeen = sync.inputs.reduce((m, raw) => Math.max(m, raw[1]), sync.appliedBlock);
+      this.syncHead = sync.appliedBlock;
       for (const [p, tick] of sync.left) this.leftAt.set(p, { tick, at: this.env.now() });
       for (const [tick, h] of sync.hashes) this.hashMap(tick).set('authority', h);
     }
@@ -191,6 +204,7 @@ export class LockstepSession implements NetSession {
 
   pollTurn(tick: Tick): Turn | null {
     if (this.disposed) return null;
+    this.trackPollGap();
     if (this.lastTurn?.tick === tick) return this.lastTurn;
     this.service();
     const block = Math.floor(tick / this.turnTicks);
@@ -263,11 +277,15 @@ export class LockstepSession implements NetSession {
   }
 
   /**
-   * Ticks of turns that are ready to apply right now. A rejoining peer starts with a large
-   * backlog; the match loop should step without its per-frame catch-up cap while this is big.
+   * How many ticks this peer should step right away: turns it already has (a rejoiner starts
+   * with the whole log) or, when it fell behind the others (a throttled background tab, a long
+   * hitch), the gap to where they are. The match loop steps without its per-frame cap while
+   * this is large; `pollTurn` still returns null whenever input is genuinely missing.
    */
   backlogTicks(currentTick: Tick): number {
-    return Math.max(0, (this.appliedBlock + 1) * this.turnTicks - currentTick);
+    const applied = (this.appliedBlock + 1) * this.turnTicks - currentTick;
+    const behind = this.behindBlocks(Math.floor(currentTick / this.turnTicks));
+    return Math.max(0, applied, behind > this.catchUpThreshold() ? behind * this.turnTicks : 0);
   }
 
   /** Every applied turn with commands so far, plus the setup: a replay or a rejoin log. */
@@ -295,6 +313,7 @@ export class LockstepSession implements NetSession {
       case 'in':
         return this.onInput(msg, from);
       case 'ping':
+        if (msg.blk !== undefined) this.peerBlock.set(from, msg.blk);
         return this.transport.send({ t: 'pong', ts: msg.ts }, from);
       case 'pong':
         return this.onPong(msg.ts, from);
@@ -356,13 +375,28 @@ export class LockstepSession implements NetSession {
   // Sending
   // -------------------------------------------------------------------------------------
 
+  /**
+   * Behind = the others' sims are well ahead of ours (rejoining, or a throttled tab). Judged from
+   * the blocks peers report, not from how far ahead their input reaches: a peer may legitimately
+   * send far ahead (see `leadBlocks`), and that must not make everyone else think they're behind.
+   */
   private get catchingUp(): boolean {
-    return this.maxSeen - this.localBlock > 2 * this.delayBlocks + 4;
+    return this.behindBlocks(this.localBlock) > this.catchUpThreshold();
+  }
+
+  private catchUpThreshold(): number {
+    return 2 * this.delayBlocks + 4;
+  }
+
+  private behindBlocks(localBlock: number): number {
+    let head = this.syncHead;
+    for (const [peer, b] of this.peerBlock) if (this.isActivePeer(peer)) head = Math.max(head, b);
+    return head - localBlock;
   }
 
   private flush(): void {
     if (this.phase === 'dropped' || this.nextSend.size === 0) return;
-    let target = this.localBlock + this.delayBlocks;
+    let target = this.localBlock + this.delayBlocks + this.leadBlocks();
     // While fast-forwarding after a rejoin, keep pace with the others instead of stalling them.
     if (this.catchingUp) target = Math.max(target, this.maxSeen);
     for (;;) {
@@ -386,6 +420,29 @@ export class LockstepSession implements NetSession {
     }
   }
 
+  /**
+   * A background tab only gets ~1 timer per second, so between its frames the others would
+   * run out of its input after `delayBlocks` and the whole game would crawl. When polls come
+   * in large gaps, send (empty) input far enough ahead to cover the next gap. The cost is
+   * extra command latency for the player who isn't looking anyway.
+   */
+  private trackPollGap(): void {
+    const now = this.env.now();
+    if (this.lastPollAt !== null) {
+      const gap = now - this.lastPollAt;
+      if (gap >= this.recentGap || now - this.recentGapAt > GAP_WINDOW_MS) {
+        this.recentGap = gap;
+        this.recentGapAt = now;
+      }
+    }
+    this.lastPollAt = now;
+  }
+
+  private leadBlocks(): number {
+    if (this.recentGap < THROTTLED_GAP_MS) return 0;
+    return Math.min(MAX_LEAD_BLOCKS, Math.ceil(this.recentGap / (this.turnTicks * TICK_MS)) + 1);
+  }
+
   private resendRecent(peer: PeerId): void {
     const from = Math.max(0, this.appliedBlock - RESEND_BLOCKS);
     for (const [b, msg] of this.sent) if (b >= from) this.transport.send(msg, peer);
@@ -395,7 +452,7 @@ export class LockstepSession implements NetSession {
     const now = this.env.now();
     if (now - this.lastPing >= PING_MS) {
       this.lastPing = now;
-      this.transport.send({ t: 'ping', ts: now });
+      this.transport.send({ t: 'ping', ts: now, blk: this.localBlock });
     }
   }
 

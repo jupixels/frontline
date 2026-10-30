@@ -51,15 +51,35 @@ Model entries:
 - `clips`: keep only these clips. `animTolerance`: keyframe resampling tolerance.
   `animPrune.dropBones`: regex of bones whose channels to drop. Channels on non-deforming rig helpers and channels
   that hold the rest pose are always dropped.
+- `holdPose`: `{ clip, into, bones }` bakes the first frame of `clip` into the `bones` channels of each clip in `into`.
+  The soldiers' idle and locomotion clips let the weapon dangle from one hand; Unity layers `WeaponHold_*` over them,
+  three.js can't, so the hold pose is baked in.
+- `reparent`: node name → new parent node name, keeping the rest-pose placement (the soldiers' weapons go on the hand bone).
 - `colors`: material name (or `"*"`) → hex color, multiplied into any texture. `palette`: name of a shared `palettes` entry.
 - `meshMaterials`: mesh name → `{ name, color, roughness, metallic }`, for meshes that ship without materials (the soldiers).
 - `textureAdjust`: `{ saturation, brightness, tint }` applied to base color textures (tones down the Kenney colormap).
 - `textureSize`: max texture size (default 512).
+- `texture`: base color image (next to the file) for OBJs that ship without an `.mtl`.
 - `kitbash`: instead of `zip`/`path`, a list of parts merged into one model. Each part is either a source model
   (same fields as above, plus `at: [x, y, z]`) or a primitive: `{ box: [w, h, d] }`, `{ cylinder: [rBottom, rTop, h] }`
   or `{ arch: [w, d] }` with `color`, `name`, `at`, and `center: false` so `at` is the base center.
+  A part's `parent` hangs it under a named node so it follows that node's animation. `stripMeshesUnder` removes the
+  meshes below a node and keeps the node and its clips. aa_tank uses both to swap the MBT's turret for an AA turret
+  that still turns with `TurretTurn` and can be aimed through `P_turret`.
 
-`textures` entries pick maps out of an ambientCG zip by filename suffix; `files` copies a downloaded file as-is.
+`textures` entries pick maps out of an ambientCG zip by filename suffix. `roughMin` remaps roughness into
+`[roughMin, 1]` (Grass004 ships a mean roughness of 0.26, which renders as a wet glint). `files` copies a
+downloaded file as-is.
+
+`sounds` entries copy every `.mp3` under `prefix` in the zip to `out`. Optional fields:
+
+- `files`: only these names (relative to `prefix`)
+- `encode`: re-encode with ffmpeg (must be on `PATH`, or set `FFMPEG=<path>`). Output is MP3:
+  - `bitrate` (default `64k`), mono unless `stereo: true`, `sampleRate` (default 44100)
+  - `maxSeconds`: trim to this length with a short fade-out
+  - `split: n`: the file holds several takes separated by silence (the `02_weapons` recordings do); write up to `n` of them as `name_1.mp3`, `name_2.mp3`, ...
+
+Entries without `encode` don't need ffmpeg.
 
 Output is meshopt-compressed (`EXT_meshopt_compression`, with quaternion/exponential filters on animation data)
 with WebP textures. three.js loads it via `GLTFLoader` + `MeshoptDecoder`, as `src/render/units.ts` does.
@@ -72,14 +92,16 @@ The processed output **is** committed: GitHub Pages can't serve Git LFS files, s
 |---|---|---|
 | Modern-RTS-Animations.zip, Zsky vehicles (`*_zsky_CC-BY`) | jeep, scout_car, tank_light, heli_attack, patrol_boat | **CC-BY 4.0**, Zsky (zsky2000.itch.io) |
 | Modern-RTS-Models.zip, Zsky military base | hq, barracks, helipad, radar, supply_depot, hospital, watchtower, props, parts of the kitbashes | **CC-BY 4.0**, Zsky |
-| Modern-RTS-Animations.zip, Freeciv units by yd | ifv, tank_mbt, heli_transport, jet_fighter, bomber, cruise_missile, destroyer, cruiser, submarine, transport_ship | CC0 |
+| Modern-RTS-Animations.zip, Freeciv units by yd | ifv, tank_mbt, aa_tank (MBT hull + primitive twin-cannon turret), heli_transport, jet_fighter, bomber, cruise_missile, destroyer, cruiser, submarine, transport_ship | CC0 |
 | Modern-RTS-Animations.zip, toon vehicles | rocket_truck, artillery (recolored). The pack README lists them as CC0; they look like CptDrunkBear's N64-style set, so they're credited to CptDrunkBear | CC0 |
-| Modern-RTS-Animations.zip, `AntiAirTank1_abstract` from Nikke's Abstract RTS pack | aa_tank (recolored) | **CC-BY-SA 3.0**, Nikke / Nickotopia (nickotopia.com). The models pack README says CC0, but the pack's own README.txt says CC-BY-SA 3.0, so we follow that |
 | Modern-RTS-Animations.zip, Kevin Iglesias soldiers | rifleman, sniper, at_soldier | Royalty-free, commercial use OK, no resale of the assets themselves |
 | [Kenney Nature Kit](https://kenney.nl/assets/nature-kit) | `models/env/*` | CC0 |
 | [Kenney City Kit (Industrial)](https://kenney.nl/assets/city-kit-industrial) | parts of war_factory, airfield, power_plant, naval_yard | CC0 |
 | ambientCG [Grass004](https://ambientcg.com/view?id=Grass004), [Ground103](https://ambientcg.com/view?id=Ground103), [Rock030](https://ambientcg.com/view?id=Rock030), [Ground080](https://ambientcg.com/view?id=Ground080), [Ground048](https://ambientcg.com/view?id=Ground048) | grass, dirt, rock, sand, mud | CC0 |
 | Poly Haven [Kloppenheim 06 (Pure Sky)](https://polyhaven.com/a/kloppenheim_06_puresky) by Greg Zaal, Jarod Guest | sky.hdr | CC0 |
 
-Anything marked CC-BY or CC-BY-SA needs a credit line in the in-game credits (see the Credits section of the root
+Nikke's Abstract RTS pack (`*_abstract`) is **CC-BY-SA 3.0** per its own README.txt, even though the pack README says
+CC0, so we don't ship anything from it.
+
+Anything marked CC-BY needs a credit line in the in-game credits (see the Credits section of the root
 `README.md` and `docs/GAME_PLAN.md` §3).

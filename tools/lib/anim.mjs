@@ -2,6 +2,8 @@
 // a full Unity control rig (IK/FK helpers, pole targets) and animate T/R/S on every bone, so most
 // channels are either on non-deforming helpers or hold the rest pose.
 
+import { Matrix4, Quaternion, Vector3 } from 'three';
+
 const TOL = { translation: 1e-3, rotation: 1e-3, scale: 1e-3 };
 
 /**
@@ -54,4 +56,53 @@ export function pruneAnimationChannels(doc, opts = {}) {
     }
   }
   return { dropped, total };
+}
+
+/**
+ * Moves a mesh node under another node without changing where it sits in the rest pose. Used to hang
+ * the soldiers' weapons on the hand's deform bone instead of a separately animated rig helper.
+ */
+export function reparentKeepWorld(doc, nodeName, newParentName) {
+  const nodes = doc.getRoot().listNodes();
+  const node = nodes.find((n) => n.getName() === nodeName);
+  const target = nodes.find((n) => n.getName() === newParentName);
+  if (!node || !target) throw new Error(`reparent: missing ${node ? newParentName : nodeName}`);
+  const world = new Matrix4().fromArray(node.getWorldMatrix());
+  const local = new Matrix4().copy(new Matrix4().fromArray(target.getWorldMatrix())).invert().multiply(world);
+  const t = new Vector3(), r = new Quaternion(), s = new Vector3();
+  local.decompose(t, r, s);
+  for (const p of node.listParents()) if (p.propertyType === 'Node' || p.propertyType === 'Scene') p.removeChild(node);
+  target.addChild(node);
+  node.setTranslation(t.toArray()).setRotation(r.toArray()).setScale(s.toArray());
+}
+
+/**
+ * Replaces the channels of `bones` in each clip of `into` with the first frame of `clip`: a baked
+ * upper-body layer. The Kevin Iglesias idle/locomotion clips let the weapon hang from one hand;
+ * Unity layers WeaponHold_* over them, three.js can't, so we bake that pose in.
+ */
+export function bakeHoldPose(doc, { clip, into, bones }) {
+  const root = doc.getRoot();
+  const re = new RegExp(bones);
+  const hold = root.listAnimations().find((a) => a.getName() === clip);
+  if (!hold) throw new Error(`bakeHoldPose: no clip ${clip}`);
+  const buffer = root.listBuffers()[0];
+  for (const anim of root.listAnimations().filter((a) => into.includes(a.getName()))) {
+    for (const ch of anim.listChannels()) {
+      if (!re.test(ch.getTargetNode()?.getName() ?? '')) continue;
+      const s = ch.getSampler();
+      ch.dispose();
+      if (!s.listParents().some((p) => p.propertyType === 'AnimationChannel')) s.dispose();
+    }
+    for (const ch of hold.listChannels()) {
+      const node = ch.getTargetNode();
+      if (!node || !re.test(node.getName())) continue;
+      const src = ch.getSampler().getOutput();
+      const value = src.getElement(0, []);
+      const input = doc.createAccessor().setBuffer(buffer).setType('SCALAR').setArray(new Float32Array([0]));
+      const output = doc.createAccessor().setBuffer(buffer).setType(src.getType()).setArray(new Float32Array(value));
+      const sampler = doc.createAnimationSampler().setInput(input).setOutput(output).setInterpolation('STEP');
+      anim.addSampler(sampler).addChannel(doc.createAnimationChannel().setTargetNode(node).setTargetPath(ch.getTargetPath()).setSampler(sampler));
+    }
+  }
 }

@@ -23,7 +23,8 @@ import sharp from 'sharp';
 import { fetchSources, defaultCacheDir } from './fetch-sources.mjs';
 import { objToDocument } from './lib/obj.mjs';
 import { shapeDocument, hexColor } from './lib/shapes.mjs';
-import { pruneAnimationChannels } from './lib/anim.mjs';
+import { pruneAnimationChannels, bakeHoldPose, reparentKeepWorld } from './lib/anim.mjs';
+import { encodeSound } from './lib/audio.mjs';
 
 const root = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, '$1')), '..');
 const args = process.argv.slice(2);
@@ -96,7 +97,15 @@ async function loadSourceRaw(spec) {
   const sibling = (rel) => files[posix.normalize(dir + rel.replaceAll('\\', '/'))];
   const bytes = zipFile(spec.zip, spec.path);
   const ext = spec.path.split('.').pop().toLowerCase();
-  if (ext === 'obj') return objToDocument(new TextDecoder().decode(bytes), sibling, posix.basename(spec.path, '.obj'));
+  if (ext === 'obj') {
+    const doc = objToDocument(new TextDecoder().decode(bytes), sibling, posix.basename(spec.path, '.obj'));
+    // `texture`: base color map for OBJs that ship without an .mtl.
+    if (spec.texture) {
+      const tex = doc.createTexture(spec.texture).setImage(sibling(spec.texture)).setMimeType('image/png');
+      for (const mat of doc.getRoot().listMaterials()) mat.setBaseColorTexture(tex).setBaseColorFactor([1, 1, 1, 1]);
+    }
+    return doc;
+  }
   const jsonDoc = ext === 'glb' ? parseGlb(bytes) : { json: JSON.parse(new TextDecoder().decode(bytes)), resources: {} };
   // Resolve external buffers/images (Kenney GLBs reference Textures/colormap.png).
   for (const r of [...(jsonDoc.json.buffers ?? []), ...(jsonDoc.json.images ?? [])]) {
@@ -178,6 +187,11 @@ async function adjustTextures(doc, adjust) {
 
 async function buildPartDoc(part) {
   const doc = await loadSource(part);
+  // `stripMeshesUnder`: drop the meshes below a node but keep the node and its animation (to swap a turret).
+  if (part.stripMeshesUnder) {
+    const strip = (n) => (n.setMesh(null), n.listChildren().forEach(strip));
+    strip(doc.getRoot().listNodes().find((n) => n.getName() === part.stripMeshesUnder));
+  }
   recolor(doc, part.colors ?? manifest.palettes?.[part.palette]);
   await adjustTextures(doc, part.textureAdjust);
   const wrap = normalize(doc, part, part.name ?? 'part');
@@ -200,6 +214,8 @@ async function kitbash(parts) {
       scene.addChild(child);
     }
     merged.dispose();
+    // `parent`: hang the part under a named node (e.g. a turret) so it follows that node's animation.
+    if (part.parent) reparentKeepWorld(doc, part.name, part.parent);
   }
   for (const s of doc.getRoot().listScenes()) if (s !== scene) s.dispose();
   doc.getRoot().setDefaultScene(scene);
@@ -238,6 +254,8 @@ async function buildModel(m) {
   const doc = m.kitbash ? await kitbash(m.kitbash) : await loadSource(m);
   const before = m.kitbash ? 0 : zipFile(m.zip, m.path).byteLength;
 
+  if (m.holdPose) bakeHoldPose(doc, m.holdPose);
+  for (const [node, parent] of Object.entries(m.reparent ?? {})) reparentKeepWorld(doc, node, parent);
   if (m.clips) {
     for (const anim of doc.getRoot().listAnimations()) {
       if (m.clips.includes(anim.getName())) continue;
@@ -308,8 +326,10 @@ for (const t of (manifest.textures ?? []).filter((t) => match(t.out))) {
   for (const [kind, suffix] of Object.entries(t.maps)) {
     const name = Object.keys(files).find((f) => f.endsWith(suffix));
     if (!name) throw new Error(`${t.zip}: no file ending in ${suffix}`);
-    const img = sharp(files[name]).resize(t.size ?? 1024, t.size ?? 1024);
-    const data = await (kind === 'rough' ? img.greyscale() : img).webp({ quality: t.quality?.[kind] ?? 82, effort: 6 }).toBuffer();
+    let img = sharp(files[name]).resize(t.size ?? 1024, t.size ?? 1024);
+    // Remaps roughness into [roughMin, 1]: Grass004 ships a mean of ~0.26, which reads as a wet glint.
+    if (kind === 'rough') img = img.greyscale().linear(1 - (t.roughMin ?? 0), 255 * (t.roughMin ?? 0));
+    const data = await img.webp({ quality: t.quality?.[kind] ?? 82, effort: 6 }).toBuffer();
     write(`${t.out}_${kind}.webp`, data);
     sizes.push(`${kind} ${Math.round(data.byteLength / 1024)} KB`);
   }
@@ -323,14 +343,21 @@ for (const f of (manifest.files ?? []).filter((f) => match(f.out))) {
   console.log(`${f.out}  ${Math.round(data.byteLength / 1024)} KB`);
 }
 
-const sounds = manifest.sounds.filter((s) => !only || s.out.includes(only));
+// Sounds: copied as-is, or re-encoded with ffmpeg when the entry has `encode`.
+const sounds = manifest.sounds.filter((s) => match(s.out, s.prefix));
 for (const s of sounds) {
   const files = zipDir(s.zip, s.prefix);
   let n = 0;
+  let bytes = 0;
   for (const [name, data] of Object.entries(files)) {
     if (!name.endsWith('.mp3') || name.endsWith('/')) continue;
-    write(s.out + name.slice(s.prefix.length), data);
-    n++;
+    const rel = name.slice(s.prefix.length);
+    if (s.files && !s.files.includes(rel)) continue;
+    for (const [out, d] of s.encode ? encodeSound(rel, data, s.encode) : [[rel, data]]) {
+      write(s.out + out, d);
+      bytes += d.byteLength;
+      n++;
+    }
   }
-  console.log(`${s.out}  ${n} files`);
+  console.log(`${s.out}  ${n} files  ${Math.round(bytes / 1024)} KB${s.encode ? '  (encoded)' : ''}`);
 }
