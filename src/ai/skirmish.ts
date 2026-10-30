@@ -2,8 +2,8 @@
 // Each think it (1) builds its base from a build plan, (2) keeps factories producing a mix that
 // counters what it has seen, and (3) runs task forces that contest capture points: gather, attack
 // (sometimes around a flank), take the point and hold it with a drawn frontline. Raiders hit supply
-// trucks, depots and power; transports carry troops to islands; abilities and the superweapon fire
-// when they pay off.
+// trucks, depots and power; transports carry troops to islands; the fleet hunts enemy ships and
+// shells coastal points; abilities and the superweapon fire when they pay off.
 
 import type { Command } from '../shared/commands';
 import type { MapDef } from '../shared/data';
@@ -73,6 +73,11 @@ const COUNTERS: Partial<Record<Role, Record<string, number>>> = {
 };
 
 const RAIDER_TYPES = new Set(['jeep', 'scout_car', 'heli_attack']);
+const NAVAL_TYPES = ['patrol_boat', 'destroyer', 'submarine', 'cruiser'];
+/** Maps where at least this share of the points can be shelled from the water are fought at sea. */
+const SEA_MAP = 0.4;
+/** How far offshore a ship can stand and still hit a point (a bit under the naval gun's 180 m). */
+const SHELL_RANGE = 160;
 /** Buildings worth holding production back for. */
 const CORE = new Set(['barracks', 'war_factory', 'power_plant', 'supply_depot', 'radar']);
 
@@ -105,6 +110,11 @@ export class SkirmishAi {
   private turtling = false;
   /** Water spot near our base, if the map has sea within reach (naval yard / transport pickup). */
   private shore: Vec2 | null | undefined;
+  /** Share of the map's points that ships can shell from the water (0 on land maps). */
+  private readonly seaPower: number;
+  /** Water within shelling range of a point or structure (cached by entity id), or null. */
+  private readonly offshore = new Map<EntityId, Vec2 | null>();
+  private fleetAt = -999;
 
   constructor(
     readonly player: PlayerId,
@@ -125,6 +135,8 @@ export class SkirmishAi {
     this.spawn = map.spawns[spawns.get(player) ?? 0];
     this.enemySpawns = setup.players.filter((s) => teamOf(s.id) !== this.team).map((s) => map.spawns[spawns.get(s.id) ?? 0]);
     this.naval = !!(map.terrain?.water?.length || map.water?.length);
+    const pts = map.points ?? [];
+    this.seaPower = this.naval && pts.length ? pts.filter((p) => this.waterNear(p, SHELL_RANGE, false)).length / pts.length : 0;
     this.nextThink = this.rand.next() * this.p.think;
   }
 
@@ -219,6 +231,31 @@ export class SkirmishAi {
     return best;
   }
 
+  /** Deep water within `r` of `p` (nearest first), optionally only water our ships can sail to. */
+  private waterNear(p: Vec2, r: number, sailable = true): Vec2 | null {
+    const from = sailable ? this.shorePoint() : null;
+    if (sailable && !from) return null;
+    const half = this.map.size / 2 - 10;
+    for (let d = 20; d <= r; d += 20) {
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        const q = { x: p.x + Math.cos(a) * d, z: p.z + Math.sin(a) * d };
+        if (Math.abs(q.x) > half || Math.abs(q.z) > half || this.sim.heightAt(q.x, q.z) > -3) continue;
+        if (!from || this.sim.reachable('naval', from, q)) return q;
+      }
+    }
+    return null;
+  }
+
+  private offshoreOf(e: { id: EntityId; pos: Vec2 }): Vec2 | null {
+    let w = this.offshore.get(e.id);
+    if (w === undefined) {
+      w = this.waterNear(e.pos, SHELL_RANGE);
+      this.offshore.set(e.id, w);
+    }
+    return w;
+  }
+
   // --- economy ---
 
   /** The base this difficulty wants by now, in build order: [type, count]. */
@@ -228,13 +265,15 @@ export class SkirmishAi {
       ['barracks', 1],
       ['power_plant', 1],
       ['supply_depot', 1],
-      ['war_factory', 1],
-      ['power_plant', 2],
     ];
+    // On sea maps the navy is a main arm: the yard comes before the war factory.
+    const seaFirst = this.seaPower >= SEA_MAP && this.difficulty !== 'easy' && !!this.shorePoint();
+    if (seaFirst) plan.push(['naval_yard', 1]);
+    plan.push(['war_factory', 1], ['power_plant', 2]);
     if (p.depots >= 2) plan.push(['supply_depot', 2]);
     if (now >= p.radarAt) plan.push(['radar', 1]);
     if (this.difficulty !== 'easy') plan.push(['hospital', 1]);
-    if (this.naval && this.shorePoint() && this.difficulty !== 'easy') plan.push(['naval_yard', 1]);
+    if (!seaFirst && this.naval && this.shorePoint() && this.difficulty !== 'easy') plan.push(['naval_yard', 1]);
     if (now >= p.radarAt + 60) plan.push(['helipad', 1], ['power_plant', 3]);
     if (p.depots >= 3) plan.push(['supply_depot', 3]);
     if (now > (this.difficulty === 'hard' ? 600 : 900)) plan.push(['war_factory', 2], ['barracks', 2]);
@@ -296,7 +335,7 @@ export class SkirmishAi {
     if (!this.sim.buildable(this.player).includes(next)) return;
     if (eco.supply < cost) {
       // Save for core buildings only; extras wait for spare money so the army doesn't starve.
-      if (CORE.has(next)) this.pendingBuild = cost;
+      if (CORE.has(next) || (next === 'naval_yard' && this.seaPower >= SEA_MAP)) this.pendingBuild = cost;
       return;
     }
     let at = this.placeFor(next);
@@ -451,7 +490,8 @@ export class SkirmishAi {
   /** Base weights for the tier, pushed toward counters for what the enemy fields. */
   private desiredMix(tier: number): Record<string, number> {
     const mix = { ...BASE_MIX[Math.min(3, Math.max(1, tier))] };
-    if (!this.naval) for (const u of ['patrol_boat', 'destroyer', 'submarine', 'cruiser']) delete mix[u];
+    if (!this.naval) for (const u of NAVAL_TYPES) delete mix[u];
+    else if (this.seaPower >= SEA_MAP) for (const u of NAVAL_TYPES) if (mix[u]) mix[u] *= 1 + this.seaPower * 1.5;
     if (this.p.counters) {
       const { mix: seen, total } = this.k.enemyMix();
       if (total > 300) {
@@ -490,7 +530,10 @@ export class SkirmishAi {
   }
 
   private military(now: number): void {
-    const army = this.armyUnits();
+    const all = this.armyUnits();
+    // Warships run as one fleet; everything else forms the task forces.
+    const ships = all.filter((u) => UNIT_DEFS[u.type]?.domain === 'naval');
+    const army = ships.length ? all.filter((u) => UNIT_DEFS[u.type]?.domain !== 'naval') : all;
     const alive = new Set(this.k.own.map((e) => e.id));
     for (const f of this.forces) for (const id of [...f.units]) if (!alive.has(id)) f.units.delete(id);
     for (const [id] of this.assigned) if (!alive.has(id)) this.assigned.delete(id);
@@ -557,6 +600,56 @@ export class SkirmishAi {
       }
     }
     for (const f of this.forces) this.runForce(f, now);
+    this.runFleet(ships, now);
+  }
+
+  /**
+   * The fleet hunts enemy ships it can see, else shells the coastal point our army is fighting for, the
+   * best coastal point we don't hold, or an enemy naval yard. A small fleet guards home waters.
+   */
+  private runFleet(ships: EntityState[], now: number): void {
+    if (!ships.length || now - this.fleetAt < 12) return;
+    this.fleetAt = now;
+    const home = this.shorePoint() ?? this.base();
+    const c = centroid(ships.map((s) => s.pos));
+    let value = 0;
+    for (const s of ships) value += valueOf(s.type);
+    let target: Vec2 | null = null;
+    let foeId: EntityId | undefined;
+    let best = 700;
+    for (const e of this.k.visible) {
+      if (UNIT_DEFS[e.type]?.domain !== 'naval') continue;
+      const d = Math.min(dist(e.pos, c), dist(e.pos, home));
+      if (d < best) {
+        best = d;
+        target = e.pos;
+        foeId = e.id;
+      }
+    }
+    if (!target && value >= 600) {
+      const fighting = new Set(this.forces.filter((f) => f.state !== 'gather').map((f) => f.point));
+      const objectives = this.objectives();
+      const ordered = [...objectives.filter((o) => fighting.has(o.id)), ...objectives.filter((o) => !this.k.isFriend(o.owner))];
+      for (const o of ordered) {
+        target = this.offshoreOf(o);
+        if (target) break;
+      }
+      if (!target) {
+        const yards = this.k.enemyStructures().filter((s) => s.type === 'naval_yard').sort((a, b) => dist(a.pos, c) - dist(b.pos, c));
+        for (const y of yards) {
+          target = this.offshoreOf(y);
+          if (target) break;
+        }
+      }
+    }
+    if (!target) {
+      // Guard home waters, or a held coastal point under attack.
+      const threatened = this.k.points.find((p) => this.k.isFriend(p.owner) && this.k.enemyStrength(p.pos, 160) > 0 && this.offshoreOf(p));
+      target = threatened ? this.offshoreOf(threatened) : home;
+    }
+    const ids = ships.map((s) => s.id);
+    if (foeId !== undefined && this.sim.fog.canSee(this.player, foeId)) this.send({ type: 'attack', units: ids, targetId: foeId });
+    else this.send({ type: 'move', units: ids, target: target!, attackMove: true });
   }
 
   /** Can this unit get to `p` on its own (aircraft always; ships by water; troops by land)? */

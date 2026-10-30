@@ -281,16 +281,32 @@ export class Lobby {
   // Host-only actions (ignored for non-hosts)
   // -------------------------------------------------------------------------------------
 
-  /** Map, victory mode, max players. Changing settings clears everyone's ready flag. */
-  setSettings(patch: Partial<LobbySettings>): void {
-    if (!this.isHost || this.state.phase !== 'lobby') return;
+  /**
+   * Map, victory mode, max players (the map's spawn count). Changing settings clears everyone's ready
+   * flag. Shrinking moves seated players and AIs down into free slots and closes the rest; it's refused
+   * (returns false, nothing changes) when more are seated than the new size holds.
+   */
+  setSettings(patch: Partial<LobbySettings>): boolean {
+    if (!this.isHost || this.state.phase !== 'lobby') return false;
     const s = { ...this.state.settings, ...patch };
     s.maxPlayers = clampInt(s.maxPlayers, 2, MAX_PLAYERS);
-    // Can't shrink below an occupied slot.
-    const lastUsed = Math.max(...this.state.slots.filter((x) => x.state === 'human' || x.state === 'ai').map((x) => x.index));
-    s.maxPlayers = Math.max(s.maxPlayers, lastUsed + 1);
-    this.state = { ...this.state, settings: s, slots: this.state.slots.map((x) => (x.state === 'human' ? { ...x, ready: false } : x)) };
+    const old = this.state.settings.maxPlayers;
+    const seated = this.state.slots.filter((x) => x.state === 'human' || x.state === 'ai');
+    if (seated.length > s.maxPlayers) return false;
+    let slots = this.state.slots.map((x) => (x.state === 'human' ? { ...x, ready: x.peer === this.state.hostPeer } : x));
+    // Slots that were outside the old size open up; the host's own closed slots stay closed.
+    for (let i = old; i < s.maxPlayers; i++) if (slots[i].state === 'closed') slots[i] = emptySlot(i, 'open');
+    for (const x of seated) {
+      if (x.index < s.maxPlayers) continue;
+      let to = slots.findIndex((y, i) => i < s.maxPlayers && y.state === 'open');
+      if (to < 0) to = slots.findIndex((y, i) => i < s.maxPlayers && y.state === 'closed');
+      slots[to] = { ...slots[x.index], index: to };
+      slots[x.index] = emptySlot(x.index, 'closed');
+    }
+    slots = slots.map((x) => (x.index >= s.maxPlayers && x.state === 'open' ? emptySlot(x.index, 'closed') : x));
+    this.state = { ...this.state, settings: s, slots };
     this.broadcastState();
+    return true;
   }
 
   /** Put an AI in `index` (or the first open slot). Returns the slot index or -1. */

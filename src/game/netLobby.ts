@@ -29,6 +29,8 @@ export class NetLobbyAdapter implements LobbyApi {
   match: StartedMatch | null = null;
   private closedError: string | null = null;
   private closed = false;
+  /** Chat listeners, for notices only this player sees (e.g. a refused map change). */
+  private readonly chatFns = new Set<(msg: ChatMessage) => void>();
 
   constructor(readonly lobby: Lobby) {
     lobby.on('closed', (err) => {
@@ -63,10 +65,15 @@ export class NetLobbyAdapter implements LobbyApi {
   }
 
   onChat(fn: (msg: ChatMessage) => void): () => void {
-    return this.lobby.on('chat', (m) => {
+    this.chatFns.add(fn);
+    const off = this.lobby.on('chat', (m) => {
       const slot = this.lobby.snapshot.slots[m.slot];
       fn({ from: m.slot < 0 ? 'system' : (slot?.peer ?? `slot${m.slot}`), name: m.name, text: m.text, at: Date.now() });
     });
+    return () => {
+      this.chatFns.delete(fn);
+      off();
+    };
   }
 
   onStart(fn: (setup: MatchSetup) => void): () => void {
@@ -102,8 +109,14 @@ export class NetLobbyAdapter implements LobbyApi {
     this.lobby.sendChat(text);
   }
 
+  /** The room's size follows the map's spawn count; a map too small for everyone seated is refused. */
   setMap(mapId: string): void {
-    this.lobby.setSettings({ mapId });
+    const map = MAPS.find((m) => m.id === mapId);
+    if (!map) return;
+    if (this.lobby.setSettings({ mapId, maxPlayers: map.maxPlayers })) return;
+    const seated = this.lobby.snapshot.slots.filter((s) => s.state === 'human' || s.state === 'ai').length;
+    const text = `${map.name} holds ${map.maxPlayers} players and ${seated} are seated. Remove players or AIs first.`;
+    for (const fn of this.chatFns) fn({ from: 'system', name: 'Lobby', text, at: Date.now() });
   }
 
   setVictory(victory: VictoryMode): void {
@@ -159,7 +172,7 @@ function toUiSlot(s: NetSlot): LobbySlot {
 export const netLobbyConnector: LobbyConnector = {
   async host(name) {
     try {
-      return new NetLobbyAdapter(await hostLobby({ name, settings: { mapId: MAPS[0].id } }));
+      return new NetLobbyAdapter(await hostLobby({ name, settings: { mapId: MAPS[0].id, maxPlayers: MAPS[0].maxPlayers } }));
     } catch (err) {
       throw new Error(errorText(err));
     }

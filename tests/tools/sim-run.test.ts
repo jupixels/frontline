@@ -4,11 +4,13 @@ import units from '../../data/units.json';
 import valley from '../../data/maps/valley_pass.json';
 import coastal from '../../data/maps/coastal_strait.json';
 import desert from '../../data/maps/desert_oilfields.json';
+import inland from '../../data/maps/inland_sea.json';
+import gulf from '../../data/maps/iron_gulf.json';
 import type { MapDef, UnitDef } from '../../src/shared/data';
 import type { MatchSetup } from '../../src/shared/types';
 import { runHeadless } from '../../src/ai/headless';
 
-const MAPS: Record<string, MapDef> = { valley_pass: valley as unknown as MapDef, coastal_strait: coastal as unknown as MapDef, desert_oilfields: desert as unknown as MapDef };
+const MAPS: Record<string, MapDef> = { valley_pass: valley as unknown as MapDef, coastal_strait: coastal as unknown as MapDef, desert_oilfields: desert as unknown as MapDef, inland_sea: inland as unknown as MapDef, iron_gulf: gulf as unknown as MapDef };
 
 it.skipIf(!process.env.SIMRUN)('headless match', () => {
   const base = MAPS[process.env.MAP ?? 'valley_pass'];
@@ -32,4 +34,7 @@ it.skipIf(!process.env.SIMRUN)('headless match', () => {
   } });
   console.log(`winner=${r.winner} secs=${Math.round(r.seconds)} morale=${JSON.stringify(r.morale)} produced=${JSON.stringify(r.produced)} lost=${JSON.stringify(r.lost)} wall=${Math.round(performance.now() - t0)}ms`);
   console.log(JSON.stringify(r.types));
+  const ships = ['patrol_boat', 'destroyer', 'submarine', 'cruiser', 'transport_ship'];
+  const navy = (t: Record<string, number>) => ships.map((u) => t[u] ?? 0).reduce((a, b) => a + b, 0);
+  console.log(`ships built=${JSON.stringify(Object.fromEntries(Object.entries(r.types).map(([p, t]) => [p, navy(t)])))} ships lost=${JSON.stringify(Object.fromEntries(Object.entries(r.lostTypes).map(([p, t]) => [p, navy(t)])))}`);
 }, 600000);
