@@ -163,7 +163,7 @@ describe.each(MAPS.map((m) => [m.id, m] as const))('map %s', (_id, map) => {
       expect.soft(near(end(0), map.spawns, 150), `dock ${d.x},${d.z} clear of spawns`).toBe(false);
     }
     for (const p of (map.props ?? []) as (MapDef['props'] & object)[number][]) {
-      if (!(p as { burnt?: boolean }).burnt) continue;
+      if (!(p as { burnt?: boolean }).burnt && !/\/wreck_/.test(p.model)) continue;
       ground(p, `wreck ${p.model} ${p.x},${p.z}`);
       expect.soft(pointClear(p, 8), `wreck ${p.x},${p.z} clear of points`).toBe(true);
     }

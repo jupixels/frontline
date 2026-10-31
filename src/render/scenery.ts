@@ -50,8 +50,15 @@ const DESERT_SCRUB: Record<string, number> = { grass: 0x857a4c };
 const DETAIL_ZOOM: Record<QualityLevel, number> = { low: 150, medium: 230, high: 320, ultra: Infinity };
 /** Share of scattered rocks and bushes kept, by quality. */
 const SCATTER_SHARE: Record<QualityLevel, number> = { low: 0.45, medium: 0.75, high: 1, ultra: 1 };
-/** Props smaller than this (largest side, meters) count as small detail. */
-const SMALL = 3;
+/** Props smaller than this (largest side, meters) count as small detail: sandbag walls and barriers included. */
+const SMALL = 4.5;
+
+/** Meshy power pole (models/catalog.json): crossarm along x, wires hang from its insulators. */
+const POWER_POLE = 'models/buildings/props/power_pole.glb';
+const WIRE_OFFSETS = [-2, 0, 2];
+const WIRE_HEIGHT = 8.4;
+/** Meshy pier section: `length` along x, deck `height` above its base; `deck` is where the deck sits. */
+const PIER = { model: 'models/buildings/props/pier.glb', length: 16, width: 4.42, height: 2.96, deck: 1.6 };
 
 const ROAD_COLORS: Record<string, [number, number]> = {
   temperate: [0x8c7a5c, 0x6f5f47],
@@ -456,29 +463,25 @@ export class Scenery {
         prev = [x, y, z];
       });
     } else if (line.kind === 'power') {
-      const pole = this.prim('power-pole', () => ({ geometry: new THREE.CylinderGeometry(0.13, 0.18, 1, 6), material: new THREE.MeshStandardMaterial({ color: 0x4e3d2c, roughness: 0.9 }), small: false, shadow: true }));
-      const arm = this.prim('power-arm', () => ({ geometry: box(), material: new THREE.MeshStandardMaterial({ color: 0x3e3226, roughness: 0.9 }), small: true, shadow: false }));
       const wire: number[] = [];
       let prev: { x: number; y: number; z: number; nx: number; nz: number } | null = null;
-      const H = 9;
       this.walk(pts, 40, (x, z, dx, dz) => {
         const y = this.heightAt(x, z);
         // No poles in rivers: the wires span to the next pole on land.
         if (y < 0.5) return;
-        this.upright(pole, x, y - 0.3, z, 1, H, 1);
-        const yaw = Math.atan2(dx, dz) + Math.PI / 2;
-        this.upright(arm, x, y + H - 0.8, z, 0.14, 0.14, 2.6, yaw);
+        // The pole's crossarm is its x axis: face along the line so the arm stands across it.
+        this.add(POWER_POLE, { x, y: y - 0.2, z, rot: Math.atan2(dx, dz), scale: 1 });
         const nx = -dz;
         const nz = dx;
         if (prev) {
-          // Three sagging wires between the poles' crossarm ends and middle.
-          for (const o of [-1.1, 0, 1.1]) {
+          // Three sagging wires from the crossarm's insulators.
+          for (const o of WIRE_OFFSETS) {
             const ax = prev.x + prev.nx * o;
             const az = prev.z + prev.nz * o;
             const bx = x + nx * o;
             const bz = z + nz * o;
-            const ay = prev.y + H - 0.6;
-            const by = y + H - 0.6;
+            const ay = prev.y + WIRE_HEIGHT;
+            const by = y + WIRE_HEIGHT;
             const n = 8;
             for (let k = 0; k < n; k++) {
               for (const f of [k / n, (k + 1) / n]) {
@@ -488,7 +491,7 @@ export class Scenery {
             }
           }
         }
-        prev = { x, y, z, nx, nz };
+        prev = { x, y: y - 0.2, z, nx, nz };
       });
       if (wire.length) {
         const geo = new THREE.BufferGeometry();
@@ -511,25 +514,22 @@ export class Scenery {
     }
   }
 
-  /** Timber jetty on piles: deck at the waterline plus a bit, piles down to the bed, bollards. */
+  /** Timber jetty from pier sections laid end to end (and side by side for wide docks), deck just above the water. */
   private buildDock(dock: DressingArea): void {
-    const box = () => new THREE.BoxGeometry(1, 1, 1);
-    const deck = this.prim('dock-deck', () => ({ geometry: box(), material: new THREE.MeshStandardMaterial({ color: 0x6b5641, roughness: 0.95 }), small: false, shadow: true }));
-    const pile = this.prim('dock-pile', () => ({ geometry: new THREE.CylinderGeometry(0.25, 0.25, 1, 6), material: new THREE.MeshStandardMaterial({ color: 0x3f3226, roughness: 0.95 }), small: false, shadow: false }));
-    const bollard = this.prim('dock-bollard', () => ({ geometry: new THREE.CylinderGeometry(0.22, 0.28, 1, 8), material: new THREE.MeshStandardMaterial({ color: 0x2b2d2f, roughness: 0.6, metalness: 0.5 }), small: true, shadow: false }));
     const rot = dock.rotation ?? 0;
     const cos = Math.cos(rot);
     const sin = Math.sin(rot);
-    const at = (lx: number, lz: number): [number, number] => [dock.x + lx * cos + lz * sin, dock.z - lx * sin + lz * cos];
-    const top = Math.max(1.4, this.heightAt(...at(0, -dock.d / 2)) + 0.4);
-    _q.setFromAxisAngle(Y, rot);
-    deck.matrices.push(new THREE.Matrix4().compose(new THREE.Vector3(dock.x, top - 0.25, dock.z), _q.clone(), new THREE.Vector3(dock.w, 0.5, dock.d)));
-    for (let lz = -dock.d / 2 + 1; lz <= dock.d / 2; lz += 4) {
-      for (const side of [-1, 1]) {
-        const [x, z] = at(side * (dock.w / 2 - 0.3), lz);
-        const bed = Math.min(this.heightAt(x, z), top - 1);
-        this.upright(pile, x, bed - 0.5, z, 1, top - bed + 0.6, 1);
-        if (Math.round(lz) % 12 === 1) this.upright(bollard, x, top, z, 1, 0.6, 1);
+    const sections = Math.max(1, Math.round(dock.d / PIER.length));
+    const scale = dock.d / sections / PIER.length;
+    const rows = Math.max(1, Math.round(dock.w / (PIER.width * scale)));
+    for (let k = 0; k < sections; k++) {
+      for (let j = 0; j < rows; j++) {
+        const lz = -dock.d / 2 + ((k + 0.5) * dock.d) / sections;
+        const lx = (j - (rows - 1) / 2) * PIER.width * scale;
+        const x = dock.x + lx * cos + lz * sin;
+        const z = dock.z - lx * sin + lz * cos;
+        // The section's long axis is its x: turn it onto the dock's length.
+        this.add(PIER.model, { x, y: PIER.deck - PIER.height * scale, z, rot: rot - Math.PI / 2, scale });
       }
     }
   }
