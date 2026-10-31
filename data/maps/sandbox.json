@@ -131,73 +131,61 @@
  ],
  "props": [
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 12,
-   "z": -5.1,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 11.6,
+   "z": -5.8,
    "rotation": 2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 12.7,
-   "z": -2.6,
-   "rotation": 1.8
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 12.8,
+   "z": -2,
+   "rotation": 1.7
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 13,
-   "z": 0,
-   "rotation": 1.6
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 12.7,
-   "z": 2.6,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 12.8,
+   "z": 2,
    "rotation": 1.4
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 12,
-   "z": 5.1,
-   "rotation": 1.2
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 11.6,
+   "z": 5.8,
+   "rotation": 1.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -12,
-   "z": 5.1,
-   "rotation": -1.2
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -11.6,
+   "z": 5.8,
+   "rotation": -1.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -12.7,
-   "z": 2.6,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -12.8,
+   "z": 2,
    "rotation": -1.4
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -13,
-   "z": 0,
-   "rotation": -1.6
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -12.8,
+   "z": -2,
+   "rotation": -1.7
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -12.7,
-   "z": -2.6,
-   "rotation": -1.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -12,
-   "z": -5.1,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -11.6,
+   "z": -5.8,
    "rotation": -2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": 0,
    "z": -15,
    "rotation": 3.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": 0,
    "z": 15,
    "rotation": 0
@@ -214,73 +202,61 @@
    "z": -4.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 5.1,
-   "z": 182,
-   "rotation": 0.4
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 5.8,
+   "z": 181.6,
+   "rotation": 0.5
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 2.6,
-   "z": 182.7,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 2,
+   "z": 182.8,
    "rotation": 0.2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 0,
-   "z": 183,
-   "rotation": 0
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -2.6,
-   "z": 182.7,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -2,
+   "z": 182.8,
    "rotation": -0.2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -5.1,
-   "z": 182,
-   "rotation": -0.4
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -5.8,
+   "z": 181.6,
+   "rotation": -0.5
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -5.1,
-   "z": 158,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -5.8,
+   "z": 158.4,
    "rotation": -2.7
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -2.6,
-   "z": 157.3,
-   "rotation": -2.9
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -2,
+   "z": 157.2,
+   "rotation": -3
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 0,
-   "z": 157,
-   "rotation": -3.1
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 2.6,
-   "z": 157.3,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 2,
+   "z": 157.2,
    "rotation": -3.3
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 5.1,
-   "z": 158,
-   "rotation": -3.5
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 5.8,
+   "z": 158.4,
+   "rotation": -3.6
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": 15,
    "z": 170,
    "rotation": 1.6
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": -15,
    "z": 170,
    "rotation": -1.6
@@ -297,73 +273,61 @@
    "z": 165.6
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -5.1,
-   "z": -182,
-   "rotation": 3.5
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -5.8,
+   "z": -181.6,
+   "rotation": 3.6
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -2.6,
-   "z": -182.7,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -2,
+   "z": -182.8,
    "rotation": 3.3
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 0,
-   "z": -183,
-   "rotation": 3.1
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 2,
+   "z": -182.8,
+   "rotation": 3
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 2.6,
-   "z": -182.7,
-   "rotation": 2.9
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 5.1,
-   "z": -182,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 5.8,
+   "z": -181.6,
    "rotation": 2.7
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 5.1,
-   "z": -158,
-   "rotation": 0.4
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 5.8,
+   "z": -158.4,
+   "rotation": 0.5
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 2.6,
-   "z": -157.3,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 2,
+   "z": -157.2,
    "rotation": 0.2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 0,
-   "z": -157,
-   "rotation": 0
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -2.6,
-   "z": -157.3,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -2,
+   "z": -157.2,
    "rotation": -0.2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -5.1,
-   "z": -158,
-   "rotation": -0.4
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -5.8,
+   "z": -158.4,
+   "rotation": -0.5
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": -15,
    "z": -170,
    "rotation": 4.7
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": 15,
    "z": -170,
    "rotation": 1.6
@@ -380,73 +344,61 @@
    "z": -165.6
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 182,
-   "z": -5.1,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 181.6,
+   "z": -5.8,
    "rotation": 2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 182.7,
-   "z": -2.6,
-   "rotation": 1.8
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 182.8,
+   "z": -2,
+   "rotation": 1.7
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 183,
-   "z": 0,
-   "rotation": 1.6
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 182.7,
-   "z": 2.6,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 182.8,
+   "z": 2,
    "rotation": 1.4
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 182,
-   "z": 5.1,
-   "rotation": 1.2
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 181.6,
+   "z": 5.8,
+   "rotation": 1.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 158,
-   "z": 5.1,
-   "rotation": -1.2
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 158.4,
+   "z": 5.8,
+   "rotation": -1.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 157.3,
-   "z": 2.6,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 157.2,
+   "z": 2,
    "rotation": -1.4
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 157,
-   "z": 0,
-   "rotation": -1.6
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 157.2,
+   "z": -2,
+   "rotation": -1.7
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 157.3,
-   "z": -2.6,
-   "rotation": -1.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": 158,
-   "z": -5.1,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": 158.4,
+   "z": -5.8,
    "rotation": -2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": 170,
    "z": -15,
    "rotation": 3.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": 170,
    "z": 15,
    "rotation": 0
@@ -463,73 +415,61 @@
    "z": -4.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -182,
-   "z": 5.1,
-   "rotation": -1.2
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -181.6,
+   "z": 5.8,
+   "rotation": -1.1
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -182.7,
-   "z": 2.6,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -182.8,
+   "z": 2,
    "rotation": -1.4
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -183,
-   "z": 0,
-   "rotation": -1.6
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -182.8,
+   "z": -2,
+   "rotation": -1.7
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -182.7,
-   "z": -2.6,
-   "rotation": -1.8
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -182,
-   "z": -5.1,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -181.6,
+   "z": -5.8,
    "rotation": -2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -158,
-   "z": -5.1,
-   "rotation": -4.3
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -158.4,
+   "z": -5.8,
+   "rotation": -4.2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -157.3,
-   "z": -2.6,
-   "rotation": -4.5
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -157.2,
+   "z": -2,
+   "rotation": -4.6
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -157,
-   "z": 0,
-   "rotation": -4.7
-  },
-  {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -157.3,
-   "z": 2.6,
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -157.2,
+   "z": 2,
    "rotation": -4.9
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
-   "x": -158,
-   "z": 5.1,
-   "rotation": -5.1
+   "model": "models/buildings/props/sandbag_wall.glb",
+   "x": -158.4,
+   "z": 5.8,
+   "rotation": -5.2
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": -170,
    "z": 15,
    "rotation": 0
   },
   {
-   "model": "models/buildings/props/sandbags.glb",
+   "model": "models/buildings/props/sandbag_wall.glb",
    "x": -170,
    "z": -15,
    "rotation": -3.1
@@ -553,7 +493,7 @@
    "burnt": true
   },
   {
-   "model": "models/buildings/props/barrier.glb",
+   "model": "models/buildings/props/jersey_barrier.glb",
    "x": -100,
    "z": 40,
    "rotation": 1.6
@@ -572,7 +512,7 @@
    "burnt": true
   },
   {
-   "model": "models/buildings/props/barrier.glb",
+   "model": "models/buildings/props/jersey_barrier.glb",
    "x": 100,
    "z": -40,
    "rotation": 4.7

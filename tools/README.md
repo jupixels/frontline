@@ -187,6 +187,7 @@ and roads.
 Each map also carries render-only `dressing` (fields, fences, dry-stone walls, power lines,
 pipelines, docks) and props, including burnt-out wrecks (`burnt: true` draws a unit model charred).
 `src/render/scenery.ts` draws them; the sim never reads them, so they don't block movement or give
-cover (neutral ruins in `structures` do). The `DRESS` table at the top of the dressing helpers holds
-placeholder models for props the models session is making: swap a path there and regenerate. The terrain format is `TerrainDef` in
+cover (neutral ruins in `structures` do). The `DRESS` table at the top of the dressing helpers lists
+the prop models (mostly the Meshy set: sandbag wall, ruined wall, fuel tank, jersey barrier, truck and
+APC hulks); swap a path there and regenerate. Power poles and pier sections are placed by scenery. The terrain format is `TerrainDef` in
 `src/shared/terrain.ts`; the sim and the renderer both read it.

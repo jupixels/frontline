@@ -69,8 +69,8 @@ function pointDressing(p) {
   // Facing away from the middle keeps twin points identical under the map's symmetry.
   const out = p.x || p.z ? Math.atan2(p.z, p.x) : 0;
   for (const arc of [out, out + Math.PI]) {
-    for (let i = -2; i <= 2; i++) {
-      const a = arc + i * 0.2;
+    for (let i = 0; i < 4; i++) {
+      const a = arc + (i - 1.5) * 0.31;
       props.push({ model: DRESS.sandbagWall, x: r1(p.x + Math.cos(a) * 13), z: r1(p.z + Math.sin(a) * 13), rotation: r1(Math.PI / 2 - a) });
     }
   }
@@ -84,19 +84,25 @@ function pointDressing(p) {
 }
 
 // --- dressing (render only: the sim never reads `dressing` or props) ---------------------------
-// Placeholders until the models session's Meshy props land: swap the paths here and regenerate.
+// Dressing models: the Meshy props from the models session, plus a few Kenney/Zsky ones (block, lamp,
+// containers). Swap a path here and regenerate. Power poles and pier sections are drawn by scenery.
 const DRESS = {
-  sandbagWall: 'models/buildings/props/sandbags.glb',
-  ruinedWall: 'models/buildings/props/wall_02.glb',
-  fuelTank: 'models/buildings/props/gas_tank.glb',
-  barrier: 'models/buildings/props/barrier.glb',
+  sandbagWall: 'models/buildings/props/sandbag_wall.glb',
+  ruinedWall: 'models/buildings/props/ruined_wall.glb',
+  fuelTank: 'models/buildings/props/fuel_tank.glb',
+  barrier: 'models/buildings/props/jersey_barrier.glb',
+  wreckTruck: 'models/buildings/props/wreck_truck.glb',
+  wreckApc: 'models/buildings/props/wreck_apc.glb',
   block: 'models/buildings/props/concrete_block.glb',
   lamp: 'models/buildings/props/light_pole.glb',
   containers: ['models/buildings/props/container_01.glb', 'models/buildings/props/container_02.glb', 'models/buildings/props/container_03.glb'],
 };
-/** Burnt-out vehicles reuse the unit models, drawn charred. */
-const wreck = (unit, x, z, rotation) => ({ model: `models/${unit}.glb`, x, z, rotation, burnt: true });
+/** Burnt-out vehicles: the truck and APC hulks are their own models; tanks and jeeps are unit models drawn charred. */
+const HULKS = { supply_truck: DRESS.wreckTruck, ifv: DRESS.wreckApc };
+const wreck = (unit, x, z, rotation) => (HULKS[unit] ? { model: HULKS[unit], x, z, rotation } : { model: `models/${unit}.glb`, x, z, rotation, burnt: true });
 const prop = (model, x, z, rotation = 0) => ({ model, x, z, rotation });
+/** A fuel tank lying along `rotation`'s x axis (the model's long axis is z, hence the quarter turn). */
+const tank = (x, z, rotation = 0) => prop(DRESS.fuelTank, x, z, r1(rotation + Math.PI / 2));
 
 const TAU = Math.PI * 2;
 const wrap = (a) => r1(((a % TAU) + TAU) % TAU);
@@ -312,8 +318,8 @@ write({
       prop(DRESS.containers[0], 445, 262),
       prop(DRESS.containers[1], 445, 266.5),
       prop(DRESS.containers[2], 428, 250, 1.57),
-      prop(DRESS.fuelTank, 350, 268, 1.57),
-      prop(DRESS.fuelTank, 358, 268, 1.57),
+      tank(350, 268, 1.57),
+      tank(358, 268, 1.57),
       prop(DRESS.lamp, -372, 258),
       prop(DRESS.lamp, 392, 256),
       prop(DRESS.lamp, 40, 30),
@@ -394,10 +400,10 @@ write({
   },
   props: S.area(
     [
-      prop(DRESS.fuelTank, -350, 250, 1.57),
-      prop(DRESS.fuelTank, -358, 250, 1.57),
-      prop(DRESS.fuelTank, -366, 250, 1.57),
-      prop(DRESS.fuelTank, 82, 18, 0.8),
+      tank(-350, 250, 1.57),
+      tank(-358, 250, 1.57),
+      tank(-366, 250, 1.57),
+      tank(82, 18, 0.8),
       prop(DRESS.barrier, 30, 300),
       prop(DRESS.barrier, -30, 300),
       prop(DRESS.block, 0, 296),
@@ -690,10 +696,10 @@ function compass(x, z) {
     },
     props: S.area(
       [
-        prop(DRESS.fuelTank, -780, -340),
-        prop(DRESS.fuelTank, -780, -335),
-        prop(DRESS.fuelTank, -780, -330),
-        prop(DRESS.fuelTank, -765, -352, 1.57),
+        tank(-780, -340),
+        tank(-780, -335),
+        tank(-780, -330),
+        tank(-765, -352, 1.57),
         prop(DRESS.containers[0], -200, -425),
         prop(DRESS.containers[2], 258, -428, 1.57),
         prop(DRESS.ruinedWall, -255, -470, 0.2),
