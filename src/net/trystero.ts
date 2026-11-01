@@ -1,6 +1,7 @@
 import type { JoinRoom, MessageAction, Room } from '@trystero-p2p/core';
 import type { NetEnv } from './env';
 import type { NetMessage, PeerId } from './protocol';
+import { getTurnServers } from './turn';
 import { BaseTransport, NetError, type StrategyStatus, type Transport, type TransportFactory } from './transport';
 
 /**
@@ -24,11 +25,11 @@ export interface TrysteroOptions {
   /** Give up with `signaling-unavailable` when no relay at all is open after this long. */
   signalingTimeoutMs?: number;
   iceServers?: RTCIceServer[];
-  /** Optional TURN servers (users may paste their own later). */
+  /** TURN servers. Default: fetched by `getTurnServers()` (see `./turn.ts`); `[]` turns TURN off. */
   turnServers?: RTCIceServer[];
 }
 
-/** Free public STUN servers. TURN is not free; ~10% of NATs need it (see GAME_PLAN §8). */
+/** Free public STUN servers. Strict NATs and port-80/443-only networks also need TURN (`./turn.ts`). */
 export const PUBLIC_STUN: RTCIceServer[] = [
   { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
   { urls: 'stun:stun.cloudflare.com:3478' },
@@ -41,7 +42,11 @@ interface StrategyModule {
   joinRoom: JoinRoom;
   getRelaySockets: () => Record<string, unknown>;
   selfId: string;
+  defaultRelayUrls?: string[];
 }
+
+/** Extra MQTT relay on port 443, for networks that block the default brokers' ports. */
+export const EXTRA_MQTT_RELAYS = ['wss://mqtt.eclipseprojects.io:443/mqtt'];
 
 const LOADERS: Record<StrategyName, () => Promise<StrategyModule>> = {
   nostr: () => import('@trystero-p2p/nostr') as Promise<StrategyModule>,
@@ -61,7 +66,8 @@ interface Joined {
 export function trysteroTransport(opts: TrysteroOptions = {}): TransportFactory {
   return async (roomId, env) => {
     if (typeof RTCPeerConnection === 'undefined') throw new NetError('webrtc-unsupported');
-    const t = new TrysteroTransport(roomId, env, opts);
+    const turnServers = opts.turnServers ?? (await getTurnServers());
+    const t = new TrysteroTransport(roomId, env, { ...opts, turnServers });
     await t.connect();
     return t;
   };
@@ -138,7 +144,9 @@ class TrysteroTransport extends BaseTransport implements Transport {
       j.mod = await LOADERS[name]();
       if (this.closed) return;
       this.selfId ||= j.mod.selfId;
-      const room = j.mod.joinRoom({ appId: this.appId, rtcConfig: this.rtcConfig }, this.roomId, {
+      const relayConfig =
+        name === 'mqtt' && j.mod.defaultRelayUrls ? { urls: [...EXTRA_MQTT_RELAYS, ...j.mod.defaultRelayUrls] } : undefined;
+      const room = j.mod.joinRoom({ appId: this.appId, rtcConfig: this.rtcConfig, relayConfig }, this.roomId, {
         onJoinError: (e) => {
           j.error = e.error;
           console.warn(`[net] ${name} join error`, e.error);

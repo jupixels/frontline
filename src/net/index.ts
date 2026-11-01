@@ -19,5 +19,6 @@ export { LockstepSession, type DesyncInfo, type SessionEvents, type SessionStatu
 export { downloadReplay, parseReplay, ReplaySession, serializeReplay, type CommandLog, type ReplayFile } from './replay';
 export { NetError, type NetErrorCode, type Transport, type TransportFactory, type TransportStatus } from './transport';
 export { trysteroTransport, PUBLIC_STUN, type TrysteroOptions } from './trystero';
+export { getTurnServers, parseIceServers, turnSource, DEFAULT_TURN_SOURCE } from './turn';
 export { LoopbackNetwork } from './loopback';
 export type { AiDifficulty, ChatMessage, LobbySettings, LobbySlot, LobbyState, SlotPatch } from './protocol';
